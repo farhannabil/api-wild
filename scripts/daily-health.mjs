@@ -1,5 +1,6 @@
 import {resolveMx,resolveTxt} from 'node:dns/promises';
 import {appendFileSync} from 'node:fs';
+import {spfIncludesProvider} from './spf-health.mjs';
 
 const site='https://apiwild.com';
 const support='https://yautmilnpllojugpmfgy.supabase.co/functions/v1/support-inbound';
@@ -33,7 +34,7 @@ await check('Support receiver health',async()=>{const r=await request(support+'/
 await check('Unsigned support event rejected',async()=>{const r=await request(support,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});requireValue(r.status===401);});
 await check('Support incoming MX',async()=>requireValue((await resolveMx('apiwild.com')).some(r=>r.exchange.replace(/\.$/,'')==='inbound-smtp.us-east-1.amazonaws.com'&&r.priority===10)));
 await check('Resend outgoing MX',async()=>requireValue((await resolveMx('send.apiwild.com')).some(r=>r.exchange.replace(/\.$/,'')==='feedback-smtp.us-east-1.amazonses.com')));
-await check('Resend SPF',async()=>requireValue((await resolveTxt('send.apiwild.com')).some(r=>r.join('').includes('include:amazonses.com'))));
+await check('Resend SPF',async()=>requireValue(await spfIncludesProvider('send.apiwild.com','amazonses.com',resolveTxt)));
 await check('Resend DKIM',async()=>requireValue((await resolveTxt('resend._domainkey.apiwild.com')).some(r=>/p=\S+/.test(r.join('')))));
 await check('DMARC record',async()=>requireValue((await resolveTxt('_dmarc.apiwild.com')).some(r=>r.join('').startsWith('v=DMARC1;'))));
 // No response bodies, tokens, email addresses, recipient records or secrets in logs.
