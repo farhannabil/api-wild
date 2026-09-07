@@ -1,0 +1,5 @@
+import {notFound} from 'next/navigation';
+import {pages} from '../content';
+import Pricing from '../pricing';
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}){const {slug}=await params;return {title:(slug==='pricing'?'Pricing':pages[slug]?.title||'Page not found')+' — API WILD'}}
+export default async function ContentPage({params}:{params:Promise<{slug:string}>}){const {slug}=await params;if(slug==='pricing')return <Pricing/>;const p=pages[slug];if(!p)notFound();return <main id="main" className="content-page"><div className="content-heading"><span className="section-overline">{p.eyebrow}</span><h1>{p.title}</h1><p>{p.intro}</p></div><div className="content-layout"><aside className="content-nav"><a href="/docs">Documentation</a><a href="/quickstart">Quickstart</a><a href="/api-reference">API reference</a><a href="/integrations">Integrations</a><a href="/security">Security</a><a href="/support">Support</a></aside><article>{p.sections.map((s,i)=><section key={i}><h2>{s.title}</h2><p>{s.body}</p>{s.code&&<pre>{s.code}</pre>}</section>)}{p.cta&&<a className="pill-button dark" href={p.cta[1]}>{p.cta[0]} →</a>}</article></div></main>}

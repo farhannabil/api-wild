@@ -1,0 +1,15 @@
+API WILD
+
+Your support request has an update.
+
+{{resolution_summary}}
+
+Request: {{ticket_id}}
+Subject: {{ticket_subject}}
+
+Open API WILD: https://apiwild.com
+
+If you still need help, reply to this email and include your request number.
+
+API WILD Support
+support@apiwild.com

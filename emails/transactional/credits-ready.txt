@@ -1,0 +1,15 @@
+API WILD
+
+Your credits are ready.
+
+{{credit_amount}} has been added to your API WILD credit balance.
+
+Order: {{order_id}}
+Added: {{credit_amount}}
+
+View your balance: https://apiwild.com/console/billing
+
+Your dashboard shows available services and usage.
+
+API WILD Support
+support@apiwild.com

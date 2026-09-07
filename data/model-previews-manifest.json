@@ -1,0 +1,562 @@
+{
+  "minimax/hailuo-3-max": {
+    "url": "https://model-assets.openrouter.ai/model-examples/minimax/hailuo-3-max-20260901/99711ffe-c10d-45a0-8ba4-0630dd476e40/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/minimax--hailuo-3-max.webp",
+    "filename": "minimax--hailuo-3-max.webp",
+    "contentType": "image/webp",
+    "bytes": 11432,
+    "sha256": "a205fba0a049ecc3af7918f1c460def410fa614967a4ab478420ec09149e5181"
+  },
+  "alibaba/wan-3.0-prime": {
+    "url": "https://model-assets.openrouter.ai/model-examples/alibaba/wan-3.0-prime-20260827/ad048942-b2b5-4d97-9d16-fb4ee148096d/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/alibaba--wan-3.0-prime.webp",
+    "filename": "alibaba--wan-3.0-prime.webp",
+    "contentType": "image/webp",
+    "bytes": 22210,
+    "sha256": "02fa53ad2c10b5fbf085821ec120121d68b53088cbaa71e7905fdcc9d7336a5a"
+  },
+  "meta/muse-image": {
+    "url": "https://model-assets.openrouter.ai/model-examples/meta/muse-image-1.0-eval-20260824/a45b3b4c-28a1-4bcb-8b57-a90b79e45b36/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/meta--muse-image.webp",
+    "filename": "meta--muse-image.webp",
+    "contentType": "image/webp",
+    "bytes": 33622,
+    "sha256": "618620c1c205d5d2d9ceeb7ab261fae3c2b55deb81d6ce395206fe65a8638b58"
+  },
+  "recraft/recraft-v4-styles-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4-styles-pro-20260826/14d3cf00-a758-4794-8d61-7441e12d80c1/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4-styles-pro.webp",
+    "filename": "recraft--recraft-v4-styles-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 28048,
+    "sha256": "a619276cd1926ca6383102051af37f77264d42f02d85383da5d85d62bcfa05e1"
+  },
+  "recraft/recraft-v4-styles-vector": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4-styles-vector-20260826/997b2894-020d-42db-94b8-0ac213c699db/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4-styles-vector.webp",
+    "filename": "recraft--recraft-v4-styles-vector.webp",
+    "contentType": "image/webp",
+    "bytes": 11660,
+    "sha256": "97f65c79dfb65c5c0b3ae1bfae3181a5a455151d0ae9b0a00995bb132b751068"
+  },
+  "recraft/recraft-v4-styles-pro-vector": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4-styles-pro-vector-20260826/0583d3ae-8b67-4387-97db-5ab97c5bbaf8/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4-styles-pro-vector.webp",
+    "filename": "recraft--recraft-v4-styles-pro-vector.webp",
+    "contentType": "image/webp",
+    "bytes": 22192,
+    "sha256": "36298dad21c6f5bb63c2a317c222663e5b285f433bcd5cd716eaadfae1ed7519"
+  },
+  "recraft/recraft-v4-styles": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4-styles-20260826/11ee693c-5794-414b-b155-1c7d6c4adf80/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4-styles.webp",
+    "filename": "recraft--recraft-v4-styles.webp",
+    "contentType": "image/webp",
+    "bytes": 29154,
+    "sha256": "0d750a9399df601a84a35cf3bc7588db260f450be53f5b2c960698a55b2b34f7"
+  },
+  "alibaba/wan-3.0": {
+    "url": "https://model-assets.openrouter.ai/model-examples/alibaba/wan-3.0-20260824/e4cd78ca-bd9f-4bd4-949d-2e1a129a2b0e/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/alibaba--wan-3.0.webp",
+    "filename": "alibaba--wan-3.0.webp",
+    "contentType": "image/webp",
+    "bytes": 23726,
+    "sha256": "5704c5e1c132bcca3e700aadb67f32c6b8fa8fe6ca7c7717efe43aef7545399d"
+  },
+  "bytedance-seed/seedream-5-0-lite": {
+    "url": "https://model-assets.openrouter.ai/model-examples/bytedance-seed/seedream-5-0-lite-20260812/4932e160-2d76-4d40-88eb-a82527b2b897/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/bytedance-seed--seedream-5-0-lite.webp",
+    "filename": "bytedance-seed--seedream-5-0-lite.webp",
+    "contentType": "image/webp",
+    "bytes": 21716,
+    "sha256": "05adbd16346ef0778280f92370f9b7810eb5c81d5167c7e3cda13ae27130d86f"
+  },
+  "bytedance-seed/seedream-5-0-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/bytedance-seed/seedream-5-0-pro-20260812/36b966fb-e1ff-434a-8539-f969948daf22/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/bytedance-seed--seedream-5-0-pro.webp",
+    "filename": "bytedance-seed--seedream-5-0-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 27492,
+    "sha256": "e47fbc17465d9e52bb5c9c7fea83379a4ccb837c4d4d85ef832c389629bce592"
+  },
+  "bytedance/seedance-2.0-mini": {
+    "url": "https://model-assets.openrouter.ai/model-examples/bytedance/seedance-2.0-mini-20260811/6d70b1b8-3b5f-44c4-9997-dfc4485ffceb/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/bytedance--seedance-2.0-mini.webp",
+    "filename": "bytedance--seedance-2.0-mini.webp",
+    "contentType": "image/webp",
+    "bytes": 16454,
+    "sha256": "8e9c0afcf22aec20d003b6bf4dfd0edb8f2517a814da93344a061a9c17d99634"
+  },
+  "x-ai/grok-imagine-image-2.0": {
+    "url": "https://model-assets.openrouter.ai/model-examples/x-ai/grok-imagine-image-2.0-20260811/f092cc2c-9cf2-4b44-8463-80a5574f4871/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/x-ai--grok-imagine-image-2.0.webp",
+    "filename": "x-ai--grok-imagine-image-2.0.webp",
+    "contentType": "image/webp",
+    "bytes": 27110,
+    "sha256": "37c88ea3746b03dce2be345a90f62ce986c1cdc39acca2475a18c958e9ccb418"
+  },
+  "bytedance/seedance-2.5": {
+    "url": "https://model-assets.openrouter.ai/model-examples/bytedance/seedance-2.5-20260807/bd6114c8-ef63-47e2-9399-d89271243fe4/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/bytedance--seedance-2.5.webp",
+    "filename": "bytedance--seedance-2.5.webp",
+    "contentType": "image/webp",
+    "bytes": 9752,
+    "sha256": "da41ca9807701de635325546f81852acaaa1f8522af8df0b6e771cc0db7d93ca"
+  },
+  "qwen/qwen-image-3": {
+    "url": "https://model-assets.openrouter.ai/model-examples/qwen/qwen-image-3-20260805/42f88ff9-8745-4a0f-95c5-249815de8a72/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/qwen--qwen-image-3.webp",
+    "filename": "qwen--qwen-image-3.webp",
+    "contentType": "image/webp",
+    "bytes": 17944,
+    "sha256": "626eb4b766ded602be158df0f28c2c9a7d9842f93df1f1964baa3c41e4d47872"
+  },
+  "qwen/qwen-image-3-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/qwen/qwen-image-3-pro-20260805/35a61846-824d-49b7-aa38-f6b8104fd32f/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/qwen--qwen-image-3-pro.webp",
+    "filename": "qwen--qwen-image-3-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 18692,
+    "sha256": "821d452b51fb10cbad0e8c773b75608ea7368e607c13e17c21a97789f6acfbfa"
+  },
+  "black-forest-labs/flux-3-video": {
+    "url": "https://model-assets.openrouter.ai/model-examples/black-forest-labs/flux-3-video-20260804/5f94f507-2544-44ba-bf13-0145642c2864/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/black-forest-labs--flux-3-video.webp",
+    "filename": "black-forest-labs--flux-3-video.webp",
+    "contentType": "image/webp",
+    "bytes": 9244,
+    "sha256": "64cfa1357840b2028af7b2fdff30fa0be319673b4fb1a873af7fe0ef672e90a6"
+  },
+  "minimax/hailuo-3": {
+    "url": "https://model-assets.openrouter.ai/model-examples/minimax/hailuo-03-20260730/5ce0cba3-4e7d-49a3-8f69-8d40b7f993bc/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/minimax--hailuo-3.webp",
+    "filename": "minimax--hailuo-3.webp",
+    "contentType": "image/webp",
+    "bytes": 8232,
+    "sha256": "18c280fa4fc17a0e8462cde1bd76de4b09c47611d341e3ba902e64b0399ef753"
+  },
+  "runway/gen-4.5": {
+    "url": "https://model-assets.openrouter.ai/model-examples/runway/gen-4.5-20260729/c6001836-7c46-457e-8de2-0844fb74a88d/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/runway--gen-4.5.webp",
+    "filename": "runway--gen-4.5.webp",
+    "contentType": "image/webp",
+    "bytes": 22274,
+    "sha256": "5031c11ed8e96d0a5e80ac9d7728ea22d2749d25f3fad010f81dd8f421754e93"
+  },
+  "microsoft/mai-image-2.5-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/microsoft/mai-image-2.5-pro-20260723/8d081ac7-ebbb-4ac0-9c63-9a981efe3255/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/microsoft--mai-image-2.5-pro.webp",
+    "filename": "microsoft--mai-image-2.5-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 30610,
+    "sha256": "5d0f220ea32ac7a5a100a9a1933a3396d655240fd242c37823bea73e2c96ad11"
+  },
+  "krea/krea-2-large": {
+    "url": "https://model-assets.openrouter.ai/model-examples/krea/krea-2-large-20260720/3f77a785-77b6-4ccf-82ba-6eb758919cd0/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/krea--krea-2-large.webp",
+    "filename": "krea--krea-2-large.webp",
+    "contentType": "image/webp",
+    "bytes": 26452,
+    "sha256": "db9bc26596713942c883e101ecaa648aa61664fac425a5559bef0420dd367012"
+  },
+  "krea/krea-2-medium": {
+    "url": "https://model-assets.openrouter.ai/model-examples/krea/krea-2-medium-20260720/8cf5c9f9-49ba-49ba-9c2f-42eddd5550c9/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/krea--krea-2-medium.webp",
+    "filename": "krea--krea-2-medium.webp",
+    "contentType": "image/webp",
+    "bytes": 16464,
+    "sha256": "1c161c9ddb5261a510afce5bfb73a1a6ebf0a02cdda6d9f4d9ccf6f63c357844"
+  },
+  "krea/krea-2-medium-turbo": {
+    "url": "https://model-assets.openrouter.ai/model-examples/krea/krea-2-medium-turbo-20260720/0db8c119-6f5b-439b-8c59-6ca9344dbec4/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/krea--krea-2-medium-turbo.webp",
+    "filename": "krea--krea-2-medium-turbo.webp",
+    "contentType": "image/webp",
+    "bytes": 18508,
+    "sha256": "34c16f3842bcb91991e596c918f147b5ffa88ce7c68704427d2b5a0f5bce9eeb"
+  },
+  "x-ai/grok-imagine-video-1.5": {
+    "url": "https://model-assets.openrouter.ai/model-examples/x-ai/grok-imagine-video-1.5-20260719/371b9844-98ed-47a6-8952-336c05bd687a/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/x-ai--grok-imagine-video-1.5.webp",
+    "filename": "x-ai--grok-imagine-video-1.5.webp",
+    "contentType": "image/webp",
+    "bytes": 16880,
+    "sha256": "4e07a0fc7b4fae175356b057aace63debfc517e7a393a08b2a7a41fe18a54195"
+  },
+  "google/gemini-3.1-flash-lite-image": {
+    "url": "https://model-assets.openrouter.ai/model-examples/google/gemini-3.1-flash-lite-image-20260630/7c76aa10-681d-4d0f-a5d5-9bc4c188b096/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/google--gemini-3.1-flash-lite-image.webp",
+    "filename": "google--gemini-3.1-flash-lite-image.webp",
+    "contentType": "image/webp",
+    "bytes": 22116,
+    "sha256": "a94d768e1117db22265eff3ab95620e2dc51a7069085fd148ffcb137ea0d1f74"
+  },
+  "alibaba/happyhorse-1.1": {
+    "url": "https://model-assets.openrouter.ai/model-examples/alibaba/happyhorse-1.1-20260624/60dfc0c2-cbd2-4ba3-a35d-1e2e70305d37/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/alibaba--happyhorse-1.1.webp",
+    "filename": "alibaba--happyhorse-1.1.webp",
+    "contentType": "image/webp",
+    "bytes": 15272,
+    "sha256": "78ad69d4b0dc2c756e72d3c210b2c3f7d702b25a0ab6cdc1c4669f73f06c103e"
+  },
+  "openai/gpt-image-2": {
+    "url": "https://model-assets.openrouter.ai/model-examples/openai/gpt-image-2/a5e8605c-e799-4bfa-811b-3afb065e0350/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/openai--gpt-image-2.webp",
+    "filename": "openai--gpt-image-2.webp",
+    "contentType": "image/webp",
+    "bytes": 27088,
+    "sha256": "877a6009c93cc0daaf7f46a273610c51a6a5e4dc89870d215e4f68324f728d08"
+  },
+  "openai/gpt-image-1": {
+    "url": "https://model-assets.openrouter.ai/model-examples/openai/gpt-image-1/3377eebb-7b3e-46ed-a892-0e666801a4ed/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/openai--gpt-image-1.webp",
+    "filename": "openai--gpt-image-1.webp",
+    "contentType": "image/webp",
+    "bytes": 12510,
+    "sha256": "71dd4c1d9faf9c5f4eaa68cfd5d95899f1a13eaf82bea04128d1c725b7465d10"
+  },
+  "openai/gpt-image-1-mini": {
+    "url": "https://model-assets.openrouter.ai/model-examples/openai/gpt-image-1-mini/dd703cae-7186-4d1f-8f89-63329694e2fc/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/openai--gpt-image-1-mini.webp",
+    "filename": "openai--gpt-image-1-mini.webp",
+    "contentType": "image/webp",
+    "bytes": 11588,
+    "sha256": "5f15ba27622caaf410923da4507238d8d421ce6795421b126551c6b65e200669"
+  },
+  "alibaba/happyhorse-1.0": {
+    "url": "https://model-assets.openrouter.ai/model-examples/alibaba/happyhorse-1.0-20260624/54a4dcd6-0038-489a-ab96-2bcdffa2677e/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/alibaba--happyhorse-1.0.webp",
+    "filename": "alibaba--happyhorse-1.0.webp",
+    "contentType": "image/webp",
+    "bytes": 20640,
+    "sha256": "10ceede02ac196fe7110ea36d2cad255325f33ac766f0bde93e3413021e08ac9"
+  },
+  "google/gemini-3.1-flash-image": {
+    "url": "https://model-assets.openrouter.ai/model-examples/google/gemini-3.1-flash-image-20260528/eb1b93d2-f9c1-4650-92ba-2b4b1d080c20/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/google--gemini-3.1-flash-image.webp",
+    "filename": "google--gemini-3.1-flash-image.webp",
+    "contentType": "image/webp",
+    "bytes": 27206,
+    "sha256": "b8e6cac12db806509ab43406e0390745b4edb8b78b50048420dbc4df5e4c9da3"
+  },
+  "google/gemini-3-pro-image": {
+    "url": "https://model-assets.openrouter.ai/model-examples/google/gemini-3-pro-image-20260528/10c0f842-826c-49e7-a00e-0eab9e11b14d/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/google--gemini-3-pro-image.webp",
+    "filename": "google--gemini-3-pro-image.webp",
+    "contentType": "image/webp",
+    "bytes": 20998,
+    "sha256": "920f07f38286f859aef4dc723dcd4ba7a7cb853525368fd53a0fb85c751d11f4"
+  },
+  "sourceful/riverflow-v2.5-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/sourceful/riverflow-v2.5-pro-20260605/3208af56-cc2d-411c-8534-4bee15de749e/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/sourceful--riverflow-v2.5-pro.webp",
+    "filename": "sourceful--riverflow-v2.5-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 26964,
+    "sha256": "0527ca6e712c80eefe781865e313d802c232027dba97c161b0102b98aec9df76"
+  },
+  "sourceful/riverflow-v2.5-fast": {
+    "url": "https://model-assets.openrouter.ai/model-examples/sourceful/riverflow-v2.5-fast-20260605/9de35138-4f05-4895-9caf-7017aac98c13/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/sourceful--riverflow-v2.5-fast.webp",
+    "filename": "sourceful--riverflow-v2.5-fast.webp",
+    "contentType": "image/webp",
+    "bytes": 20834,
+    "sha256": "aed014bad5a9ec093735cbaa9d9737d7ef215a3f6df182807c38cbf6f9d7a4ee"
+  },
+  "microsoft/mai-image-2.5": {
+    "url": "https://model-assets.openrouter.ai/model-examples/microsoft/mai-image-2.5/d74e1d36-4cfa-42cb-9381-abcad58703df/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/microsoft--mai-image-2.5.webp",
+    "filename": "microsoft--mai-image-2.5.webp",
+    "contentType": "image/webp",
+    "bytes": 22700,
+    "sha256": "5479d92ab2a1b5e2ea18a95bbc6369d932c7fbd9c3aa11963be4fc94d403ef08"
+  },
+  "x-ai/grok-imagine-video": {
+    "url": "https://model-assets.openrouter.ai/model-examples/x-ai/grok-imagine-video-20260512/51a366fb-7886-45ca-872a-9733dfed1aae/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/x-ai--grok-imagine-video.webp",
+    "filename": "x-ai--grok-imagine-video.webp",
+    "contentType": "image/webp",
+    "bytes": 17920,
+    "sha256": "b96b79741240e0e62e70528bfe9a8e27334e1ec1392ea334f54a4e4f5153af9b"
+  },
+  "x-ai/grok-imagine-image-quality": {
+    "url": "https://model-assets.openrouter.ai/model-examples/x-ai/grok-imagine-image-quality-20260512/bc320baa-571c-4a10-b01b-cff6c3a6ad90/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/x-ai--grok-imagine-image-quality.webp",
+    "filename": "x-ai--grok-imagine-image-quality.webp",
+    "contentType": "image/webp",
+    "bytes": 20760,
+    "sha256": "3c8f7d88dfdee74c85ffefa797b5bb6c2b883f12757fcbae3a0af510a93063a0"
+  },
+  "recraft/recraft-v4.1-pro-vector": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4.1-pro-vector-20260514/34eada20-9be2-44bc-acc4-a43695c47875/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4.1-pro-vector.webp",
+    "filename": "recraft--recraft-v4.1-pro-vector.webp",
+    "contentType": "image/webp",
+    "bytes": 32740,
+    "sha256": "6b26105dfa7443ba9f167960da5ef1c3fca4002fa4fad1c4a1ec12b47f3ee941"
+  },
+  "recraft/recraft-v4.1-vector": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4.1-vector-20260514/a7cb9166-5787-48a0-afa7-b41b0243e0d2/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4.1-vector.webp",
+    "filename": "recraft--recraft-v4.1-vector.webp",
+    "contentType": "image/webp",
+    "bytes": 17470,
+    "sha256": "a048535296a0c29faa6e879590dd933a365ffa0bc558fcba0580016ed85c8fae"
+  },
+  "recraft/recraft-v4.1-utility-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4.1-utility-pro-20260514/720f4e7b-5a2e-4e93-ab59-42c5c090a3b2/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4.1-utility-pro.webp",
+    "filename": "recraft--recraft-v4.1-utility-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 43336,
+    "sha256": "9723bd515583e0999c16496024b1b0ddc597fee469a903587d321c9f81ab5269"
+  },
+  "recraft/recraft-v4.1-utility": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4.1-utility-20260514/c240aac9-94a6-4e5a-b625-59fda519e288/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4.1-utility.webp",
+    "filename": "recraft--recraft-v4.1-utility.webp",
+    "contentType": "image/webp",
+    "bytes": 32954,
+    "sha256": "e86dad25e5f43cb8d5976be454381d712969b5ecdbcc25210a83950d754fc57a"
+  },
+  "recraft/recraft-v4.1-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4.1-pro-20260514/ec07a3b9-6e94-4158-a430-1185131ee5a5/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4.1-pro.webp",
+    "filename": "recraft--recraft-v4.1-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 21392,
+    "sha256": "cd9ecba31c50814dde17561816651d3d81ae7b259e8439b11a5bd039426cdc9e"
+  },
+  "recraft/recraft-v4.1": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4.1-20260514/74ec986c-7432-4daf-ab8d-1a5f797a7ceb/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4.1.webp",
+    "filename": "recraft--recraft-v4.1.webp",
+    "contentType": "image/webp",
+    "bytes": 23606,
+    "sha256": "30751396f3fd466cae924c5871e341c72b306628ad6d79de972eb36b77b9b2fb"
+  },
+  "recraft/recraft-v4-pro-vector": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4-pro-vector-20260514/ff8f7e6d-47db-4db8-9558-30c52728ecd5/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4-pro-vector.webp",
+    "filename": "recraft--recraft-v4-pro-vector.webp",
+    "contentType": "image/webp",
+    "bytes": 11676,
+    "sha256": "7f7abda7d506813ed43abdd4fac59de3a507e38ef019d75ce88c0ba114b57bc9"
+  },
+  "recraft/recraft-v4-vector": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4-vector-20260514/7ae47249-8f6a-49c8-b49a-f5f6d1e6ff60/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4-vector.webp",
+    "filename": "recraft--recraft-v4-vector.webp",
+    "contentType": "image/webp",
+    "bytes": 20876,
+    "sha256": "39d3544d00afc8c81280e62c46daf71c2ed995c3d9d9c4db92092f9f0989002f"
+  },
+  "recraft/recraft-v4-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4-pro-20260413/943e4831-ca4c-4411-9315-45ac22b34c76/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4-pro.webp",
+    "filename": "recraft--recraft-v4-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 29866,
+    "sha256": "af2d327a6670b463cf67b13d6a3ee072979e397d6f0278e1ad3731c6e0c9bf2f"
+  },
+  "recraft/recraft-v4": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v4-20260413/0d71313b-ed2b-4ed5-854e-78481f1edd2f/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v4.webp",
+    "filename": "recraft--recraft-v4.webp",
+    "contentType": "image/webp",
+    "bytes": 30454,
+    "sha256": "ba1c9c27a900795f15512cbb2f5b1c7ed0b0a347631396be7212693a23ecbf37"
+  },
+  "recraft/recraft-v3": {
+    "url": "https://model-assets.openrouter.ai/model-examples/recraft/recraft-v3-20260413/17641e90-eb13-4e23-8116-4ca88c29c999/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/recraft--recraft-v3.webp",
+    "filename": "recraft--recraft-v3.webp",
+    "contentType": "image/webp",
+    "bytes": 28510,
+    "sha256": "2b05d847a4d9b3b65e64c029505a199656329cb98bf9b58672dcac0c67eca09f"
+  },
+  "kwaivgi/kling-v3.0-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/kwaivgi/kling-v3.0-pro-20260429/a8d09fcd-6a84-45fb-8f7c-7f2dab42a41c/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/kwaivgi--kling-v3.0-pro.webp",
+    "filename": "kwaivgi--kling-v3.0-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 14130,
+    "sha256": "0f4a07ba8f476ba3ed35cd3f3b6ef15c068cc2ef8200ec076bafe268592852b7"
+  },
+  "kwaivgi/kling-v3.0-std": {
+    "url": "https://model-assets.openrouter.ai/model-examples/kwaivgi/kling-v3.0-std-20260429/c460b607-f99d-40dd-b198-2cca8a817a4f/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/kwaivgi--kling-v3.0-std.webp",
+    "filename": "kwaivgi--kling-v3.0-std.webp",
+    "contentType": "image/webp",
+    "bytes": 11870,
+    "sha256": "e246ecedb7179c89b920e3d18e3deb6a900313e919cb9c9f688d0ff441ff34d5"
+  },
+  "google/veo-3.1-fast": {
+    "url": "https://model-assets.openrouter.ai/model-examples/google/veo-3.1-fast-20260320/44c93819-29e1-4b22-8039-79e73429c79e/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/google--veo-3.1-fast.webp",
+    "filename": "google--veo-3.1-fast.webp",
+    "contentType": "image/webp",
+    "bytes": 31258,
+    "sha256": "1d9611607b374e64ff50626516ead6181379a9679180ad51eb181314aee6d037"
+  },
+  "google/veo-3.1-lite": {
+    "url": "https://model-assets.openrouter.ai/model-examples/google/veo-3.1-lite-20260331/7017a30e-cdec-442b-8fd8-07a28cd669e7/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/google--veo-3.1-lite.webp",
+    "filename": "google--veo-3.1-lite.webp",
+    "contentType": "image/webp",
+    "bytes": 30542,
+    "sha256": "1eade9967b93e19178f9a9061914beb96c2549bc9f85b0f610cde9b19d67517d"
+  },
+  "openai/gpt-5.4-image-2": {
+    "url": "https://model-assets.openrouter.ai/model-examples/openai/gpt-5.4-image-2-20260421/b3a54e22-0d35-4269-b3df-cee5ec2af28f/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/openai--gpt-5.4-image-2.webp",
+    "filename": "openai--gpt-5.4-image-2.webp",
+    "contentType": "image/webp",
+    "bytes": 27022,
+    "sha256": "fced3def8cd6d4e57907532c528915aa513ec62adcbf9167a6e0fb1629e16db8"
+  },
+  "kwaivgi/kling-video-o1": {
+    "url": "https://model-assets.openrouter.ai/model-examples/kwaivgi/kling-video-o1-20260420/fd4d865a-2cf3-43b2-80d0-e6b76a2d89d9/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/kwaivgi--kling-video-o1.webp",
+    "filename": "kwaivgi--kling-video-o1.webp",
+    "contentType": "image/webp",
+    "bytes": 15426,
+    "sha256": "1a44002b7d0ee6d809495f0be554e5e35b8f4c17d30392e541c9b88d9340a5ec"
+  },
+  "minimax/hailuo-2.3": {
+    "url": "https://model-assets.openrouter.ai/model-examples/minimax/hailuo-2.3-20260420/2c2cca54-c923-40c7-9339-5516ef02e9c8/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/minimax--hailuo-2.3.webp",
+    "filename": "minimax--hailuo-2.3.webp",
+    "contentType": "image/webp",
+    "bytes": 11964,
+    "sha256": "7233771658576ef6772c770ec74c00b549575d9c5db744e28ffc2eb3b4997e4b"
+  },
+  "alibaba/wan-2.7": {
+    "url": "https://model-assets.openrouter.ai/model-examples/alibaba/wan-2.7-20260414/f248d843-3bc8-44c1-943f-333104a8470e/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/alibaba--wan-2.7.webp",
+    "filename": "alibaba--wan-2.7.webp",
+    "contentType": "image/webp",
+    "bytes": 16062,
+    "sha256": "2c38934dee5217786853cf6a7c7d33661bb1c1bf653c3b033f5b009700edd961"
+  },
+  "bytedance/seedance-2.0": {
+    "url": "https://model-assets.openrouter.ai/model-examples/bytedance/seedance-2.0-20260414/1e766b93-d558-46c2-adfb-11d1aaf0c36f/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/bytedance--seedance-2.0.webp",
+    "filename": "bytedance--seedance-2.0.webp",
+    "contentType": "image/webp",
+    "bytes": 9338,
+    "sha256": "fdd90f8bd5d6963cc52e809fff5471c7e1c71c0b0cf76c8cb194d3f908cdba6a"
+  },
+  "openai/sora-2-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/openai/sora-2-pro-20260320/46974e67-b643-4001-96d6-a0ba60dc378b/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/openai--sora-2-pro.webp",
+    "filename": "openai--sora-2-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 30630,
+    "sha256": "5f6b058c12274b59e3a6dead6d8fc863805f5d6e23e95fa76d6e8c3745c87afb"
+  },
+  "google/veo-3.1": {
+    "url": "https://model-assets.openrouter.ai/model-examples/google/veo-3.1-20260320/b38b5b13-a9f2-4492-a4c9-b0eee9393b0c/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/google--veo-3.1.webp",
+    "filename": "google--veo-3.1.webp",
+    "contentType": "image/webp",
+    "bytes": 29910,
+    "sha256": "76d8f595cbdafe2bff575a9466e0f591a2286f115349ee1697a35e859c34b1c4"
+  },
+  "google/gemini-3.1-flash-image-preview": {
+    "url": "https://model-assets.openrouter.ai/model-examples/google/gemini-3.1-flash-image-preview-20260226/ce91d0e2-9d8b-4242-bc3b-01a200506afb/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/google--gemini-3.1-flash-image-preview.webp",
+    "filename": "google--gemini-3.1-flash-image-preview.webp",
+    "contentType": "image/webp",
+    "bytes": 30324,
+    "sha256": "94ca615b1e1f5c3ea440f4d0b9428f7fadedb36edfb0af8371dca06f898f415c"
+  },
+  "sourceful/riverflow-v2-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/sourceful/riverflow-v2-pro-20260130/ede66e11-50b4-4cba-a7ff-7ba7cca6ea37/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/sourceful--riverflow-v2-pro.webp",
+    "filename": "sourceful--riverflow-v2-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 27202,
+    "sha256": "7e6328b9b49fc8a07774a01e99f448b19861f1ec7b9796fcc24d1dcba35c0924"
+  },
+  "sourceful/riverflow-v2-fast": {
+    "url": "https://model-assets.openrouter.ai/model-examples/sourceful/riverflow-v2-fast-20260130/3aabd03a-4c07-44c3-b7c7-66f44306b8ed/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/sourceful--riverflow-v2-fast.webp",
+    "filename": "sourceful--riverflow-v2-fast.webp",
+    "contentType": "image/webp",
+    "bytes": 21314,
+    "sha256": "2180a4b5bff3d159dca661f22d485081025389d6e4070aaf43299534fa63855b"
+  },
+  "black-forest-labs/flux.2-klein-4b": {
+    "url": "https://model-assets.openrouter.ai/model-examples/black-forest-labs/flux.2-klein-4b/b43a291e-f1a6-436e-9434-c61af7e31d7d/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/black-forest-labs--flux.2-klein-4b.webp",
+    "filename": "black-forest-labs--flux.2-klein-4b.webp",
+    "contentType": "image/webp",
+    "bytes": 28148,
+    "sha256": "bd2c0b88716f1c185ea66523c1bd79031cb141e40492b089da94eb224499faf4"
+  },
+  "bytedance-seed/seedream-4.5": {
+    "url": "https://model-assets.openrouter.ai/model-examples/bytedance-seed/seedream-4.5-20251203/d8cd2dd8-a6da-4b88-8033-4d530482f983/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/bytedance-seed--seedream-4.5.webp",
+    "filename": "bytedance-seed--seedream-4.5.webp",
+    "contentType": "image/webp",
+    "bytes": 18796,
+    "sha256": "27ccf11814c20c2740332beeede1ccc28ca7e5866d6759d5e7f54488b85195a4"
+  },
+  "black-forest-labs/flux.2-max": {
+    "url": "https://model-assets.openrouter.ai/model-examples/black-forest-labs/flux.2-max/63bf8e56-ac94-41c9-8f33-dde05adbed5e/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/black-forest-labs--flux.2-max.webp",
+    "filename": "black-forest-labs--flux.2-max.webp",
+    "contentType": "image/webp",
+    "bytes": 21204,
+    "sha256": "0cb9ada467b4480942c03ac3cad289e12775f5bd60585195911d00869743b7de"
+  },
+  "black-forest-labs/flux.2-flex": {
+    "url": "https://model-assets.openrouter.ai/model-examples/black-forest-labs/flux.2-flex/c795ffed-e7c5-4f07-94d6-d0d25402efb3/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/black-forest-labs--flux.2-flex.webp",
+    "filename": "black-forest-labs--flux.2-flex.webp",
+    "contentType": "image/webp",
+    "bytes": 23720,
+    "sha256": "edb5160a8c8fd8f6cc08ff5908e613923743561334874126a8134623742c966d"
+  },
+  "black-forest-labs/flux.2-pro": {
+    "url": "https://model-assets.openrouter.ai/model-examples/black-forest-labs/flux.2-pro/b97f6462-2311-44ca-b2fc-16fb10fc3bba/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/black-forest-labs--flux.2-pro.webp",
+    "filename": "black-forest-labs--flux.2-pro.webp",
+    "contentType": "image/webp",
+    "bytes": 24656,
+    "sha256": "a59f959ce4b9deac1b172bbd6a9abf4f71cd0728658e79a71668a196b81be379"
+  },
+  "google/gemini-3-pro-image-preview": {
+    "url": "https://model-assets.openrouter.ai/model-examples/google/gemini-3-pro-image-preview-20251120/22a29428-074d-4a75-acaf-bc50051bcaa4/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/google--gemini-3-pro-image-preview.webp",
+    "filename": "google--gemini-3-pro-image-preview.webp",
+    "contentType": "image/webp",
+    "bytes": 20022,
+    "sha256": "82d51f94119b340b631278eb4f4d2684abcc7a587f32c6f827b0b8811b77b3d1"
+  },
+  "openai/gpt-5-image-mini": {
+    "url": "https://model-assets.openrouter.ai/model-examples/openai/gpt-5-image-mini/27cfc306-9f9c-4368-9ff7-cd2e4291a9c7/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/openai--gpt-5-image-mini.webp",
+    "filename": "openai--gpt-5-image-mini.webp",
+    "contentType": "image/webp",
+    "bytes": 12846,
+    "sha256": "ab3aa0d6d069675192ed5c67cf30e5e5e68c4ee16104df6349cc3657fb514307"
+  },
+  "openai/gpt-5-image": {
+    "url": "https://model-assets.openrouter.ai/model-examples/openai/gpt-5-image/e1e250ca-4a7d-4928-ae8e-1920360ec354/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/openai--gpt-5-image.webp",
+    "filename": "openai--gpt-5-image.webp",
+    "contentType": "image/webp",
+    "bytes": 13674,
+    "sha256": "c94816c086a4a75bba25b783b7aa34d636d97a92b7231190bcee0cda386c0fa2"
+  },
+  "google/gemini-2.5-flash-image": {
+    "url": "https://model-assets.openrouter.ai/model-examples/google/gemini-2.5-flash-image/90e14706-8f92-496b-a6e6-bd81e95001f5/thumb-0.webp",
+    "local": "/workspace/scratch/ae455ebf3a30/catalog-audit/model-previews/google--gemini-2.5-flash-image.webp",
+    "filename": "google--gemini-2.5-flash-image.webp",
+    "contentType": "image/webp",
+    "bytes": 21690,
+    "sha256": "2fc1aae7ac6d46f77d49c7da2fce50bcba496a5a1b5c67e42508539332871357"
+  }
+}

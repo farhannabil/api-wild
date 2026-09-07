@@ -1,0 +1,3 @@
+import {database} from '@/db/service';
+export async function hashKey(value:string){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))].map(x=>x.toString(16).padStart(2,'0')).join('');}
+export async function keyIdentity(request:Request){const token=request.headers.get('authorization')?.match(/^Bearer (lx_[a-f0-9]{64})$/)?.[1];if(!token)return null;const now=new Date().toISOString();const row=await database().prepare("UPDATE api_keys SET last_used_at=? WHERE hash=? AND scope='read' AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>?) RETURNING id,user_id").bind(now,await hashKey(token),now).first<{id:string;user_id:string}>();return row?{id:row.user_id,keyId:row.id}:null;}

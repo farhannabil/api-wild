@@ -1,0 +1,14 @@
+A NEW API KEY WAS CREATED.
+
+An API key was created for your account. The full key is shown only once in your dashboard and is never included in email.
+
+Key name: {{key_name}}
+Key prefix: {{key_prefix}}
+Expires: {{expires_at}}
+
+Open API keys: https://apiwild.com/console/keys
+
+If you did not create this key, revoke it in your dashboard and contact support immediately.
+
+API WILD
+Support: support@apiwild.com

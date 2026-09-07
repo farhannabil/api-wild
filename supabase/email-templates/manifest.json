@@ -1,0 +1,57 @@
+[
+  {
+    "file": "confirmation.html",
+    "subject": "Confirm your API WILD email",
+    "type": "signup",
+    "provider_applied": true,
+    "verification": "Saved through Supabase dashboard; preview contains exactly one branded heading."
+  },
+  {
+    "file": "recovery.html",
+    "subject": "Reset your API WILD password",
+    "type": "recovery",
+    "provider_applied": true,
+    "verification": "Saved through Supabase dashboard; preview contains exactly one branded heading."
+  },
+  {
+    "file": "magic-link.html",
+    "subject": "Your API WILD sign-in link",
+    "type": "magiclink",
+    "provider_applied": true,
+    "verification": "Saved through Supabase dashboard; preview contains exactly one branded heading."
+  },
+  {
+    "file": "invite.html",
+    "subject": "You\u2019re invited to API WILD",
+    "type": "invite",
+    "provider_applied": true,
+    "verification": "Saved through Supabase dashboard; preview contains exactly one branded heading."
+  },
+  {
+    "file": "email-change.html",
+    "subject": "Confirm your API WILD email change",
+    "type": "email_change",
+    "provider_applied": true,
+    "verification": "Saved through Supabase dashboard; preview contains exactly one branded heading."
+  },
+  {
+    "file": "reauthentication.html",
+    "subject": "Your API WILD verification code",
+    "provider_applied": true,
+    "verification": "Saved through Supabase dashboard; preview contains exactly one branded heading."
+  },
+  {
+    "file": "password-changed.html",
+    "subject": "Your API WILD password was changed",
+    "provider_applied": true,
+    "verification": "Saved through Supabase dashboard; preview contains exactly one branded heading.",
+    "notification_enabled": true
+  },
+  {
+    "file": "email-changed.html",
+    "subject": "Your API WILD email address was changed",
+    "provider_applied": true,
+    "verification": "Saved through Supabase dashboard; preview contains exactly one branded heading.",
+    "notification_enabled": true
+  }
+]

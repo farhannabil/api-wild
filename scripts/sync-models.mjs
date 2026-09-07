@@ -1,0 +1,11 @@
+import {writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+const source='https://openrouter.ai/api/v1/models';
+const response=await fetch(source,{signal:AbortSignal.timeout(20000)});
+if(!response.ok)throw Error(`Catalog fetch failed: ${response.status}`);
+const raw=await response.json();
+if(!Array.isArray(raw.data)||raw.data.length<1||raw.links?.next)throw Error('Catalog is empty or incomplete; preserve previous snapshot.');
+const models=raw.data.map(m=>({id:m.id,name:m.name,provider:m.id.split('/')[0],context:m.context_length||0,input:m.architecture?.input_modalities||[],output:m.architecture?.output_modalities||[],parameters:m.supported_parameters||[],pricing:{input:m.pricing?.prompt??null,output:m.pricing?.completion??null},created:m.created}));
+const snapshot={source,fetchedAt:new Date().toISOString(),sourceHash:createHash('sha256').update(JSON.stringify(raw)).digest('hex'),count:models.length,models};
+await writeFile(new URL('../data/models.json',import.meta.url),JSON.stringify(snapshot));
+console.log(`Saved ${models.length} catalog models.`);

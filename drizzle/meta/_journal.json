@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1788684675976,
+      "tag": "0000_material_skrulls",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788701278809,
+      "tag": "0001_overrated_ultimo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788769553933,
+      "tag": "0002_careful_medusa",
+      "breakpoints": true
+    }
+  ]
+}

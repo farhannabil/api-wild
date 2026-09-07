@@ -1,0 +1,16 @@
+/* Preserved from supplied Deal Desk offline template. */
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:#07080d;}
+  ::selection{background:rgba(92,217,255,0.25);color:#fff;}
+  @keyframes spotIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  @keyframes ringspin{to{transform:rotate(360deg);}}
+  @keyframes glowIn{from{opacity:0;transform:translateY(36px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes ringspinRev{to{transform:rotate(-360deg);}}
+  @keyframes corePulse{0%,100%{transform:scale(1);opacity:0.85;}50%{transform:scale(1.14);opacity:1;}}
+  ::-webkit-scrollbar{width:9px;}
+  ::-webkit-scrollbar-track{background:#07080d;}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:10px;}

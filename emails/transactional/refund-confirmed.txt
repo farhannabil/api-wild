@@ -1,0 +1,16 @@
+API WILD
+
+Your refund was processed.
+
+A refund for {{product_name}} has been processed to the original payment method.
+
+Order: {{order_id}}
+Refunded: {{refund_amount}}
+Refund reference: {{refund_id}}
+
+View refund details: {{receipt_url}}
+
+Your bank determines when the refund appears. This email does not promise a settlement date.
+
+API WILD Support
+support@apiwild.com

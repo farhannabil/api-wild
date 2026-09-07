@@ -1,0 +1,15 @@
+API WILD
+
+We received your message.
+
+Your support request has been recorded. Reply to this email to add information.
+
+Request: {{ticket_id}}
+Subject: {{ticket_subject}}
+
+View API WILD: https://apiwild.com
+
+Please do not send passwords, API keys, payment card details, or private customer data.
+
+API WILD Support
+support@apiwild.com

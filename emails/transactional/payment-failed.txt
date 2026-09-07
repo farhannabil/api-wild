@@ -1,0 +1,15 @@
+API WILD
+
+Your payment did not complete.
+
+We could not complete the payment for {{product_name}}. Open billing to review the order and choose how to continue.
+
+Order: {{order_id}}
+Attempted amount: {{attempted_amount}}
+
+Review billing: https://apiwild.com/console/billing
+
+If your bank shows a pending authorization, contact your bank for its release timing.
+
+API WILD Support
+support@apiwild.com

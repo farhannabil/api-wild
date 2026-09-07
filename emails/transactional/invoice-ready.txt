@@ -1,0 +1,16 @@
+API WILD
+
+Your paid invoice is ready.
+
+Your invoice for {{product_name}} is available to view and download.
+
+Invoice: {{invoice_number}}
+Paid: {{paid_amount}}
+Date: {{paid_at}}
+
+View paid invoice: {{invoice_url}}
+
+Keep this invoice for your records. Contact support if your billing details need attention.
+
+API WILD Support
+support@apiwild.com

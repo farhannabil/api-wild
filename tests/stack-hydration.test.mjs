@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const source=readFileSync(new URL('../public/workspace/account-persistence.js',import.meta.url),'utf8');
+test('stack saves wait for successful hydration, including failure and retry',async()=>{
+ const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{disabled:id==='#save-account-stack',hidden:false,textContent:'',handlers:{},addEventListener(event,fn){this.handlers[event]=fn;}});return nodes.get(id);};
+ const requests=[];let settle;const state={stack:new Set()};let renders=0;
+ const sandbox={document:{querySelector:node},state,catalog:[{id:'fast'}],renderStack:()=>renders++,toast:()=>{},crypto,FormData,fetch:(url,options)=>{requests.push({url,options});return new Promise(resolve=>settle=resolve);}};
+ vm.runInNewContext(source,sandbox);
+ const button=node('#save-account-stack');assert.equal(button.disabled,true);
+ await button.handlers.click({currentTarget:button});assert.equal(requests.length,1);
+ settle({ok:false,json:async()=>({error:'Temporary failure'})});await new Promise(setImmediate);
+ assert.equal(button.disabled,true);assert.equal(node('#retry-account-load').hidden,false);
+ await button.handlers.click({currentTarget:button});assert.equal(requests.length,1);
+ const retry=node('#retry-account-load').handlers.click();
+ settle({ok:true,json:async()=>({profile:{stack:'["fast"]'}})});await retry;
+ assert.equal(button.disabled,false);assert.equal(state.stack.has('fast'),true);assert.equal(renders,1);
+ const saving=button.handlers.click({currentTarget:button});assert.equal(JSON.parse(requests[2].options.body).stack[0],'fast');
+ settle({ok:true,json:async()=>({ok:true})});await saving;
+});

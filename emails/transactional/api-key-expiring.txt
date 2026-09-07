@@ -1,0 +1,14 @@
+YOUR API KEY IS EXPIRING.
+
+One of your API keys will expire soon. Create a replacement before it expires if you still need it.
+
+Key name: {{key_name}}
+Key prefix: {{key_prefix}}
+Expires: {{expires_at}}
+
+Manage API keys: https://apiwild.com/console/keys
+
+For security, API WILD never includes the full API key in email.
+
+API WILD
+Support: support@apiwild.com

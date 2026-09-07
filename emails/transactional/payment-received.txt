@@ -1,0 +1,16 @@
+API WILD
+
+Payment received.
+
+We received your payment for {{product_name}}. Your payment details are below.
+
+Order: {{order_id}}
+Paid: {{paid_amount}}
+Date: {{paid_at}}
+
+View payment receipt: {{receipt_url}}
+
+Payment confirmation does not mean an API service is provisioned. Your dashboard shows its current status.
+
+API WILD Support
+support@apiwild.com

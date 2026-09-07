@@ -1,0 +1,14 @@
+AN API KEY WAS REVOKED.
+
+An API key was revoked for your account and can no longer access API WILD.
+
+Key name: {{key_name}}
+Key prefix: {{key_prefix}}
+Revoked: {{revoked_at}}
+
+Review API keys: https://apiwild.com/console/keys
+
+If you did not revoke this key, review your account and contact support.
+
+API WILD
+Support: support@apiwild.com
