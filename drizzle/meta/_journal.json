@@ -22,6 +22,27 @@
       "when": 1788769553933,
       "tag": "0002_careful_medusa",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1788881301573,
+      "tag": "0003_fair_shinko_yamashiro",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1788882142699,
+      "tag": "0004_shallow_warlock",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1788882431165,
+      "tag": "0005_harsh_spitfire",
+      "breakpoints": true
     }
   ]
 }

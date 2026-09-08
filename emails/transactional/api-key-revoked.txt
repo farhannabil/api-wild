@@ -6,7 +6,7 @@ Key name: {{key_name}}
 Key prefix: {{key_prefix}}
 Revoked: {{revoked_at}}
 
-Review API keys: https://apiwild.com/console/keys
+Review API keys: https://apiwild.com/console/api-keys
 
 If you did not revoke this key, review your account and contact support.
 

@@ -6,7 +6,7 @@ Your email address is confirmed. Open your dashboard to finish setting up your a
 
 
 
-Open your dashboard: https://apiwild.com/console
+Open your dashboard: https://apiwild.com/onboarding
 
 Creating an account does not create a paid order or activate an API service.
 
