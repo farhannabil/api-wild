@@ -118,11 +118,16 @@ test('taxed partial/full refunds reverse only credits and cannot regress on old 
  const refund=amount=>({has_more:false,data:[{id:'re_fixture',status:'succeeded',amount,currency:'usd'}]});
  a.setSession(refund(1100));await b.reconcileRefund({payment_intent:'pi_fixture123'});await b.reconcileRefund({payment_intent:'pi_fixture123'});
  assert.equal(a.sql.prepare('SELECT SUM(amount_cents) n FROM credit_ledger').get().n,1500);
+ a.setSession({...f.s,amount_subtotal:2500,amount_total:2750,total_details:{amount_tax:250,amount_discount:0}});
+ assert.equal((await b.reconcileSession(f.sessionId)).status,'partially_refunded');
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM credit_ledger').get().n,2);
  a.setSession(refund(2750));await b.reconcileRefund({payment_intent:'pi_fixture123'});
  a.setSession(refund(1100));await b.reconcileRefund({payment_intent:'pi_fixture123'});
  assert.equal(a.sql.prepare('SELECT SUM(amount_cents) n FROM credit_ledger').get().n,0);
  assert.equal(a.sql.prepare('SELECT status FROM billing_orders').get().status,'refunded');
- a.setSession({...f.s,amount_subtotal:2500,amount_total:2750,total_details:{amount_tax:250,amount_discount:0}});await b.reconcileSession(f.sessionId);
+ a.setSession({...f.s,amount_subtotal:2500,amount_total:2750,total_details:{amount_tax:250,amount_discount:0}});
+ assert.equal((await b.reconcileSession(f.sessionId)).status,'refunded');
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM credit_ledger').get().n,3);
  assert.equal(a.sql.prepare('SELECT status FROM billing_orders').get().status,'refunded');
 });
 
@@ -134,4 +139,121 @@ test('dispute holds are bounded by unrefunded credits and terminal win cannot be
  assert.equal(await b.billingHold('fixture-a'),1500);
  a.setSession({...d,status:'won'});await b.reconcileDispute(d.id);assert.equal(await b.billingHold('fixture-a'),0);
  a.setSession(d);await b.reconcileDispute(d.id);assert.equal(await b.billingHold('fixture-a'),0);
+});
+
+test('terminal async failure records once without credits; abandonment is expired and late failure cannot undo payment',async()=>{
+ const config={STRIPE_SECRET_KEY:'sk_test_fixture',STRIPE_WEBHOOK_SECRET:'whsec_fixture'};
+ const a=setup(config),f=paidFixture(a),route=a.load('app/api/billing/webhook/route.ts');
+ const event={id:'evt_terminalfailure',type:'checkout.session.async_payment_failed',livemode:false,data:{object:f.s}};
+ a.setSession({...f.s,payment_status:'unpaid'});
+ for(let i=0;i<2;i++)assert.equal((await route.POST(await signedEvent(event))).status,200);
+ assert.equal(a.sql.prepare('SELECT status FROM billing_orders').get().status,'failed');
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM credit_ledger').get().n,0);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM billing_events').get().n,1);
+ const abandoned=setup(config),g=paidFixture(abandoned);
+ abandoned.setSession({...g.s,status:'expired',payment_status:'unpaid'});
+ assert.equal((await abandoned.load('app/api/billing/webhook/route.ts').POST(await signedEvent({...event,id:'evt_abandoned',type:'checkout.session.expired',data:{object:g.s}}))).status,200);
+ assert.equal(abandoned.sql.prepare('SELECT status FROM billing_orders').get().status,'expired');
+ assert.equal(abandoned.sql.prepare('SELECT COUNT(*) n FROM credit_ledger').get().n,0);
+ const paid=setup(config),h=paidFixture(paid);
+ assert.equal((await paid.load('app/api/billing/webhook/route.ts').POST(await signedEvent({...event,id:'evt_latefailure',data:{object:h.s}}))).status,200);
+ assert.equal(paid.sql.prepare('SELECT status FROM billing_orders').get().status,'paid');
+ assert.equal(paid.sql.prepare('SELECT SUM(amount_cents) n FROM credit_ledger').get().n,2500);
+});
+
+test('signed partial and full refund events reconcile once without browser return, ignoring pending or failed refunds',async()=>{
+ const a=setup({STRIPE_SECRET_KEY:'sk_test_fixture',STRIPE_WEBHOOK_SECRET:'whsec_fixture'}),f=paidFixture(a),route=a.load('app/api/billing/webhook/route.ts');
+ const send=async(id,type,object)=>assert.equal((await route.POST(await signedEvent({id,type,livemode:false,data:{object}}))).status,200);
+ await send('evt_paidnoreturn','checkout.session.completed',f.s);
+ a.setResponder(url=>url.includes('/payment_intents/')?Response.json({metadata:{order_id:f.id},currency:'usd',livemode:false,amount_received:2500}):null);
+ const refund=(id,status,amount)=>({id,status,amount,currency:'usd',payment_intent:'pi_fixture123'});
+ const part=refund('re_partial','succeeded',1000),rest=refund('re_remaining','succeeded',1500);
+ a.setSession({has_more:false,data:[refund('re_pending','pending',1500),refund('re_failed','failed',1500)]});
+ await send('evt_pendingrefund','refund.updated',{payment_intent:'pi_fixture123'});
+ assert.equal(a.sql.prepare('SELECT SUM(amount_cents) n FROM credit_ledger').get().n,2500);
+ a.setSession({has_more:false,data:[part]});
+ await send('evt_partialrefund','refund.updated',part);
+ await send('evt_partialrefund','refund.updated',part);
+ await send('evt_partialcharge','charge.refunded',{payment_intent:'pi_fixture123'});
+ assert.equal(a.sql.prepare('SELECT SUM(amount_cents) n FROM credit_ledger').get().n,1500);
+ assert.equal(a.sql.prepare('SELECT status FROM billing_orders').get().status,'partially_refunded');
+ a.setSession({has_more:false,data:[part,rest]});
+ await send('evt_fullrefund','refund.updated',rest);
+ await send('evt_fullcharge','charge.refunded',{payment_intent:'pi_fixture123'});
+ assert.equal(a.sql.prepare('SELECT SUM(amount_cents) n FROM credit_ledger').get().n,0);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM credit_ledger').get().n,3);
+ assert.equal(a.sql.prepare('SELECT status FROM billing_orders').get().status,'refunded');
+});
+
+
+test('billing refresh releases a paid no-return attempt and preserves the open checkout retry',async()=>{
+ const a=setup({STRIPE_SECRET_KEY:'sk_test_fixture',STRIPE_WEBHOOK_SECRET:'whsec_fixture',BILLING_ENABLED:'true',WEBHOOK_INGRESS_VERIFIED:'true'});
+ const checkout=a.load('app/api/billing/checkout/route.ts'),billing=a.load('app/api/billing/route.ts'),retries=a.load('lib/billing-checkout.ts');
+ const requestId=crypto.randomUUID(),stored=new Map([['apiwild-checkout-starter',requestId]]),storage={getItem:key=>stored.get(key)??null,removeItem:key=>stored.delete(key)};
+ const body={pack:'starter',requestId};
+ a.setSession({id:'cs_test_noreturnretry',url:'https://checkout.stripe.com/c/pay/noreturnretry',status:'open'});
+ assert.equal((await checkout.POST(req('/api/billing/checkout','POST',body))).status,200);
+ const open=await(await billing.GET(req('/api/billing'))).json();
+ assert.equal(open.orders[0].request_id,requestId);assert.equal(open.orders[0].pack,'starter');
+ retries.forgetFinishedCheckoutRequests(open.orders,storage);
+ assert.equal(storage.getItem('apiwild-checkout-starter'),requestId);
+ assert.equal((await checkout.POST(req('/api/billing/checkout','POST',body))).status,200);
+ assert.equal(a.calls.filter(c=>c.url.endsWith('/checkout/sessions')&&c.opts.method==='POST').length,1);
+ const order=a.sql.prepare('SELECT * FROM billing_orders').get();
+ const paid={id:order.session_id,mode:'payment',status:'complete',payment_status:'paid',client_reference_id:order.id,metadata:{order_id:order.id},amount_total:2500,currency:'usd',livemode:false,payment_intent:'pi_noreturnretry'};
+ a.setSession(paid);
+ assert.equal((await a.load('app/api/billing/webhook/route.ts').POST(await signedEvent({id:'evt_noreturnretry',type:'checkout.session.completed',livemode:false,data:{object:paid}}))).status,200);
+ const completed=await(await billing.GET(req('/api/billing'))).json();
+ assert.equal(completed.availableCents,2500);
+ retries.forgetFinishedCheckoutRequests(completed.orders,storage);
+ assert.equal(storage.getItem('apiwild-checkout-starter'),null);
+ a.setSession({id:'cs_test_secondpurchase',url:'https://checkout.stripe.com/c/pay/secondpurchase',status:'open'});
+ assert.equal((await checkout.POST(req('/api/billing/checkout','POST',{pack:'starter',requestId:crypto.randomUUID()}))).status,200);
+ assert.equal(a.calls.filter(c=>c.url.endsWith('/checkout/sessions')&&c.opts.method==='POST').length,2);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM billing_orders').get().n,2);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM credit_ledger').get().n,1);
+});
+
+test('checkout cleanup retains unrelated, newer, created and pending attempts',()=>{
+ const a=setup(),retries=a.load('lib/billing-checkout.ts'),stored=new Map([['apiwild-checkout-starter','starter-open'],['apiwild-checkout-builder','builder-new'],['apiwild-checkout-scale','scale-open']]);
+ const storage={getItem:key=>stored.get(key)??null,removeItem:key=>stored.delete(key)};
+ retries.forgetFinishedCheckoutRequests([{pack:'starter',request_id:'starter-open',status:'created'},{pack:'builder',request_id:'builder-old',status:'paid'},{pack:'scale',request_id:'scale-open',status:'checkout'}],storage);
+ assert.equal(storage.getItem('apiwild-checkout-starter'),'starter-open');
+ assert.equal(storage.getItem('apiwild-checkout-builder'),'builder-new');
+ assert.equal(storage.getItem('apiwild-checkout-scale'),'scale-open');
+ retries.forgetCheckoutRequest({pack:'starter',request_id:'starter-open'},storage);
+ assert.equal(storage.getItem('apiwild-checkout-starter'),null);
+ assert.equal(storage.getItem('apiwild-checkout-builder'),'builder-new');
+ assert.equal(storage.getItem('apiwild-checkout-scale'),'scale-open');
+ for(const status of ['paid','partially_refunded','refunded','expired','failed']){
+   stored.set('apiwild-checkout-starter','finished');
+   retries.forgetFinishedCheckoutRequests([{pack:'starter',request_id:'finished',status}],storage);
+   assert.equal(storage.getItem('apiwild-checkout-starter'),null);
+ }
+});
+
+test('signed unrelated order metadata is acknowledged without financial side effects',async()=>{
+ const a=setup({STRIPE_SECRET_KEY:'sk_test_fixture',STRIPE_WEBHOOK_SECRET:'whsec_fixture'}),route=a.load('app/api/billing/webhook/route.ts');
+ a.setResponder(url=>url.includes('/payment_intents/')?Response.json({id:'pi_otherproduct',metadata:{order_id:'other-product-order'},currency:'usd',livemode:false,amount_received:2500}):url.includes('/disputes/')?Response.json({id:'dp_otherproduct',payment_intent:'pi_otherproduct',livemode:false,currency:'usd',amount:2500,status:'needs_response'}):null);
+ const cases=[['evt_othercheckout','checkout.session.completed',{id:'cs_test_otherproduct',metadata:{order_id:'other-product-order'}}],['evt_otherrefund','refund.updated',{id:'re_otherproduct',payment_intent:'pi_otherproduct'}],['evt_otherdispute','charge.dispute.created',{id:'dp_otherproduct'}]];
+ for(const [id,type,object] of cases)assert.equal((await route.POST(await signedEvent({id,type,livemode:false,data:{object}}))).status,200);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM billing_events').get().n,3);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM credit_ledger').get().n,0);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM billing_disputes').get().n,0);
+ assert.equal(a.calls.filter(c=>c.url.includes('/checkout/sessions')||c.url.includes('/refunds?')).length,0);
+});
+
+test('persisted API WILD orders keep checkout, refund and dispute delivery retryable until payment linkage',async()=>{
+ const a=setup({STRIPE_SECRET_KEY:'sk_test_fixture',STRIPE_WEBHOOK_SECRET:'whsec_fixture'}),f=paidFixture(a),route=a.load('app/api/billing/webhook/route.ts');
+ a.sql.prepare('UPDATE billing_orders SET session_id=NULL WHERE id=?').run(f.id);
+ a.setResponder(url=>url.includes('/payment_intents/')?Response.json({id:'pi_fixture123',metadata:{order_id:f.id},currency:'usd',livemode:false,amount_received:2500}):url.includes('/disputes/')?Response.json({id:'dp_pendinglink',payment_intent:'pi_fixture123',livemode:false,currency:'usd',amount:2500,status:'needs_response'}):url.includes('/refunds?')?Response.json({has_more:false,data:[]}):null);
+ const cases=[['evt_pendingcheckoutlink','checkout.session.completed',f.s],['evt_pendingrefundlink','refund.updated',{id:'re_pendinglink',payment_intent:'pi_fixture123'}],['evt_pendingdisputelink','charge.dispute.created',{id:'dp_pendinglink'}]];
+ for(const [id,type,object] of cases)assert.equal((await route.POST(await signedEvent({id,type,livemode:false,data:{object}}))).status,503);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM billing_events').get().n,0);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM credit_ledger').get().n,0);
+ a.sql.prepare('UPDATE billing_orders SET session_id=? WHERE id=?').run(f.sessionId,f.id);
+ for(const [id,type,object] of cases)assert.equal((await route.POST(await signedEvent({id,type,livemode:false,data:{object}}))).status,200);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM billing_events').get().n,3);
+ assert.equal(a.sql.prepare('SELECT COUNT(*) n FROM credit_ledger').get().n,1);
+ assert.equal(await a.load('lib/billing.ts').billingHold('fixture-a'),2500);
 });

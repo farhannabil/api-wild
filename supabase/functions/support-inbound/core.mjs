@@ -60,6 +60,26 @@ export function buildReply(email,sender,template) {
     text:`API WILD Support\n\nWe received your message.\nRequest: ${ticket}\nSubject: ${subject}\n\nYour support request has been recorded. Reply to this email to add information.\nPlease do not send passwords, API keys, payment card details, or private customer data.\n\nhttps://apiwild.com\nsupport@apiwild.com`,headers};
 }
 
+async function readWebhookBody(request,limit) {
+  const reader=request.body?.getReader();
+  if (!reader) return '';
+  const decoder=new TextDecoder();
+  let raw='',bytes=0;
+  try {
+    while (true) {
+      const {done,value}=await reader.read();
+      if (done) break;
+      bytes+=value.byteLength;
+      if (bytes>limit) {
+        await reader.cancel().catch(()=>{});
+        return null;
+      }
+      raw+=decoder.decode(value,{stream:true});
+    }
+    return raw+decoder.decode();
+  } finally { reader.releaseLock(); }
+}
+
 export function createHandler({secret,enabled,db,provider,template,now=Date.now}) {
   return async request=>{
     if (request.method==='GET' && new URL(request.url).pathname.endsWith('/health')) {
@@ -68,8 +88,10 @@ export function createHandler({secret,enabled,db,provider,template,now=Date.now}
     }
     if (request.method!=='POST') return json({error:'method_not_allowed'},405);
     if (Number(request.headers.get('content-length')||0)>65536) return json({error:'too_large'},413);
-    const raw=await request.text();
-    if (Buffer.byteLength(raw)>65536) return json({error:'too_large'},413);
+    let raw;
+    try { raw=await readWebhookBody(request,65536); }
+    catch { return json({error:'invalid_body'},400); }
+    if (raw===null) return json({error:'too_large'},413);
     let event;
     try {event=verifyWebhook(raw,request.headers,secret,now());} catch {return json({error:'invalid_signature'},401);}
     if (event.type!=='email.received') return json({status:'ignored'});

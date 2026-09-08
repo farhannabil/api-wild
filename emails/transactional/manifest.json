@@ -16,8 +16,10 @@
         "product_name",
         "receipt_url"
       ],
-      "trigger": "Verified successful payment; Stripe receipt is canonical. Use this alternative only if native Stripe payment receipts are disabled to prevent duplicate receipts.",
-      "enabled": false
+      "trigger": "Stripe native paid-invoice summary is the canonical successful-payment message, including invoice and receipt links. This custom template remains suppressed; no automatic fallback.",
+      "enabled": false,
+      "canonical_sender": "stripe-native",
+      "notification_group": "financial_success"
     },
     {
       "id": "credits-ready",
@@ -29,7 +31,8 @@
         "order_id"
       ],
       "trigger": "After a successful payment AND committed credit ledger entry; never merely on checkout return.",
-      "enabled": false
+      "enabled": false,
+      "canonical_sender": "apiwild-resend"
     },
     {
       "id": "payment-failed",
@@ -42,7 +45,8 @@
         "product_name"
       ],
       "trigger": "Verified terminal payment failure, not a transient error or abandoned checkout.",
-      "enabled": false
+      "enabled": false,
+      "canonical_sender": "apiwild-resend"
     },
     {
       "id": "refund-confirmed",
@@ -56,8 +60,9 @@
         "refund_amount",
         "refund_id"
       ],
-      "trigger": "Verified refund status succeeded; support partial refunds and use the actual refunded amount. Suppress if native Stripe refund email is enabled.",
-      "enabled": false
+      "trigger": "Stripe native refund email is canonical per successful refund ID, using the actual partial or full refund amount. This custom template remains suppressed; no automatic fallback.",
+      "enabled": false,
+      "canonical_sender": "stripe-native"
     },
     {
       "id": "invoice-ready",
@@ -71,8 +76,10 @@
         "paid_at",
         "product_name"
       ],
-      "trigger": "Verified paid invoice with a provider-hosted URL. Suppress when Stripe already emails the invoice summary.",
-      "enabled": false
+      "trigger": "Stripe native paid-invoice summary is the canonical successful-payment message, including invoice and receipt links. This custom template remains suppressed; no automatic fallback.",
+      "enabled": false,
+      "canonical_sender": "stripe-native",
+      "notification_group": "financial_success"
     },
     {
       "id": "welcome",
@@ -81,7 +88,8 @@
       "text": "welcome.txt",
       "variables": [],
       "trigger": "Confirmed account event recorded once; no welcome email before email verification.",
-      "enabled": false
+      "enabled": false,
+      "canonical_sender": "apiwild-resend"
     },
     {
       "id": "api-key-created",
@@ -94,7 +102,8 @@
         "expires_at"
       ],
       "trigger": "After a successful authenticated key creation. Never include the full API key in email.",
-      "enabled": false
+      "enabled": false,
+      "canonical_sender": "apiwild-resend"
     },
     {
       "id": "api-key-revoked",
@@ -107,7 +116,8 @@
         "revoked_at"
       ],
       "trigger": "After a successful authenticated key revocation. Never include the full API key in email.",
-      "enabled": false
+      "enabled": false,
+      "canonical_sender": "apiwild-resend"
     },
     {
       "id": "api-key-expiring",
@@ -120,7 +130,8 @@
         "expires_at"
       ],
       "trigger": "Scheduled once, 7 days before expiry; do not send when the key is already revoked or expired.",
-      "enabled": false
+      "enabled": false,
+      "canonical_sender": "apiwild-resend"
     },
     {
       "id": "support-received",
@@ -135,7 +146,8 @@
       "enabled": true,
       "sender_name": "API WILD Support",
       "sender_email": "support@apiwild.com",
-      "verification": "Owner inbox delivery 2026-09-07T11:51:43Z; SPF/DKIM/DMARC pass; actual Reply-To support@apiwild.com; same-event replay produces no second send."
+      "verification": "Owner inbox delivery 2026-09-07T11:51:43Z; SPF/DKIM/DMARC pass; actual Reply-To support@apiwild.com; same-event replay produces no second send.",
+      "canonical_sender": "apiwild-resend"
     },
     {
       "id": "support-resolved",
@@ -148,10 +160,32 @@
         "ticket_subject"
       ],
       "trigger": "Only after an agent records an actual resolution; reply must reopen or attach to the existing request.",
-      "enabled": false
+      "enabled": false,
+      "canonical_sender": "apiwild-resend"
     }
   ],
   "sender_provider": "Resend",
   "desired_reply_to": "support@apiwild.com",
-  "reply_to_status": "Verified receiving and signed-event support acknowledgement live on 2026-09-07. Operator inbox is Resend Receiving; external forwarding is not configured."
+  "reply_to_status": "Verified receiving and signed-event support acknowledgement live on 2026-09-07. Operator inbox is Resend Receiving; external forwarding is not configured.",
+  "delivery_ownership": {
+    "status": "Selected 2026-09-08; provider settings and commerce delivery remain unverified; no activation",
+    "auth": "supabase-auth-via-resend-smtp",
+    "financial_success": {
+      "sender": "stripe-native",
+      "notification": "paid-invoice-summary-with-receipt",
+      "dedup_key": "stripe-account:mode:invoice-id",
+      "custom_templates_suppressed": [
+        "payment-received",
+        "invoice-ready"
+      ]
+    },
+    "refund": {
+      "sender": "stripe-native",
+      "dedup_key": "stripe-account:mode:refund-id:succeeded",
+      "custom_templates_suppressed": [
+        "refund-confirmed"
+      ]
+    },
+    "activation_policy": "Only support-received is enabled. A sender selection is not authorization to enable any trigger. Never fall back to a custom sender because Stripe settings or delivery are unknown."
+  }
 }
