@@ -1,0 +1,1 @@
+ALTER TABLE `gateway_outbox` ADD `export_receipt` text;
