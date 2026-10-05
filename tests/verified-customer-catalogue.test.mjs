@@ -25,7 +25,7 @@ test('customer catalogue contains exactly the accepted 24 identities while the i
   for (const model of publicCatalog.models) {
     const original = internalCatalog.models.find(item => item.model_name === model.model_name);
     assert.ok(original);
-    for (const [key, value] of Object.entries(model)) assert.deepEqual(value, original[key], `${model.model_name}: ${key} changed`);
+    for (const [key, value] of Object.entries(model)) {if(key!=='official_reference')assert.deepEqual(value, original[key], `${model.model_name}: ${key} changed`);} assert.equal(model.official_reference.currency, 'USD'); assert.equal(model.official_reference.unit, 'per_million_tokens'); assert.equal(model.official_reference.checked_date, '2026-10-05'); assert.ok(Number.isFinite(model.official_reference.input)&&model.official_reference.input>=0); assert.ok(Number.isFinite(model.official_reference.output)&&model.official_reference.output>=0); assert.equal(new URL(model.official_reference.source).protocol, 'https:');
   }
 });
 

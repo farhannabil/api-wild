@@ -63,7 +63,17 @@ jobs:
           infra/railway/tests/welcome-brand.test.mjs
           infra/railway/tests/welcome-rpc.test.mjs
           infra/railway/tests/container-context.test.mjs
+          infra/railway/tests/stripe-checkout.test.mjs
+          infra/railway/tests/owned-billing.test.mjs
+          infra/railway/tests/credit-offers.test.mjs
+          infra/railway/tests/stripe-financial-projection.test.mjs
+          infra/railway/tests/stripe-projection-rpc.test.mjs
+          infra/railway/tests/stripe-webhook-ingress.test.mjs
           infra/railway/preparation.test.mjs
+      - name: Verify credit promotion with isolated PostgreSQL
+        run: |
+          npm install --prefix "$RUNNER_TEMP/apiwild-promotion-pglite" --no-save --ignore-scripts --no-audit --no-fund @electric-sql/pglite@0.5.8
+          node tests/integration/credit-promotion-pglite.mjs "$RUNNER_TEMP/apiwild-promotion-pglite/node_modules/@electric-sql/pglite/dist/index.js"
   production-health:
     needs: build-and-test
     if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push')

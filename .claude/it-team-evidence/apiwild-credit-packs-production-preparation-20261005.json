@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-05",
+  "scope": "API WILD named one-time USD credit packs and fixed purchase promotion",
+  "packages": [["SmarT",7700,1300,9000],["NeRD",10100,1900,12000],["Newton",23400,2600,26000],["Alien",34500,5500,40000]],
+  "nativeStripe": {"account":"acct_1UCiHN194XZKj6cF","verifiedLiveOneTimeUsdPrices":4,"smartDefaultPriceUpdated":true,"historicalPricesPreserved":true,"realPaymentsCreated":0},
+  "promotion": {"startsAt":"2026-10-05T16:38:52.000Z","checkoutClosesAt":"2026-10-20T16:38:52.000Z","endsAt":"2026-10-20T17:09:52.000Z","timerResets":false,"creditExpiryIntroduced":false},
+  "database": {"project":"yautmilnpllojugpmfgy","migrationApplied":true,"migrationSha256":"8044563e1b182cba60189e0dea5b6b684a3233b75565992f58f0920a4b779d43","historicalOrdersPreserved":7,"historicalBonusesIntroduced":0,"anonPrepareAccess":false,"authenticatedPrepareAccess":false,"servicePrepareAccess":true},
+  "validation": {"rootApplicationTests":398,"rootFinalFocusedTests":84,"rootPostgreSqlAssertions":51,"rootContainerChecks":51,"railwayBuild":"passed","workerFinalRuntimeTests":75,"applicationTypeScript":"passed","independentFinancialReview":"passed","independentCustomerReview":"passed"},
+  "officialReferenceVerification": {"models":24,"checkedDate":"2026-10-05","sellingRatesChanged":false,"scope":"Standard global uncached text input/output base rates; conditional rates and source links disclosed"},
+  "preserved": {"customTopUpMinimumUsd":30,"customerModels":24,"internalSupplierModels":39,"supplierLimitCny":50,"supplierLimitChanged":false},
+  "deployment": "Pending exact release verification; this preparation record is not deployment proof"
+}
