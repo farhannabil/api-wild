@@ -11,6 +11,7 @@ test('conditional assembly refuses absent accepted policy or supplier rates with
  for(const patch of [{APIWILD_DEEPSEEK_TARIFF_ENABLED:'false'},{APIWILD_DEEPSEEK_SUPPLIER_RATES_JSON:'{}'},{APIWILD_DEEPSEEK_TARIFF_POLICY_JSON:JSON.stringify({...policy,accepted:false})}])assert.throws(()=>createOwnedGatewayFromEnv({env:{...env,...patch},catalog,fetchImpl:()=>{throw Error('unexpected network');}}));
 });
 test('admission tariff stays frozen across dispatch boundary and expired-window replay never re-quotes or redispatches',async()=>{
+ const supplierRequestId='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
  let now=Date.parse('2026-10-08T00:59:50Z'),clocks=0,row,upstreamCalls=0,finishCost,lookupCount=0;
  const port=createOwnedGatewayFromEnv({env,catalog,clock:()=>{clocks++;return now;},fetchImpl:async(url,init)=>{
   const p=init.body?JSON.parse(init.body):{};
@@ -24,8 +25,8 @@ test('admission tariff stays frozen across dispatch boundary and expired-window 
    return Response.json({fresh:true,record:row});
   }
   if(url.endsWith('gateway_claim')){row={...row,state:'executing',version:1};return Response.json({claimed:true,record:row});}
-  if(url==='https://subrouter.ai/v1/chat/completions'){upstreamCalls++;now=Date.parse('2026-10-08T01:00:10Z');return Response.json({id:'synthetic_response',model,usage:{prompt_tokens:1000,completion_tokens:1000,total_tokens:2000},choices:[{index:0,message:{role:'assistant',content:'fixture'},finish_reason:'stop'}]});}
-  if(url.endsWith('finish_retail')){finishCost=p.p_cost_usd_micros;row={...row,state:'succeeded',version:2,cost_usd_micros:p.p_cost_usd_micros,cost_cny_micros:0,observed_cny_micros:0,settlement_reference:p.p_settlement_reference,result_json:p.p_result,usage_json:p.p_usage,supplier_pending:true};return Response.json({settled:true,replayed:false,record:row});}
+  if(url==='https://subrouter.ai/v1/chat/completions'){upstreamCalls++;now=Date.parse('2026-10-08T01:00:10Z');return Response.json({id:'synthetic_response',model,usage:{prompt_tokens:1000,completion_tokens:1000,total_tokens:2000},choices:[{index:0,message:{role:'assistant',content:'fixture'},finish_reason:'stop'}]},{headers:{'x-request-id':supplierRequestId}});}
+  if(url.endsWith('finish_retail')){assert.equal(p.p_settlement_reference,'usage:'+supplierRequestId);assert.equal(p.p_usage.providerRequestId,supplierRequestId);assert.equal(p.p_usage.providerCompletionId,'synthetic_response');finishCost=p.p_cost_usd_micros;row={...row,state:'succeeded',version:2,cost_usd_micros:p.p_cost_usd_micros,cost_cny_micros:0,observed_cny_micros:0,settlement_reference:p.p_settlement_reference,result_json:p.p_result,usage_json:p.p_usage,supplier_pending:true};return Response.json({settled:true,replayed:false,record:row});}
   throw Error('unexpected fixture transport');
  }});
  const publicModel=port.discovery.catalog.models.find(row=>row.id===model);
@@ -36,6 +37,7 @@ test('admission tariff stays frozen across dispatch boundary and expired-window 
  const server=createServer((req,res)=>port.handle(req,res));await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const call=()=>new Promise((resolve,reject)=>{const body=JSON.stringify({model,messages:[{role:'user',content:'Hello'}],max_tokens:1000});const req=request({host:'127.0.0.1',port:server.address().port,path:'/api/gateway',method:'POST',headers:{host:'apiwild.com',authorization:'Bearer fixture.auth.signature','content-type':'application/json','content-length':Buffer.byteLength(body),'idempotency-key':'fixture_request_0001'}},res=>{let body='';res.on('data',c=>body+=c);res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(body)}));});req.on('error',reject);req.end(body);});
  try{const initial=await call();assert.equal(initial.status,200);assert.equal(initial.body.ok,true);assert.equal(finishCost,375);assert.equal(row.reserved_usd_micros,375);
+  for(const privateId of [supplierRequestId,'synthetic_response'])assert.equal(JSON.stringify(initial.body).includes(privateId),false);
   const previousClocks=clocks;now=Date.parse('2026-10-15T02:00:00Z');const replay=await call();assert.equal(replay.status,200);assert.equal(replay.body.replayed,true);assert.equal(upstreamCalls,1);assert.equal(lookupCount,2);assert.equal(clocks,previousClocks);
   const expired=port.discovery.read();assert.equal(expired.config.inferenceConfigured,false);assert.equal(expired.config.ready.chat,false);
   assert.equal(expired.catalog.models.find(row=>row.id===model).callable,false);

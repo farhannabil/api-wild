@@ -76,6 +76,10 @@ export function createSubrouterDispatch(config) {
       if (!response.ok || response.redirected) fail('subrouter_dispatch_not_confirmed', true);
       const value = await boundedJson(response, signal);
       if (!value || typeof value !== 'object' || typeof value.id !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(value.id) || value.model !== route.upstreamModel) fail('subrouter_response_identity_unconfirmed', true);
+      // The wallet log identifies this exact HTTP response by x-request-id.
+      // Preserve completion identity separately; neither ID is customer output.
+      const providerRequestId = response.headers.get('x-request-id');
+      if (providerRequestId !== null && !UUID.test(providerRequestId)) fail('subrouter_request_identity_unconfirmed', true);
       const input = exactInteger(value.usage?.prompt_tokens); const output = exactInteger(value.usage?.completion_tokens, 0, maxTokens);
       const total = exactInteger(input + output);
       if (value.usage.total_tokens !== undefined && value.usage.total_tokens !== total) fail('subrouter_invalid_usage', true);
@@ -83,7 +87,7 @@ export function createSubrouterDispatch(config) {
       const assistant = validateAssistantMessage(value.choices[0].message, body);
       const finish = value.choices[0].finish_reason;
       if ((assistant.toolCalls && finish !== 'tool_calls') || (!assistant.toolCalls && finish === 'tool_calls')) fail('subrouter_incomplete_tool_result', true);
-      const result = { providerResponseId: value.id, model: value.model, ...assistant,
+      const result = { providerResponseId: value.id, ...(providerRequestId ? {providerRequestId} : {}), model: value.model, ...assistant,
         created: exactInteger(value.created ?? Math.floor(Date.now() / 1000)),
         finishReason: ['stop', 'length', 'content_filter', 'tool_calls'].includes(finish) ? finish : null,
         usage: { prompt_tokens: input, completion_tokens: output }, settlementVerified: false };

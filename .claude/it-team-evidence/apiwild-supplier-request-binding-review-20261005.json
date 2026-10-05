@@ -1,0 +1,42 @@
+{
+  "task_id": "apiwild-supplier-request-binding-review-20261005",
+  "status": "passed",
+  "summary": "Independent review of exact-response supplier request correlation; no findings.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/subrouter-request-binding.test.mjs infra/railway/tests/subrouter-dispatch.test.mjs infra/railway/tests/deepseek-assembly.test.mjs infra/railway/tests/owned-gateway-assembly.test.mjs",
+      "exitCode": 0,
+      "passed": 18
+    },
+    {
+      "command": "Validate workflow diff is exactly one new runtime-test path; parse YAML and verify all 22 runtime test paths exist",
+      "exitCode": 0
+    }
+  ],
+  "review": {
+    "reviewer": "/root/public_status",
+    "author": "/root/source_launch_audit",
+    "result": "passed",
+    "findings": []
+  },
+  "verified": [
+    "Optional x-request-id is read from the same successful verified provider response and accepts an exact UUID only.",
+    "Malformed or multiple IDs remain ambiguous; completion/model/usage identity checks remain enforced and no automatic retry is added.",
+    "Absent header retains existing completion reference rather than fabricating a request ID.",
+    "Valid request ID becomes the immutable private settlement correlation; both IDs persist in private usage JSON only, with no change to public result projection.",
+    "Existing replay test preserves immutable tariff, one supplier dispatch and no public provider identifiers.",
+    "CI adds only the new test path; existing production and strict readiness gates remain unchanged."
+  ],
+  "sourceHashes": {
+    "infra/railway/runtime/subrouter-dispatch.mjs": "f10d190b02a91cf54c58f7558c396121c4fdd8c5017d7d06fe3fed007687cb2e",
+    "infra/railway/runtime/owned-gateway-assembly.mjs": "0c0596895861c945601df5569bb6d55d41b30f796c44c186701254eecb39bdd4",
+    "infra/railway/tests/subrouter-request-binding.test.mjs": "f20962bddc0c93041fda6470b326f85c639bc73eda7f1c3055ae8f15518fb9fd",
+    "infra/railway/tests/deepseek-assembly.test.mjs": "7454c94e41834d56a1acbd82369f6b9733cefb0280f56e7ce62238f87ca96e1a",
+    ".github/workflows/apiwild.yml": "6734eb2c1c5d7e2f4f888ce4f5fbbd5f52d74e655681537f27df76c4b6732af0"
+  },
+  "limitations": [
+    "All review executions used local synthetic fixtures; no paid model call or production financial change.",
+    "Request correlation is not proof of actual CNY debit; authoritative receipt reconciliation remains required.",
+    "No migrations, credentials, budget settings, enable flags or unattended workers changed."
+  ]
+}
