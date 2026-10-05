@@ -16,9 +16,12 @@ create table if not exists apiwild_finance.stripe_orders (
   stripe_customer_id text not null check (stripe_customer_id ~ '^cus_[A-Za-z0-9]+$'),
   payment_intent text,
   amount_cents bigint not null check (amount_cents between 1 and 100000000),
+  bonus_cents bigint not null default 0 check (bonus_cents between 0 and 5500),
+  credit_cents bigint generated always as (amount_cents+bonus_cents) stored,
+  package_id text, promotion_id text, promo_starts_at timestamptz, promo_ends_at timestamptz, price_id text,
   currency text not null default 'usd' check (currency='usd'),
   received_cents bigint check (received_cents between amount_cents and 200000000),
-  refunded_credit_cents bigint not null default 0 check (refunded_credit_cents between 0 and amount_cents),
+  refunded_credit_cents bigint not null default 0 check (refunded_credit_cents between 0 and amount_cents+bonus_cents),
   status text not null default 'checkout' check (status in ('checkout','pending','expired','failed','paid','partially_refunded','refunded')),
   created_at timestamptz not null default clock_timestamp(),
   updated_at timestamptz not null default clock_timestamp(),
@@ -116,7 +119,7 @@ begin
   -- Preserve any pre-existing/externally reconciled hold rather than silently
   -- releasing it during a partial ledger import. Only our verified delta is
   -- projected. An inconsistent prior projection fails closed for owner review.
-  select coalesce(sum(least(s.amount_cents-s.refunded_credit_cents,x.held)),0)*10000 into v_prior_hold
+  select coalesce(sum(least(s.credit_cents-s.refunded_credit_cents,case when s.bonus_cents>0 then floor(s.credit_cents::numeric*x.held/s.received_cents) else x.held end)),0)*10000 into v_prior_hold
     from apiwild_finance.stripe_orders s join (
       select order_id,sum(amount_cents) as held from apiwild_finance.stripe_disputes
       where status in ('needs_response','under_review','lost','warning_needs_response','warning_under_review') group by order_id
@@ -144,13 +147,13 @@ begin
       then raise exception 'stripe_payment_mismatch'; end if;
       v_source:='checkout:'||o.session_id;
       insert into apiwild_finance.stripe_credit_entries(account_id,source_id,order_id,user_id,amount_cents)
-        values(p_account_id,v_source,o.id,o.user_id,o.amount_cents) on conflict do nothing;
+        values(p_account_id,v_source,o.id,o.user_id,o.credit_cents) on conflict do nothing;
       get diagnostics v_inserted=row_count;
-      if v_inserted=1 then v_delta:=o.amount_cents;
+      if v_inserted=1 then v_delta:=o.credit_cents;
       elsif not exists(select 1 from apiwild_finance.stripe_credit_entries where account_id=p_account_id and source_id=v_source
-        and order_id=o.id and user_id=o.user_id and amount_cents=o.amount_cents) then raise exception 'stripe_credit_conflict'; end if;
+        and order_id=o.id and user_id=o.user_id and amount_cents=o.credit_cents) then raise exception 'stripe_credit_conflict'; end if;
       update apiwild_finance.stripe_orders set payment_intent=p_fact->>'payment_intent',received_cents=v_total,
-        status=case when refunded_credit_cents=amount_cents then 'refunded' when refunded_credit_cents>0 then 'partially_refunded' else 'paid' end,
+        status=case when refunded_credit_cents=credit_cents then 'refunded' when refunded_credit_cents>0 then 'partially_refunded' else 'paid' end,
         updated_at=clock_timestamp() where id=o.id;
     elsif o.received_cents is null then
       v_status:=case when p_fact->>'status'='expired' then 'expired' when p_event_type='checkout.session.async_payment_failed' then 'failed' else 'pending' end;
@@ -166,13 +169,13 @@ begin
       v_received:=(p_fact->>'received_cents')::bigint; v_refunded:=(p_fact->>'refunded_cents')::bigint;
       if v_received<>o.received_cents or v_refunded>v_received then raise exception 'stripe_refund_mismatch'; end if;
       -- Numeric arithmetic avoids overflow and never grants tax as AI credits.
-      v_target:=floor(o.amount_cents::numeric*v_refunded/v_received)::bigint;
+      v_target:=floor(o.credit_cents::numeric*v_refunded/v_received)::bigint;
       if v_target>o.refunded_credit_cents then
         v_delta:=o.refunded_credit_cents-v_target;
         insert into apiwild_finance.stripe_credit_entries(account_id,source_id,order_id,user_id,amount_cents)
           values(p_account_id,'refund-total:'||o.id::text||':'||v_target,o.id,o.user_id,v_delta);
         update apiwild_finance.stripe_orders set refunded_credit_cents=v_target,
-          status=case when v_target=amount_cents then 'refunded' else 'partially_refunded' end,updated_at=clock_timestamp() where id=o.id;
+          status=case when v_target=credit_cents then 'refunded' else 'partially_refunded' end,updated_at=clock_timestamp() where id=o.id;
       end if;
     else
       if p_fact-'order_id'-'customer_id'-'payment_intent'-'currency'-'dispute_id'-'amount_cents'-'status'<>'{}'::jsonb
@@ -196,7 +199,7 @@ begin
   end if;
   -- Per-order clamp avoids holding the same purchase twice. Lost funds remain
   -- held, not an invented double-debit; refunds proportionally reduce the hold.
-  select coalesce(sum(least(s.amount_cents-s.refunded_credit_cents,x.held)),0)*10000 into v_hold
+  select coalesce(sum(least(s.credit_cents-s.refunded_credit_cents,case when s.bonus_cents>0 then floor(s.credit_cents::numeric*x.held/s.received_cents) else x.held end)),0)*10000 into v_hold
     from apiwild_finance.stripe_orders s join (
       select order_id,sum(amount_cents) as held from apiwild_finance.stripe_disputes
       where status in ('needs_response','under_review','lost','warning_needs_response','warning_under_review') group by order_id

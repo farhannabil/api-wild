@@ -1,0 +1,44 @@
+{
+  "task_id": "apiwild-credit-packs-backend-20261005",
+  "status": "passed",
+  "summary": "Four server-authorized named USD credit packs, fixed 15-day opening window plus31-minute checkout grace, immutable trusted checkout intents, verified exactly-once paid+bonus grants, proportional cumulative reversals, preserved original custom top-ups/historical paid orders and supplier principal budgets.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/credit-offers.test.mjs infra/railway/tests/stripe-checkout.test.mjs infra/railway/tests/owned-billing.test.mjs infra/railway/tests/stripe-financial-projection.test.mjs infra/railway/tests/stripe-projection-rpc.test.mjs infra/railway/tests/stripe-webhook-ingress.test.mjs",
+      "exitCode": 0,
+      "result": "75/75 synthetic runtime tests passed"
+    },
+    {
+      "command": "node tests/integration/credit-promotion-pglite.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "exitCode": 0,
+      "result": "51 synthetic in-memory SQL assertions passed using pinned PGlite 0.5.8; actual script run via bounded error-reporting import wrapper"
+    },
+    {
+      "command": "node --test tests/owned-credit-offers.test.mjs tests/verified-customer-catalogue.test.mjs tests/owned-client-config.test.mjs infra/railway/tests/credit-offers.test.mjs infra/railway/tests/stripe-checkout.test.mjs infra/railway/tests/owned-billing.test.mjs",
+      "exitCode": 0,
+      "result": "43/43 cross-contract checks passed before adding two further runtime-only tests"
+    }
+  ],
+  "review": {
+    "reviewer": "/root and /root/launch_customer_frontend",
+    "result": "passed"
+  },
+  "limitations": [
+    "Worker ran synthetic local tests only; no actual Stripe charge/refund, production migration, production config or deploy. Root owns those actions.",
+    "Credits have no invented expiry. Checkout opening qualifies bonus; verified async settlement can complete after session expiry.",
+    "Historical existing paid/expired checkout retry fails closed without creating a replacement; exact terminal authenticated history clears the stored request."
+  ],
+  "migrationSha256": "8044563e1b182cba60189e0dea5b6b684a3233b75565992f58f0920a4b779d43",
+  "ownedFiles": [
+    "Dockerfile.railway.dockerignore",
+    "infra/railway/runtime/credit-offers.mjs",
+    "infra/railway/runtime/owned-billing.mjs",
+    "infra/railway/runtime/stripe-checkout.mjs",
+    "infra/railway/runtime/stripe-financial-projection.schema.sql",
+    "infra/railway/runtime/supplier-allowance.schema.sql",
+    "infra/railway/runtime/credit-package-promotion.schema.sql",
+    "supabase/migrations/20261005180000_credit_package_promotion.sql",
+    "infra/railway/tests/credit-offers.test.mjs",
+    "tests/integration/credit-promotion-pglite.mjs"
+  ]
+}

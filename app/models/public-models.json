@@ -32,7 +32,7 @@
         "cache_read": 0.06,
         "source": "https://platform.minimax.io/docs/guides/pricing-paygo",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write": 0.375
       },
       "openrouter_reference": null
@@ -71,7 +71,7 @@
         "cache_read": 0.06,
         "source": "https://platform.minimax.io/docs/guides/pricing-paygo",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "long_context": {
           "threshold_input_tokens": 512000,
           "input": 0.6,
@@ -121,7 +121,7 @@
         "cache_read": 1,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 12.5,
         "cache_write_1h": 20,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -168,7 +168,7 @@
         "cache_read": 0.25,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 12.5,
         "cache_write_1h": 20,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -215,7 +215,7 @@
         "cache_read": 0.1,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 1.25,
         "cache_write_1h": 2,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -262,7 +262,7 @@
         "cache_read": 0.1,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 1.25,
         "cache_write_1h": 2,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -309,7 +309,7 @@
         "cache_read": 0.5,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 6.25,
         "cache_write_1h": 10,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -356,7 +356,7 @@
         "cache_read": 0.5,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 6.25,
         "cache_write_1h": 10,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -403,7 +403,7 @@
         "cache_read": 0.5,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 6.25,
         "cache_write_1h": 10,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -450,7 +450,7 @@
         "cache_read": 0.5,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 6.25,
         "cache_write_1h": 10,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -497,7 +497,7 @@
         "cache_read": 0.2,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 5,
         "cache_write_1h": 8,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -544,7 +544,7 @@
         "cache_read": 0.3,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 3.75,
         "cache_write_1h": 6,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -591,7 +591,7 @@
         "cache_read": 0.2,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 2.5,
         "cache_write_1h": 4,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -638,7 +638,7 @@
         "cache_read": 0.2,
         "source": "https://platform.claude.com/docs/en/about-claude/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write_5m": 2.5,
         "cache_write_1h": 4,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
@@ -683,7 +683,7 @@
         "cache_read": 0.01,
         "source": "https://ai.google.dev/gemini-api/docs/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "modality": "text input / text output including thinking",
         "context_note": "Paid standard tier. Audio, storage, grounding and batch prices differ."
       },
@@ -726,7 +726,7 @@
         "cache_read": 0.025,
         "source": "https://ai.google.dev/gemini-api/docs/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "modality": "text input / text output including thinking",
         "context_note": "Paid standard tier. Audio, storage, grounding and batch prices differ."
       },
@@ -774,9 +774,9 @@
         "cache_read": 0.2,
         "source": "https://ai.google.dev/gemini-api/docs/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "modality": "text input / text output including thinking",
-        "context_note": "Paid standard tier. Audio, storage, grounding and batch prices differ.",
+        "context_note": "Paid standard text rates for prompts up to 200K tokens. Longer prompts use $4 input / $18 output per million. Audio, caching storage, grounding and batch prices differ.",
         "long_context": {
           "threshold_prompt_tokens": 200000,
           "input": 4,
@@ -823,7 +823,7 @@
         "cache_read": 0.26,
         "source": "https://docs.z.ai/guides/overview/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_storage_note": "Limited-time free storage; expiry not established."
       },
       "openrouter_reference": {
@@ -865,7 +865,7 @@
         "cache_read": 0.26,
         "source": "https://docs.z.ai/guides/overview/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_storage_note": "Limited-time free storage; expiry not established."
       },
       "openrouter_reference": {
@@ -907,7 +907,7 @@
         "cache_read": 0.075,
         "source": "https://docs.z.ai/guides/overview/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04"
+        "checked_date": "2026-10-05"
       },
       "openrouter_reference": {
         "model_id": "z-ai/glm-5.3-flashx",
@@ -954,7 +954,7 @@
         "cache_read": 1,
         "source": "https://developers.openai.com/api/docs/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "cache_write": 12.5,
         "long_context": {
           "input": 20,
@@ -1004,8 +1004,8 @@
         "cache_read": 0.2,
         "source": "https://developers.openai.com/api/docs/models/gpt-6-sol",
         "processing": "standard",
-        "checked_date": "2026-10-04",
-        "context_note": "Model-specific context premiums and processing tiers apply; not included in base rates.",
+        "checked_date": "2026-10-05",
+        "context_note": "Standard global text rates for prompts up to 272K input tokens. Above 272K, all input/cache rates double and output is 1.5x. Batch, Flex and Fast prices differ.",
         "cache_write": 2.5
       },
       "openrouter_reference": {
@@ -1052,13 +1052,14 @@
         "cache_read": 0.3,
         "source": "https://docs.x.ai/developers/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "long_context": {
           "threshold_prompt_tokens": 200000,
           "input": 4,
           "output": 12,
           "cache_read": 0.6
-        }
+        },
+        "context_note": "Standard global text rates for prompts below 200K tokens. At 200K or more, all input/output rates double. Regional and priority premiums are separate."
       },
       "openrouter_reference": {
         "model_id": "x-ai/grok-4.5",
@@ -1104,13 +1105,14 @@
         "cache_read": 0.5,
         "source": "https://docs.x.ai/developers/pricing",
         "processing": "standard",
-        "checked_date": "2026-10-04",
+        "checked_date": "2026-10-05",
         "long_context": {
           "threshold_prompt_tokens": 200000,
           "input": 4,
           "output": 12,
           "cache_read": 1
-        }
+        },
+        "context_note": "Standard global text rates for prompts below 200K tokens. At 200K or more, all input/output rates double. Regional and priority premiums are separate."
       },
       "openrouter_reference": {
         "model_id": "x-ai/grok-4.7",

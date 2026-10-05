@@ -1,0 +1,58 @@
+{
+  "task_id": "apiwild-credit-packs-customer-frontend-20261005",
+  "status": "passed",
+  "summary": "Added authoritative one-time USD SmarT, NeRD, Newton and Alien credit packs to the home, pricing and customer Credits pages. Fixed 15-day promotional checkout window has a non-resetting countdown and exact UTC cutoff. Actual payment fulfillment remains server-only. Package and custom checkout retries remain distinct and exact confirmed terminal orders clear saved requests. Official comparison cards show source, fresh checked date and pricing scope without a price-match promise.",
+  "files": [
+    "app/console/billing-client.tsx",
+    "app/public-credit-pack-cards.tsx",
+    "app/public-credit-pack-cards.css",
+    "lib/owned-credit-offers.mjs",
+    "lib/owned-credit-offers.d.mts",
+    "tests/owned-credit-offers.test.mjs",
+    "app/pricing.tsx",
+    "app/landing.tsx",
+    "app/route-cards.tsx",
+    "app/models/selected-suppliers.tsx",
+    "app/models/[modelId]/model-detail.tsx",
+    "tests/verified-customer-catalogue.test.mjs"
+  ],
+  "checks": [
+    {
+      "command": "node --test tests/owned-credit-offers.test.mjs tests/verified-customer-catalogue.test.mjs tests/owned-client-config.test.mjs",
+      "exitCode": 0,
+      "result": "13 passed after final corrections: canonical server/client offer contract, exact fixed window and 31-minute grace, no client bonus authority, stable package/custom retries, failure orderId persistence and exact signed terminal cleanup, existing approved 24-model catalogue and redirect trust checks."
+    },
+    {
+      "command": "node --input-type=module - (TypeScript compiler API application check)",
+      "exitCode": 0,
+      "result": "Application TypeScript passed twice, including failed-order recovery change; noEmit true and incremental false. Pre-existing deployment-only vite.config.ts omitted because local .openai/hosting.json is absent."
+    },
+    {
+      "command": "git diff --check -- assigned tracked UI paths",
+      "exitCode": 0,
+      "result": "No whitespace errors; Windows line-ending notices only."
+    },
+    {
+      "command": "node - (new owned-file trailing-whitespace check)",
+      "exitCode": 0,
+      "result": "All five new source/helper/test files passed."
+    },
+    {
+      "command": "node --test infra/railway/tests/credit-offers.test.mjs infra/railway/tests/owned-billing.test.mjs infra/railway/tests/stripe-checkout.test.mjs",
+      "exitCode": 0,
+      "result": "Independent cross-layer review: 30 synthetic server tests passed. No external payment, provider or data writes."
+    }
+  ],
+  "review": {
+    "reviewer": "/root/general_web_backend",
+    "result": "passed",
+    "scope": "Final independent frontend re-review: canonical pack display, authoritative offer parsing, package/custom checkout identities, failure orderId persistence, exact terminal cleanup including signed failed history, fixed UTC window/countdown and deadline wording, preserved custom topups, honest pricing scopes and sources. Reviewer independently ran 43 cross-contract tests, all passed. Peer receipt apiwild-credit-packs-frontend-peer-review-20261005.json."
+  },
+  "limitations": [
+    "Local source preparation only. Parent owns native Stripe configuration, SQL application, deployment, promotion start/end settings and browser/live acceptance. No real payment executed by worker.",
+    "Credits and bonuses are added only after verified successful payment. One-time packs do not promise renewal or recurring subscriptions; checkout countdown does not represent credit expiry.",
+    "Displayed official comparisons depend on parent-owned freshly verified public-models.json; worker did not edit rates, official source data, historical581 catalogue, internal39 supplier journal, runtime routing or provider budgets.",
+    "Application TypeScript excludes the existing deployment-only vite.config.ts requiring a local generated hosting file.",
+    "Independent financial review found no remaining source blockers in frozen eligibility, owner/mode isolation, replay, cumulative bonus refunds/dispute holds, preserved external holds, paid-principal supplier mapping, expired intents or legacy zero-bonus orders. Root owns SQL fixture execution and live financial acceptance."
+  ]
+}

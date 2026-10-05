@@ -75,7 +75,7 @@ begin
   eligible:=o.status='paid' and o.refunded_credit_cents=0 and o.received_cents>=o.amount_cents
     and o.payment_intent is not null and not a.suspended and a.payment_hold_usd_micros=0
     and exists(select 1 from apiwild_finance.stripe_credit_entries where account_id=o.account_id
-      and order_id=o.id and user_id=o.user_id and source_id='checkout:'||o.session_id and amount_cents=o.amount_cents)
+      and order_id=o.id and user_id=o.user_id and source_id='checkout:'||o.session_id and amount_cents=o.credit_cents)
     and not exists(select 1 from apiwild_finance.stripe_disputes where order_id=o.id
       and status in ('needs_response','under_review','lost','warning_needs_response','warning_under_review'));
   if not coalesce(eligible,false) then

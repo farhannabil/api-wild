@@ -1,0 +1,11 @@
+export type CreditPack = Readonly<{id:'smart'|'nerd'|'newton'|'alien';name:string;priceCents:number;bonusCents:number;totalCreditCents:number}>;
+export type CreditOffers = Readonly<{authority:'apiwild-owned-billing';currency:'USD';promotion:Readonly<{id:string;startsAt:string|null;endsAt:string|null;checkoutClosesAt:string|null;active:boolean}>;packages:readonly CreditPack[]}>;
+export const CREDIT_PACK_NAMES:Readonly<Record<CreditPack['id'],string>>;
+export function verifiedCreditOffers(data:unknown):CreditOffers;
+export function promotionalCheckoutRemaining(offers:CreditOffers,now?:number):number;
+export function checkoutStorageKey(identity:{amountCents?:number;packageId?:CreditPack['id'];promotionId?:string}):string;
+export type CheckoutRequest={key:string;requestId:string;body:{packageId:CreditPack['id'];requestId:string}|{amountCents:number;requestId:string}};
+export function checkoutRequest(storage:Pick<Storage,'getItem'|'setItem'>,identity:{amountCents?:number;packageId?:CreditPack['id'];promotionId?:string},createId?:()=>string):CheckoutRequest;
+export function saveCheckoutOrder(storage:Pick<Storage,'setItem'>,request:CheckoutRequest,orderId:unknown):void;
+export function saveFailedCheckoutOrder(storage:Pick<Storage,'setItem'>,request:CheckoutRequest,error:unknown):void;
+export function clearConfirmedCheckouts(storage:Pick<Storage,'getItem'|'removeItem'>,orders:Record<string,unknown>[],currentPromotionId?:string):void;
