@@ -32,15 +32,15 @@ async function server(f,run){const app=createPreparationServer(f);await new Prom
   const req=request({hostname:'127.0.0.1',port:app.address().port,path,method,headers:{host:'apiwild.com',...headers}},res=>{let raw='';res.on('data',chunk=>raw+=chunk);res.on('end',()=>resolve({status:res.statusCode,headers:res.headers,raw,body:raw?JSON.parse(raw):null}));});req.on('error',reject);req.end(body);
 }));}finally{await new Promise(r=>app.close(r));}}
 
-test('public discovery exposes all retail models and truthful inactive capabilities without transport or supplier data',async()=>{
+test('public discovery hides every unconfigured model without transport or supplier data',async()=>{
   const f=fixture();await server(f,async call=>{
     const models=await call('/api/models'),config=await call('/api/gateway/config');
-    assert.equal(models.status,200);assert.equal(models.body.count,39);assert.equal(models.body.models.length,39);
+    assert.equal(models.status,200);assert.equal(models.body.count,0);assert.deepEqual(models.body.models,[]);
     assert.equal(models.body.authority,'apiwild-owned-runtime');assert.ok(models.body.models.every(model=>model.callable===false&&model.pricing.currency==='USD'&&model.capabilities.length===0));
     assert.equal(config.status,200);assert.equal(config.body.deploymentCommit,env.RAILWAY_GIT_COMMIT_SHA);assert.equal(config.body.inferenceConfigured,false);assert.equal(config.body.enabled,false);
     assert.ok(Object.values(config.body.ready).every(value=>value===false));assert.equal(config.body.streaming,true);assert.equal(config.body.streamingMode,'buffered-after-settlement');assert.equal(config.body.nativeStreaming,false);assert.equal(config.body.functionCalling,true);assert.equal(config.body.externalTools,false);
     for(const forbidden of ['supplier','primary','backup','offer_id','fx','CNY','apiKey','sb_secret_','sb_publishable_'])assert.ok(!models.raw.includes(forbidden)&&!config.raw.includes(forbidden),forbidden);
-    const conditional=models.body.models.find(model=>model.id==='deepseek-v4-flash');assert.equal(conditional.pricing.conditionalPricing,true);assert.ok(conditional.pricing.peak.input>conditional.pricing.input);assert.equal(typeof conditional.pricing.tierSchedule,'string');assert.equal(conditional.callable,false);
+    assert.deepEqual(config.body.models,[]);
     assert.equal((await call('/health/ready')).status,503);assert.equal(f.calls.length,0);
   });
 });
@@ -48,7 +48,7 @@ test('public discovery exposes all retail models and truthful inactive capabilit
 test('public route snapshots allow only configured approved model capabilities and validate commit identity',()=>{
   const active=createOwnedDiscoverySnapshot({catalog,routes:[{model:'claude-fable-5',capability:'code',maxOutputTokens:1000,apiKey:'must-not-be-public',supplierReserveCnyMicros:99}],rateVersion:'accepted-v1'});
   assert.equal(active.config.deploymentCommit,null);assert.equal(active.config.ready.code,true);assert.equal(active.config.ready.chat,false);
-  assert.equal(active.catalog.models.filter(model=>model.callable).length,1);assert.equal(active.v1Models.data.find(model=>model.id==='claude-fable-5').available,true);
+  assert.equal(active.catalog.count,1);assert.deepEqual(active.catalog.models.map(model=>model.id),['claude-fable-5']);assert.deepEqual(active.config.models.map(model=>model.id),['claude-fable-5']);assert.deepEqual(active.v1Models.data.map(model=>model.id),['claude-fable-5']);assert.equal(active.catalog.models[0].pricing.input,catalog.models.find(model=>model.model_name==='claude-fable-5').apiwild_selling_price.input);assert.equal(active.v1Models.data.find(model=>model.id==='claude-fable-5').available,true);
   assert.ok(!JSON.stringify(active).includes('must-not-be-public'));assert.throws(()=>active.catalog.models.push({}));
   for(const deploymentCommit of ['G'.repeat(40),'abc','x\n'+ 'a'.repeat(40),123])assert.equal(createOwnedDiscoverySnapshot({catalog,deploymentCommit}).config.deploymentCommit,null);
   assert.throws(()=>createOwnedDiscoverySnapshot({catalog,routes:[{model:'unapproved',capability:'chat',maxOutputTokens:1000}]}));
@@ -63,7 +63,7 @@ test('protected read routes establish real owner or scoped key identity and retu
     assert.equal(f.calls.length,0);
     const account=await call('/api/account',{authorization:SESSION});assert.equal(account.status,200);
     assert.deepEqual(account.body,{authority:'supabase',user:{id:USER},billingMode:'test',profileAvailable:false});assert.ok(!account.raw.includes('private@example.test'));
-    const models=await call('/v1/models',{authorization:'Bearer '+TOKEN});assert.equal(models.status,200);assert.equal(models.body.object,'list');assert.equal(models.body.data.length,39);assert.equal(models.body.inference_available,false);
+    const models=await call('/v1/models',{authorization:'Bearer '+TOKEN});assert.equal(models.status,200);assert.equal(models.body.object,'list');assert.equal(models.body.data.length,0);assert.equal(models.body.inference_available,false);
     const usage=await call('/v1/usage',{authorization:'Bearer '+TOKEN});assert.equal(usage.status,200);assert.deepEqual(usage.body,wallet);assert.equal(usage.headers['cache-control'],'private, no-store');
     const checks=f.calls.filter(call=>call.url.endsWith('key_authenticate'));assert.equal(checks.length,2);assert.ok(checks.every(call=>call.p.p_hash===createHash('sha256').update(TOKEN).digest('hex')&&call.p.p_capability==='chat'));
     assert.ok(!JSON.stringify(f.calls).includes(TOKEN));assert.ok(!usage.raw.includes(USER));assert.ok(!usage.raw.includes('supplier'));
@@ -85,7 +85,7 @@ test('API model availability reflects the verified key capability rather than an
   const route={providerBudgetId:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',model:'claude-fable-5',upstreamModel:'claude-fable-5',capability:'code',maxOutputTokens:1000,maxInputTokens:1000,maxInputChars:1000,supplierReserveCnyMicros:1000000,supplierSlug:'viapi'};
   const f=fixture({scopes:['chat','code'],env:{APIWILD_INFERENCE_ENABLED:'true',SUBROUTER_API_KEY:'sk-syntheticFixtureOnly000000',APIWILD_RETAIL_RATE_VERSION:'fixture-v1',APIWILD_GATEWAY_ROUTES_JSON:JSON.stringify([route])}});
   await server(f,async call=>{
-    const chat=await call('/v1/models',{authorization:'Bearer '+TOKEN});assert.equal(chat.status,200);assert.equal(chat.body.inference_available,false);assert.ok(chat.body.data.every(model=>model.available===false));
+    const chat=await call('/v1/models',{authorization:'Bearer '+TOKEN});assert.equal(chat.status,200);assert.equal(chat.body.inference_available,false);assert.deepEqual(chat.body.data,[]);
     const code=await call('/v1/models',{authorization:'Bearer '+TOKEN,'x-apiwild-capability':'code'});assert.equal(code.status,200);assert.equal(code.body.inference_available,true);assert.deepEqual(code.body.data.filter(model=>model.available).map(model=>model.id),['claude-fable-5']);
     assert.equal(f.calls.length,2);assert.ok(f.calls.every(call=>call.url.endsWith('key_authenticate')));
   });

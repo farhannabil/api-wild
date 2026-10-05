@@ -1,0 +1,33 @@
+{
+  "task_id": "apiwild-verified-model-discovery-20261005",
+  "status": "passed",
+  "summary": "Advertise only currently callable accepted models in public discovery/config and capability-bound authenticated v1 discovery. Preserve internal catalogue, prices, identities, existing request replay and finance. Align incoming-mail health with independently verified Mailu cutover and retained Resend rollback.",
+  "checks": [
+    {
+      "exitCode": 0,
+      "command": "node --test (11 exact files recorded in work/apiwild-verified-model-final-checks-20261005.log)",
+      "passed": 68
+    },
+    {
+      "exitCode": 0,
+      "command": "node --test tests/*.test.mjs",
+      "passed": 391,
+      "note": "Full application suite before addition of fourth catalogue assertion; final catalogue4 checks included in focused68."
+    },
+    {
+      "exitCode": 0,
+      "command": "node node_modules/vite/bin/vite.js build --config vite.railway.config.ts",
+      "note": "First successful Railway application build; final repeated build running before publication."
+    }
+  ],
+  "review": {
+    "result": "passed",
+    "reviewer": "/root/general_web_backend",
+    "receipt": ".claude/evidence/apiwild-verified-model-catalogue-review-20261005.json"
+  },
+  "limitations": [
+    "Availability is accepted configured route evidence, not continuous supplier uptime.",
+    "No paid supplier probe or real customer charge performed.",
+    "Production publication and live checks owned by root."
+  ]
+}

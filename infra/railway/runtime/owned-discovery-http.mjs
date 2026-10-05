@@ -63,11 +63,13 @@ export function createOwnedDiscoverySnapshot({catalog, routes = [], rateVersion 
   // availability afresh without choosing a tariff or changing stored requests.
   const read = () => {
     const eligible = configured.filter(route => !route.conditional || tierPolicy?.canAdmit(route.model));
+    // Customer discovery advertises only routes with accepted current availability.
+    // Keep the full internal catalogue for pricing, existing requests and audits.
     const current = models.map(model => {
       const routes = eligible.filter(route => route.model === model.id);
       const toolCapabilities = routes.filter(route => route.supportsTools).map(route => route.capability);
       return {...model,callable:routes.length > 0,capabilities:routes.map(route=>route.capability),supportsTools:toolCapabilities.length > 0,toolCapabilities};
-    });
+    }).filter(model => model.callable);
     const ready = Object.fromEntries([...capabilities, 'voice', 'transcribe', 'speak'].map(mode => [mode, eligible.some(route => route.capability === mode)]));
     return freeze({
       catalog: {...shared, source: 'apiwild-approved-retail', count: current.length, models:current},
