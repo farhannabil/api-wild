@@ -6,7 +6,7 @@ Key name: {{key_name}}
 Key prefix: {{key_prefix}}
 Expires: {{expires_at}}
 
-Manage API keys: https://apiwild.com/console/keys
+Manage API keys: https://apiwild.com/console/api-keys
 
 For security, API WILD never includes the full API key in email.
 

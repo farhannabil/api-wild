@@ -1,0 +1,1033 @@
+{
+  "account": "acct_1UCiHN194XZKj6cF",
+  "currency": "cad",
+  "fulfillment": "manual_after_confirmed_payment",
+  "brands": {
+    "teleprestige": {
+      "name": "TelePrestige",
+      "origin": "https://teleprestige.com"
+    },
+    "legacytv": {
+      "name": "Legacy TV",
+      "origin": "https://legacytv.ca"
+    },
+    "omegatv": {
+      "name": "Omega TV",
+      "origin": "https://omegatv.ca"
+    },
+    "wolvestv": {
+      "name": "Wolves TV",
+      "origin": "https://wolvestv.com"
+    }
+  },
+  "items": {
+    "wolvestv-premium-1c-1m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 1,
+      "amount": 1500,
+      "price": "price_1UJwmF194XZKj6cFMH6ry0Of"
+    },
+    "teleprestige-premium-1c-1m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 1,
+      "amount": 1500,
+      "price": "price_1UJwmF194XZKj6cFZ5A0ydak"
+    },
+    "omegatv-premium-1c-1m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 1,
+      "amount": 1500,
+      "price": "price_1UJwmF194XZKj6cFqm5iLRB8"
+    },
+    "legacytv-premium-1c-1m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 1,
+      "amount": 1500,
+      "price": "price_1UJwmF194XZKj6cFb77Uzfeh"
+    },
+    "wolvestv-premium-1c-3m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 1,
+      "amount": 4000,
+      "price": "price_1UJwmG194XZKj6cFqtp9qU4D"
+    },
+    "teleprestige-premium-1c-3m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 1,
+      "amount": 4000,
+      "price": "price_1UJwmG194XZKj6cFxhQEvTi0"
+    },
+    "omegatv-premium-1c-3m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 1,
+      "amount": 4000,
+      "price": "price_1UJwmG194XZKj6cFYpohH2l3"
+    },
+    "legacytv-premium-1c-3m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 1,
+      "amount": 4000,
+      "price": "price_1UJwmG194XZKj6cFGhPLqSVb"
+    },
+    "omegatv-premium-1c-6m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 1,
+      "amount": 6000,
+      "price": "price_1UJwmH194XZKj6cFmDwJRH23"
+    },
+    "wolvestv-premium-1c-6m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 1,
+      "amount": 6000,
+      "price": "price_1UJwmH194XZKj6cFTzsg7nRD"
+    },
+    "teleprestige-premium-1c-6m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 1,
+      "amount": 6000,
+      "price": "price_1UJwmH194XZKj6cF71TAVJov"
+    },
+    "legacytv-premium-1c-6m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 1,
+      "amount": 6000,
+      "price": "price_1UJwmH194XZKj6cFCFzyz3Sp"
+    },
+    "omegatv-premium-1c-12m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 1,
+      "amount": 11000,
+      "price": "price_1UJwmI194XZKj6cF1TPcUIiD"
+    },
+    "wolvestv-premium-1c-12m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 1,
+      "amount": 11000,
+      "price": "price_1UJwmI194XZKj6cF8F43sJVO"
+    },
+    "teleprestige-premium-1c-12m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 1,
+      "amount": 11000,
+      "price": "price_1UJwmI194XZKj6cF2DdHZpZG"
+    },
+    "legacytv-premium-1c-12m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 1,
+      "amount": 11000,
+      "price": "price_1UJwmI194XZKj6cFINaW6qBd"
+    },
+    "omegatv-premium-2c-1m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 2,
+      "amount": 2500,
+      "price": "price_1UJwmJ194XZKj6cFQoXVW46K"
+    },
+    "wolvestv-premium-2c-1m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 2,
+      "amount": 2500,
+      "price": "price_1UJwmJ194XZKj6cFq5vGC9vB"
+    },
+    "teleprestige-premium-2c-1m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 2,
+      "amount": 2500,
+      "price": "price_1UJwmJ194XZKj6cFGfXx8etU"
+    },
+    "legacytv-premium-2c-1m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 2,
+      "amount": 2500,
+      "price": "price_1UJwmJ194XZKj6cFK84jwXkO"
+    },
+    "legacytv-premium-2c-3m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 2,
+      "amount": 6000,
+      "price": "price_1UJwmK194XZKj6cFdu8fpxKs"
+    },
+    "wolvestv-premium-2c-3m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 2,
+      "amount": 6000,
+      "price": "price_1UJwmK194XZKj6cFb90Ax7sy"
+    },
+    "omegatv-premium-2c-3m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 2,
+      "amount": 6000,
+      "price": "price_1UJwmK194XZKj6cFkVhM3f4n"
+    },
+    "teleprestige-premium-2c-3m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 2,
+      "amount": 6000,
+      "price": "price_1UJwmK194XZKj6cFiMsKXjhr"
+    },
+    "wolvestv-premium-2c-6m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 2,
+      "amount": 10000,
+      "price": "price_1UJwmL194XZKj6cFqLk9DPIn"
+    },
+    "omegatv-premium-2c-6m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 2,
+      "amount": 10000,
+      "price": "price_1UJwmL194XZKj6cFwyiqMFft"
+    },
+    "legacytv-premium-2c-6m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 2,
+      "amount": 10000,
+      "price": "price_1UJwmL194XZKj6cFQrA6loay"
+    },
+    "teleprestige-premium-2c-6m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 2,
+      "amount": 10000,
+      "price": "price_1UJwmL194XZKj6cF7oOtkSrn"
+    },
+    "wolvestv-premium-2c-12m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 2,
+      "amount": 19000,
+      "price": "price_1UJwmL194XZKj6cFOWjHSVQJ"
+    },
+    "legacytv-premium-2c-12m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 2,
+      "amount": 19000,
+      "price": "price_1UJwmL194XZKj6cFyyw3eCBO"
+    },
+    "omegatv-premium-2c-12m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 2,
+      "amount": 19000,
+      "price": "price_1UJwmM194XZKj6cFC9tizU6u"
+    },
+    "teleprestige-premium-2c-12m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 2,
+      "amount": 19000,
+      "price": "price_1UJwmM194XZKj6cF2ePjgHKe"
+    },
+    "legacytv-premium-3c-1m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 3,
+      "amount": 3000,
+      "price": "price_1UJwmM194XZKj6cFqtZNePQW"
+    },
+    "wolvestv-premium-3c-1m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 3,
+      "amount": 3000,
+      "price": "price_1UJwmM194XZKj6cFVeAvROYe"
+    },
+    "omegatv-premium-3c-1m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 3,
+      "amount": 3000,
+      "price": "price_1UJwmM194XZKj6cF2oChTiQb"
+    },
+    "teleprestige-premium-3c-1m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 1,
+      "connections": 3,
+      "amount": 3000,
+      "price": "price_1UJwmM194XZKj6cFLKJWCL7I"
+    },
+    "legacytv-premium-3c-3m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 3,
+      "amount": 7500,
+      "price": "price_1UJwmN194XZKj6cF63gTgWWT"
+    },
+    "wolvestv-premium-3c-3m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 3,
+      "amount": 7500,
+      "price": "price_1UJwmN194XZKj6cFFR2w9ANW"
+    },
+    "omegatv-premium-3c-3m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 3,
+      "amount": 7500,
+      "price": "price_1UJwmN194XZKj6cFn3DbvnC4"
+    },
+    "teleprestige-premium-3c-3m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 3,
+      "connections": 3,
+      "amount": 7500,
+      "price": "price_1UJwmN194XZKj6cFIaSvF5QV"
+    },
+    "legacytv-premium-3c-6m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 3,
+      "amount": 13000,
+      "price": "price_1UJwmO194XZKj6cFgxFB3sz4"
+    },
+    "wolvestv-premium-3c-6m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 3,
+      "amount": 13000,
+      "price": "price_1UJwmO194XZKj6cFRcURRKZM"
+    },
+    "omegatv-premium-3c-6m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 3,
+      "amount": 13000,
+      "price": "price_1UJwmO194XZKj6cF6om5aZL0"
+    },
+    "teleprestige-premium-3c-6m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 6,
+      "connections": 3,
+      "amount": 13000,
+      "price": "price_1UJwmO194XZKj6cFjG301NXL"
+    },
+    "legacytv-premium-3c-12m": {
+      "brand": "legacytv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 3,
+      "amount": 24000,
+      "price": "price_1UJwmP194XZKj6cFNknWwiGi"
+    },
+    "wolvestv-premium-3c-12m": {
+      "brand": "wolvestv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 3,
+      "amount": 24000,
+      "price": "price_1UJwmP194XZKj6cF9pOiMigz"
+    },
+    "omegatv-premium-3c-12m": {
+      "brand": "omegatv",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 3,
+      "amount": 24000,
+      "price": "price_1UJwmP194XZKj6cFUWqgCxt8"
+    },
+    "teleprestige-premium-3c-12m": {
+      "brand": "teleprestige",
+      "product": "premium",
+      "name": "Premium TV Moderne",
+      "months": 12,
+      "connections": 3,
+      "amount": 24000,
+      "price": "price_1UJwmP194XZKj6cFVU6YI7tA"
+    },
+    "legacytv-omega-1c-1m": {
+      "brand": "legacytv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmQ194XZKj6cFEdflk2kJ"
+    },
+    "omegatv-omega-1c-1m": {
+      "brand": "omegatv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmQ194XZKj6cFQP9pzQxI"
+    },
+    "teleprestige-omega-1c-1m": {
+      "brand": "teleprestige",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmQ194XZKj6cFcLC2ZJMw"
+    },
+    "wolvestv-omega-1c-1m": {
+      "brand": "wolvestv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmQ194XZKj6cFwBM66Nig"
+    },
+    "legacytv-omega-1c-3m": {
+      "brand": "legacytv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 3,
+      "connections": 1,
+      "amount": 6000,
+      "price": "price_1UJwmR194XZKj6cFz3pyhdZm"
+    },
+    "teleprestige-omega-1c-3m": {
+      "brand": "teleprestige",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 3,
+      "connections": 1,
+      "amount": 6000,
+      "price": "price_1UJwmR194XZKj6cF1b4Gwv4A"
+    },
+    "wolvestv-omega-1c-3m": {
+      "brand": "wolvestv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 3,
+      "connections": 1,
+      "amount": 6000,
+      "price": "price_1UJwmR194XZKj6cF3EydES9q"
+    },
+    "omegatv-omega-1c-3m": {
+      "brand": "omegatv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 3,
+      "connections": 1,
+      "amount": 6000,
+      "price": "price_1UJwmR194XZKj6cFI0mn1Hn3"
+    },
+    "legacytv-omega-1c-6m": {
+      "brand": "legacytv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 6,
+      "connections": 1,
+      "amount": 10000,
+      "price": "price_1UJwmR194XZKj6cF1lr9zZ5r"
+    },
+    "teleprestige-omega-1c-6m": {
+      "brand": "teleprestige",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 6,
+      "connections": 1,
+      "amount": 10000,
+      "price": "price_1UJwmS194XZKj6cF3MUExfBI"
+    },
+    "wolvestv-omega-1c-6m": {
+      "brand": "wolvestv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 6,
+      "connections": 1,
+      "amount": 10000,
+      "price": "price_1UJwmS194XZKj6cFs6mGg1r2"
+    },
+    "omegatv-omega-1c-6m": {
+      "brand": "omegatv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 6,
+      "connections": 1,
+      "amount": 10000,
+      "price": "price_1UJwmS194XZKj6cFj8l5VF6g"
+    },
+    "legacytv-omega-1c-12m": {
+      "brand": "legacytv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 12,
+      "connections": 1,
+      "amount": 18000,
+      "price": "price_1UJwmS194XZKj6cFED2aLKp9"
+    },
+    "teleprestige-omega-1c-12m": {
+      "brand": "teleprestige",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 12,
+      "connections": 1,
+      "amount": 18000,
+      "price": "price_1UJwmS194XZKj6cFMTfC16mX"
+    },
+    "wolvestv-omega-1c-12m": {
+      "brand": "wolvestv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 12,
+      "connections": 1,
+      "amount": 18000,
+      "price": "price_1UJwmT194XZKj6cF9WVhAbrV"
+    },
+    "omegatv-omega-1c-12m": {
+      "brand": "omegatv",
+      "product": "omega",
+      "name": "Omega IPTV",
+      "months": 12,
+      "connections": 1,
+      "amount": 18000,
+      "price": "price_1UJwmT194XZKj6cF22dlxAwq"
+    },
+    "legacytv-edge-1c-1m": {
+      "brand": "legacytv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmU194XZKj6cFcR6KaH0j"
+    },
+    "teleprestige-edge-1c-1m": {
+      "brand": "teleprestige",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmV194XZKj6cFClLpjGXz"
+    },
+    "wolvestv-edge-1c-1m": {
+      "brand": "wolvestv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmV194XZKj6cFn7kvkDEx"
+    },
+    "omegatv-edge-1c-1m": {
+      "brand": "omegatv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmW194XZKj6cFWefX2O5d"
+    },
+    "legacytv-edge-1c-3m": {
+      "brand": "legacytv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 3,
+      "connections": 1,
+      "amount": 5000,
+      "price": "price_1UJwmW194XZKj6cFWQ8Uttnr"
+    },
+    "teleprestige-edge-1c-3m": {
+      "brand": "teleprestige",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 3,
+      "connections": 1,
+      "amount": 5000,
+      "price": "price_1UJwmX194XZKj6cFcxKTUC94"
+    },
+    "wolvestv-edge-1c-3m": {
+      "brand": "wolvestv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 3,
+      "connections": 1,
+      "amount": 5000,
+      "price": "price_1UJwmX194XZKj6cFPg4YrqfG"
+    },
+    "omegatv-edge-1c-3m": {
+      "brand": "omegatv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 3,
+      "connections": 1,
+      "amount": 5000,
+      "price": "price_1UJwmX194XZKj6cFKaWBpTyG"
+    },
+    "legacytv-edge-1c-6m": {
+      "brand": "legacytv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 6,
+      "connections": 1,
+      "amount": 9000,
+      "price": "price_1UJwmY194XZKj6cFTFCr8CcS"
+    },
+    "teleprestige-edge-1c-6m": {
+      "brand": "teleprestige",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 6,
+      "connections": 1,
+      "amount": 9000,
+      "price": "price_1UJwmZ194XZKj6cFM1iPtMC5"
+    },
+    "wolvestv-edge-1c-6m": {
+      "brand": "wolvestv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 6,
+      "connections": 1,
+      "amount": 9000,
+      "price": "price_1UJwmZ194XZKj6cFGQz6HzSO"
+    },
+    "legacytv-edge-1c-12m": {
+      "brand": "legacytv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 12,
+      "connections": 1,
+      "amount": 16000,
+      "price": "price_1UJwmZ194XZKj6cFRgeZkLTZ"
+    },
+    "omegatv-edge-1c-6m": {
+      "brand": "omegatv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 6,
+      "connections": 1,
+      "amount": 9000,
+      "price": "price_1UJwma194XZKj6cFPJsPJPcA"
+    },
+    "wolvestv-edge-1c-12m": {
+      "brand": "wolvestv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 12,
+      "connections": 1,
+      "amount": 16000,
+      "price": "price_1UJwma194XZKj6cFKg3CmV0B"
+    },
+    "teleprestige-edge-1c-12m": {
+      "brand": "teleprestige",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 12,
+      "connections": 1,
+      "amount": 16000,
+      "price": "price_1UJwma194XZKj6cFnlCZouM4"
+    },
+    "omegatv-edge-1c-12m": {
+      "brand": "omegatv",
+      "product": "edge",
+      "name": "EDGE TV",
+      "months": 12,
+      "connections": 1,
+      "amount": 16000,
+      "price": "price_1UJwmb194XZKj6cFBYmvwTPr"
+    },
+    "legacytv-racoon-1c-1m": {
+      "brand": "legacytv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmc194XZKj6cFKnFTi3eD"
+    },
+    "teleprestige-racoon-1c-1m": {
+      "brand": "teleprestige",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmd194XZKj6cF9ID0W2m1"
+    },
+    "legacytv-racoon-1c-3m": {
+      "brand": "legacytv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 3,
+      "connections": 1,
+      "amount": 5000,
+      "price": "price_1UJwmd194XZKj6cFKhW26guX"
+    },
+    "wolvestv-racoon-1c-1m": {
+      "brand": "wolvestv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmd194XZKj6cFvyTqv0Bb"
+    },
+    "omegatv-racoon-1c-1m": {
+      "brand": "omegatv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 1,
+      "connections": 1,
+      "amount": 2000,
+      "price": "price_1UJwmd194XZKj6cFn5WK4sNd"
+    },
+    "teleprestige-racoon-1c-3m": {
+      "brand": "teleprestige",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 3,
+      "connections": 1,
+      "amount": 5000,
+      "price": "price_1UJwme194XZKj6cFMsXD67mO"
+    },
+    "wolvestv-racoon-1c-3m": {
+      "brand": "wolvestv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 3,
+      "connections": 1,
+      "amount": 5000,
+      "price": "price_1UJwme194XZKj6cFQWgrsquR"
+    },
+    "legacytv-racoon-1c-7m": {
+      "brand": "legacytv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 7,
+      "connections": 1,
+      "amount": 8000,
+      "price": "price_1UJwme194XZKj6cFso4r2zrL"
+    },
+    "omegatv-racoon-1c-3m": {
+      "brand": "omegatv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 3,
+      "connections": 1,
+      "amount": 5000,
+      "price": "price_1UJwme194XZKj6cFMgQEtejH"
+    },
+    "teleprestige-racoon-1c-7m": {
+      "brand": "teleprestige",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 7,
+      "connections": 1,
+      "amount": 8000,
+      "price": "price_1UJwme194XZKj6cFegz6V6Ua"
+    },
+    "wolvestv-racoon-1c-7m": {
+      "brand": "wolvestv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 7,
+      "connections": 1,
+      "amount": 8000,
+      "price": "price_1UJwmf194XZKj6cFTireFJ7W"
+    },
+    "legacytv-racoon-1c-14m": {
+      "brand": "legacytv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 14,
+      "connections": 1,
+      "amount": 15000,
+      "price": "price_1UJwmf194XZKj6cF3BC6SVFM"
+    },
+    "omegatv-racoon-1c-7m": {
+      "brand": "omegatv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 7,
+      "connections": 1,
+      "amount": 8000,
+      "price": "price_1UJwmf194XZKj6cF6AxYNVvh"
+    },
+    "wolvestv-racoon-1c-14m": {
+      "brand": "wolvestv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 14,
+      "connections": 1,
+      "amount": 15000,
+      "price": "price_1UJwmf194XZKj6cF5rvZW9GU"
+    },
+    "teleprestige-racoon-1c-14m": {
+      "brand": "teleprestige",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 14,
+      "connections": 1,
+      "amount": 15000,
+      "price": "price_1UJwmf194XZKj6cF5sCOXdYk"
+    },
+    "legacytv-racoon-2c-1m": {
+      "brand": "legacytv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 1,
+      "connections": 2,
+      "amount": 3000,
+      "price": "price_1UJwmf194XZKj6cFD1lgkfsk"
+    },
+    "omegatv-racoon-1c-14m": {
+      "brand": "omegatv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 14,
+      "connections": 1,
+      "amount": 15000,
+      "price": "price_1UJwmf194XZKj6cFef0zQAOS"
+    },
+    "wolvestv-racoon-2c-1m": {
+      "brand": "wolvestv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 1,
+      "connections": 2,
+      "amount": 3000,
+      "price": "price_1UJwmg194XZKj6cFd5r3WU0z"
+    },
+    "teleprestige-racoon-2c-1m": {
+      "brand": "teleprestige",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 1,
+      "connections": 2,
+      "amount": 3000,
+      "price": "price_1UJwmg194XZKj6cFOKu29j7H"
+    },
+    "legacytv-racoon-2c-3m": {
+      "brand": "legacytv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 3,
+      "connections": 2,
+      "amount": 8000,
+      "price": "price_1UJwmg194XZKj6cF0SaMEbqW"
+    },
+    "omegatv-racoon-2c-1m": {
+      "brand": "omegatv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 1,
+      "connections": 2,
+      "amount": 3000,
+      "price": "price_1UJwmg194XZKj6cF1WgRiVUK"
+    },
+    "teleprestige-racoon-2c-3m": {
+      "brand": "teleprestige",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 3,
+      "connections": 2,
+      "amount": 8000,
+      "price": "price_1UJwmh194XZKj6cFVUEUqSVq"
+    },
+    "legacytv-racoon-2c-7m": {
+      "brand": "legacytv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 7,
+      "connections": 2,
+      "amount": 14000,
+      "price": "price_1UJwmh194XZKj6cF0xjVoCFl"
+    },
+    "omegatv-racoon-2c-3m": {
+      "brand": "omegatv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 3,
+      "connections": 2,
+      "amount": 8000,
+      "price": "price_1UJwmh194XZKj6cFiyguRpVv"
+    },
+    "wolvestv-racoon-2c-3m": {
+      "brand": "wolvestv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 3,
+      "connections": 2,
+      "amount": 8000,
+      "price": "price_1UJwmh194XZKj6cFHrP6pN8L"
+    },
+    "teleprestige-racoon-2c-7m": {
+      "brand": "teleprestige",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 7,
+      "connections": 2,
+      "amount": 14000,
+      "price": "price_1UJwmi194XZKj6cFAONmkXZD"
+    },
+    "omegatv-racoon-2c-7m": {
+      "brand": "omegatv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 7,
+      "connections": 2,
+      "amount": 14000,
+      "price": "price_1UJwmi194XZKj6cF2xnU1bcA"
+    },
+    "legacytv-racoon-2c-14m": {
+      "brand": "legacytv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 14,
+      "connections": 2,
+      "amount": 26000,
+      "price": "price_1UJwmi194XZKj6cFxWIbGtIM"
+    },
+    "wolvestv-racoon-2c-7m": {
+      "brand": "wolvestv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 7,
+      "connections": 2,
+      "amount": 14000,
+      "price": "price_1UJwmi194XZKj6cFbNsIx0Dp"
+    },
+    "teleprestige-racoon-2c-14m": {
+      "brand": "teleprestige",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 14,
+      "connections": 2,
+      "amount": 26000,
+      "price": "price_1UJwmj194XZKj6cFrU6TG4Fu"
+    },
+    "omegatv-racoon-2c-14m": {
+      "brand": "omegatv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 14,
+      "connections": 2,
+      "amount": 26000,
+      "price": "price_1UJwmj194XZKj6cFbujgAuAU"
+    },
+    "wolvestv-racoon-2c-14m": {
+      "brand": "wolvestv",
+      "product": "racoon",
+      "name": "Racoon TV",
+      "months": 14,
+      "connections": 2,
+      "amount": 26000,
+      "price": "price_1UJwmj194XZKj6cF94O1Q7Ef"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+# Finite transactional worker; no repository-wide build context or dependencies.
+# Pin a reviewed base-image digest before production release.
+FROM node:24-bookworm-slim
+WORKDIR /app
+COPY infra/railway/resend-outbox.mjs infra/railway/run-welcome-outbox.mjs ./infra/railway/
+USER node
+CMD ["node", "infra/railway/run-welcome-outbox.mjs"]

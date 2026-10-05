@@ -1,2 +1,2 @@
-import {catalog} from '@/lib/catalog';
-export async function GET(){return Response.json(catalog,{headers:{'Cache-Control':'public, max-age=300'}});}
+import {getSubRouterCatalogue} from '@/lib/subrouter-catalogue-server';
+export async function GET(){return Response.json(await getSubRouterCatalogue(),{headers:{'Cache-Control':'public, max-age=300'}});}

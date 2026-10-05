@@ -1,0 +1,65 @@
+[
+  {
+    "provider": "OpenAI",
+    "path": "/workspace/scratch/eca19c345eb3/reference-assets/ofox-providers/openai.svg",
+    "source_url": "https://ofox.ai/",
+    "source_type": "inline_svg",
+    "selector": "svg containing title OpenAI",
+    "bytes": 1705,
+    "sha256": "37b5b8bf6bea93e8b70e8fd40d53b197f49449ee19a94b16638fc5936496e0fd"
+  },
+  {
+    "provider": "Claude",
+    "path": "/workspace/scratch/eca19c345eb3/reference-assets/ofox-providers/claude.svg",
+    "source_url": "https://ofox.ai/",
+    "source_type": "inline_svg",
+    "selector": "svg containing title Claude",
+    "bytes": 1715,
+    "sha256": "9e06dfbb0c0fd219b1c2056971212dd598d4bd7727c5b204fdbf8483caf856de"
+  },
+  {
+    "provider": "Gemini",
+    "path": "/workspace/scratch/eca19c345eb3/reference-assets/ofox-providers/gemini.svg",
+    "source_url": "https://ofox.ai/",
+    "source_type": "inline_svg",
+    "selector": "svg containing title Gemini",
+    "bytes": 2849,
+    "sha256": "7a9a53a24ef794868f04496c20ba6690a44df2c0a59719192c070b0fb528ec02"
+  },
+  {
+    "provider": "DeepSeek",
+    "path": "/workspace/scratch/eca19c345eb3/reference-assets/ofox-providers/deepseek.svg",
+    "source_url": "https://ofox.ai/",
+    "source_type": "inline_svg",
+    "selector": "svg containing title DeepSeek",
+    "bytes": 2162,
+    "sha256": "056cf5045cd73d5b68bafc64768d5eb591b774a57bdf18f0ec66fcfaac398621"
+  },
+  {
+    "provider": "Qwen",
+    "path": "/workspace/scratch/eca19c345eb3/reference-assets/ofox-providers/qwen.svg",
+    "source_url": "https://ofox.ai/",
+    "source_type": "inline_svg",
+    "selector": "svg containing title Qwen",
+    "bytes": 2040,
+    "sha256": "3658ff2b2fe5aed0f9f2dc0d2ca29aae8eaab40bfcff6b9988c9f7fcdb6b7695"
+  },
+  {
+    "provider": "Mistral",
+    "path": "/workspace/scratch/eca19c345eb3/reference-assets/ofox-providers/mistral.svg",
+    "source_url": "https://ofox.ai/",
+    "source_type": "inline_svg",
+    "selector": "svg containing title Mistral",
+    "bytes": 653,
+    "sha256": "387a44eda9899a0335a3528ed45422a547efb8815c0227efd4d361c7b4a9ea0e"
+  },
+  {
+    "provider": "Kimi",
+    "path": "/workspace/scratch/eca19c345eb3/reference-assets/ofox-providers/kimi.svg",
+    "source_url": "https://ofox.ai/",
+    "source_type": "inline_svg",
+    "selector": "svg containing title Kimi",
+    "bytes": 709,
+    "sha256": "788c5047ed82f8222e4b7a2ed5a4472135290d02cabbe612e8d7087970d3da2a"
+  }
+]

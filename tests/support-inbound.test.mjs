@@ -9,7 +9,7 @@ const secret='whsec_plJ3nmyCDGBKInavdOK15jsl'; // Published Svix test vector, NO
 const id='00000000-0000-4000-8000-000000000001';
 const email={id,from:'Test <customer@example.com>',to:['support@apiwild.com'],subject:'Help <script>',headers:{'Auto-Submitted':'no'},message_id:'<fixture@example.com>'};
 const template=readFileSync(new URL('../emails/transactional/support-received.html',import.meta.url),'utf8');
-test('deployed support template matches the business template',()=>assert.equal(deployedTemplate,template));
+test('deployed support template matches the business template',()=>assert.equal(deployedTemplate.replaceAll('\r\n','\n'),template.replaceAll('\r\n','\n')));
 const at=1731705121000;
 function signed(event={type:'email.received',data:{email_id:id,to:email.to}}) {
   const body=JSON.stringify(event),ts=String(at/1000),eventId='msg_fixture';

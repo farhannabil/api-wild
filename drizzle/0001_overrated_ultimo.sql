@@ -31,6 +31,7 @@ CREATE TABLE `billing_orders` (
 	`user_id` text NOT NULL,
 	`request_id` text NOT NULL,
 	`pack` text NOT NULL,
+	`purchase_mode` text DEFAULT 'one_time' NOT NULL,
 	`amount_cents` integer NOT NULL,
 	`currency` text NOT NULL,
 	`session_id` text,

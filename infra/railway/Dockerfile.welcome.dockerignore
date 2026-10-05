@@ -1,0 +1,11 @@
+**
+!infra/
+!infra/railway/
+!infra/railway/resend-outbox.mjs
+!infra/railway/run-welcome-outbox.mjs
+**/.env*
+**/node_modules/
+**/.git/
+**/*.pem
+**/*.key
+**/*.db

@@ -6,7 +6,7 @@ Key name: {{key_name}}
 Key prefix: {{key_prefix}}
 Expires: {{expires_at}}
 
-Open API keys: https://apiwild.com/console/keys
+Open API keys: https://apiwild.com/console/api-keys
 
 If you did not create this key, revoke it in your dashboard and contact support immediately.
 

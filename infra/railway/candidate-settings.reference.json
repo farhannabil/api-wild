@@ -1,0 +1,4 @@
+{
+  "build": {"builder": "RAILPACK", "dockerfilePath": "Dockerfile.railway"},
+  "deploy": {"healthcheckPath": "/health/live", "healthcheckTimeout": 30, "restartPolicyType": "NEVER", "numReplicas": 1, "sleepApplication": true}
+}

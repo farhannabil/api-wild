@@ -1,3 +1,3 @@
-import {catalog} from '@/lib/catalog';
+import {getSubRouterCatalogue} from '@/lib/subrouter-catalogue-server';
 import Models from './models-client';
-export default function Page(){return <Models snapshot={catalog}/>}
+export default async function Page(){return <Models snapshot={await getSubRouterCatalogue()}/>}

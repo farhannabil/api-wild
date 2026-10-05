@@ -1,0 +1,24 @@
+# Preparation tag only; pin a verified image digest before any production release.
+FROM node:24-bookworm-slim AS build
+WORKDIR /app
+COPY . .
+# Missing user-owned lock/catalog source fails before any dependency install.
+RUN node infra/railway/preflight.mjs
+RUN npm ci --ignore-scripts --no-audit --no-fund
+RUN node node_modules/vite/bin/vite.js build --config vite.railway.config.ts
+
+FROM node:24-bookworm-slim AS preparation
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/infra/railway/preparation-server.mjs ./infra/railway/preparation-server.mjs
+COPY --from=build /app/infra/railway/runtime/aaro-usage-ingress.mjs ./infra/railway/runtime/aaro-usage-ingress.mjs
+COPY --from=build /app/infra/railway/runtime/aaro-usage-bridge.mjs ./infra/railway/runtime/aaro-usage-bridge.mjs
+COPY --from=build /app/infra/railway/runtime/stripe-webhook-ingress.mjs ./infra/railway/runtime/stripe-webhook-ingress.mjs
+COPY --from=build /app/infra/railway/runtime/stripe-projection-rpc.mjs ./infra/railway/runtime/stripe-projection-rpc.mjs
+COPY --from=build /app/infra/railway/runtime/stripe-financial-projection.mjs ./infra/railway/runtime/stripe-financial-projection.mjs
+COPY --from=build /app/infra/railway/runtime/supabase-gateway-rpc.mjs ./infra/railway/runtime/supabase-gateway-rpc.mjs
+USER node
+CMD ["node", "infra/railway/preparation-server.mjs"]

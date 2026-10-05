@@ -1,0 +1,82 @@
+{
+  "account": "acct_1UCiHN194XZKj6cF",
+  "plans": [
+    {
+      "id": "bd-free",
+      "name": "Free",
+      "region": "BD",
+      "currency": "bdt",
+      "amount": 0,
+      "credits": 25000,
+      "displayCredits": "২৫ হাজার",
+      "productId": "prod_aaro_bd_free_20260926",
+      "priceId": "price_1UJxS7194XZKj6cFdPbGqUrt"
+    },
+    {
+      "id": "bd-starter",
+      "name": "Starter",
+      "region": "BD",
+      "currency": "bdt",
+      "amount": 45600,
+      "credits": 150000,
+      "displayCredits": "১.৫ লাখ",
+      "productId": "prod_aaro_bd_starter_20260926",
+      "priceId": "price_1UJxSA194XZKj6cFplklBHn5"
+    },
+    {
+      "id": "bd-plus",
+      "name": "Plus",
+      "region": "BD",
+      "currency": "bdt",
+      "amount": 78900,
+      "credits": 399000,
+      "displayCredits": "৩.৯৯ লাখ",
+      "productId": "prod_aaro_bd_plus_20260926",
+      "priceId": "price_1UJxSC194XZKj6cFBtsvQ1YU"
+    },
+    {
+      "id": "bd-max",
+      "name": "Max",
+      "region": "BD",
+      "currency": "bdt",
+      "amount": 123400,
+      "credits": 1200000,
+      "displayCredits": "১২ লাখ",
+      "productId": "prod_aaro_bd_max_20260926",
+      "priceId": "price_1UJxSJ194XZKj6cFHkj7glPr"
+    },
+    {
+      "id": "global-starter",
+      "name": "Starter",
+      "region": "GLOBAL",
+      "currency": "usd",
+      "amount": 1500,
+      "credits": 300000,
+      "displayCredits": "300,000",
+      "productId": "prod_aaro_global_starter_20260926",
+      "priceId": "price_1UJxSM194XZKj6cFHXqdKVq1"
+    },
+    {
+      "id": "global-plus",
+      "name": "Plus",
+      "region": "GLOBAL",
+      "currency": "usd",
+      "amount": 7900,
+      "credits": 750000,
+      "displayCredits": "750,000",
+      "productId": "prod_aaro_global_plus_20260926",
+      "priceId": "price_1UJxSO194XZKj6cFPjgx3bQz"
+    },
+    {
+      "id": "global-max",
+      "name": "Max",
+      "region": "GLOBAL",
+      "currency": "usd",
+      "amount": 13900,
+      "credits": 3000000,
+      "displayCredits": "3,000,000",
+      "productId": "prod_aaro_global_max_20260926",
+      "priceId": "price_1UJxSR194XZKj6cFf3xHVOq5"
+    }
+  ]
+}

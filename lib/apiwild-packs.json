@@ -1,0 +1,35 @@
+{
+  "account": "acct_1UCiHN194XZKj6cF",
+  "currency": "usd",
+  "funding": "one_time",
+  "packs": [
+    {
+      "id": "smart",
+      "name": "SmarT",
+      "cents": 3300,
+      "productId": "prod_apiwild_smart_20260926",
+      "priceId": "price_1UJxNQ194XZKj6cFwLyBhAHf"
+    },
+    {
+      "id": "nerd",
+      "name": "NeRD",
+      "cents": 10100,
+      "productId": "prod_apiwild_nerd_20260926",
+      "priceId": "price_1UJxNT194XZKj6cF90xXJ12b"
+    },
+    {
+      "id": "newton",
+      "name": "Newton",
+      "cents": 23400,
+      "productId": "prod_apiwild_newton_20260926",
+      "priceId": "price_1UJxNV194XZKj6cFj37joVao"
+    },
+    {
+      "id": "alien",
+      "name": "Alien",
+      "cents": 34500,
+      "productId": "prod_apiwild_alien_20260926",
+      "priceId": "price_1UJxNY194XZKj6cFqg8cq0s8"
+    }
+  ]
+}

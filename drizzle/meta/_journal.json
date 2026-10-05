@@ -22,6 +22,55 @@
       "when": 1788769553933,
       "tag": "0002_careful_medusa",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1788881301573,
+      "tag": "0003_fair_shinko_yamashiro",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1788882142699,
+      "tag": "0004_shallow_warlock",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1788882431165,
+      "tag": "0005_harsh_spitfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1790433733447,
+      "tag": "0006_clumsy_falcon",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1790436565996,
+      "tag": "0007_greedy_dorian_gray",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1790544928521,
+      "tag": "0008_lean_carmella_unuscione",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1790597765972,
+      "tag": "0009_condemned_king_bedlam",
+      "breakpoints": true
     }
   ]
 }

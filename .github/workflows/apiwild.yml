@@ -30,6 +30,7 @@ jobs:
       - name: Build and test
         run: npm test
   production-health:
+    needs: build-and-test
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -41,4 +42,6 @@ jobs:
         with:
           node-version: '22'
       - name: Check production routes, access boundaries and email DNS
+        env:
+          APIWILD_GATEWAY_OPERATIONS_SECRET: ${{ secrets.APIWILD_GATEWAY_OPERATIONS_SECRET }}
         run: node scripts/daily-health.mjs
