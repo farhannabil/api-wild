@@ -2,6 +2,7 @@ import {createOwnedBillingFromEnv} from './runtime/owned-billing.mjs';
 import {createWorkspacePolicyHttpFromEnv} from './runtime/workspace-policy-http.mjs';
 import {createOwnedGatewayFromEnv} from './runtime/owned-gateway-assembly.mjs';
 import {createSupplierDebitSweepFromEnv} from './runtime/supplier-debit-sweep.mjs';
+import {createSupplierStartupProbeFromEnv} from './runtime/supplier-startup-probe.mjs';
 import {createReservationExpirySweepFromEnv} from './runtime/reservation-expiry-sweep.mjs';
 import {loadReleaseAcceptance} from './runtime/release-acceptance.mjs';
 import {isGatewayHttp,isGatewayPath} from './runtime/gateway-http.mjs';
@@ -250,6 +251,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   frontend.listen(listener.port, listener.host, () => {
     supplierSweep.start();
     reservationExpirySweep.start();
+    void createSupplierStartupProbeFromEnv({env:listener.local?{}:process.env,write:result=>console.log(JSON.stringify(result))}).start();
     console.log(`Guarded ${listener.local ? 'local' : 'Railway'} UI preparation listening; readiness requires valid release evidence.`);
   });
 }

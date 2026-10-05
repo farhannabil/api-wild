@@ -35,6 +35,7 @@ jobs:
         run: >-
           node --test
           infra/railway/tests/gateway-ingress.test.mjs
+          infra/railway/tests/customer-key-rpc.test.mjs
           infra/railway/tests/research-tools-ingress.test.mjs
           infra/railway/tests/owned-gateway-assembly.test.mjs
           infra/railway/tests/supabase-gateway-rpc.test.mjs
@@ -48,6 +49,7 @@ jobs:
           infra/railway/tests/owned-text-modes.test.mjs
           infra/railway/tests/subrouter-receipt-reader.test.mjs
           infra/railway/tests/supplier-debit-sweep.test.mjs
+          infra/railway/tests/supplier-startup-probe.test.mjs
           infra/railway/tests/sandbox-e2e-harness.test.mjs
           infra/railway/tests/launch-status.test.mjs
           infra/railway/tests/release-acceptance.test.mjs
