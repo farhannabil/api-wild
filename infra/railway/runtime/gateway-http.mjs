@@ -1,12 +1,14 @@
 import {Readable} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 import {isGatewayIngress} from './gateway-ingress.mjs';
+import {isOwnedDiscoverySnapshot} from './owned-discovery-http.mjs';
 const instances=new WeakSet();
 export const isGatewayHttp=value=>instances.has(value);
-export const isGatewayPath=path=>typeof path==='string'&&(['/api/account','/api/usage','/api/keys','/api/gateway/keys','/api/gateway','/api/gateway/config','/v1/models','/v1/usage','/v1/chat/completions'].includes(path)||/^\/api\/(?:gateway\/)?keys\/[0-9a-f-]{36}$/.test(path));
-export function createGatewayHttp({ingress}={}){
+export const isGatewayPath=path=>typeof path==='string'&&(['/api/account','/api/usage','/api/keys','/api/gateway/keys','/api/gateway','/v1/models','/v1/usage','/v1/chat/completions'].includes(path)||/^\/api\/(?:gateway\/)?keys\/[0-9a-f-]{36}$/.test(path));
+export function createGatewayHttp({ingress,discovery}={}){
  if(!isGatewayIngress(ingress))throw Error('Invalid gateway ingress.');
- const adapter=Object.freeze({async handle(req,res){
+ if(discovery!==undefined&&!isOwnedDiscoverySnapshot(discovery))throw Error('Invalid gateway discovery.');
+ const adapter=Object.freeze({discovery,async handle(req,res){
   const send=(status,value)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'private, no-store'});res.end(JSON.stringify(value));req.resume();};
   if(req.headers.host!=='apiwild.com'||!isGatewayPath(req.url))return send(403,{error:'Invalid gateway origin.'});
   const controller=new AbortController();req.once('aborted',()=>controller.abort());res.once('close',()=>{if(!res.writableEnded)controller.abort();});req.once('error',()=>controller.abort());

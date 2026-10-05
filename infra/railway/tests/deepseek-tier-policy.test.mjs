@@ -37,6 +37,19 @@ test('explicit admission policy, calendar/source versions and exact served versi
   for(const patch of [{accepted:false},{billingBasis:'supplier_request_finish'},{sourceRevision:'unknown'},
     {calendarVersion:'guess2027'},{servedVersions:{[model]:'DeepSeek-V4-Flash'}},{validUntil:'2027-01-01T00:00:00.000Z'}])assert.throws(()=>make(undefined,patch));
 });
+
+test('nonspending availability follows the same finite admission window without selecting a tariff',()=>{
+  let now=Date.parse('2026-10-08T00:59:50Z');const policy=createDeepSeekTierPolicy({enabled:true,config,clock:()=>now});
+  assert.equal(policy.canAdmit(model),true);assert.equal(policy.canAdmit('unknown-model'),false);
+  for(const horizon of [0,120001,NaN,'25000'])assert.equal(policy.canAdmit(model,horizon),false);
+  for(const value of [Date.parse('2026-10-04T23:59:59Z'),Date.parse('2026-10-12T00:00:00Z'),NaN,'2026-10-08']){
+    now=value;assert.equal(policy.canAdmit(model),false);assert.throws(()=>policy.select(model));
+  }
+  now=Date.parse('2026-10-11T23:57:59.999Z');assert.equal(policy.canAdmit(model),true);
+  now=Date.parse('2026-10-11T23:58:00.000Z');assert.equal(policy.canAdmit(model),false);assert.throws(()=>policy.select(model));
+  assert.equal(policy.canAdmit(model,25000),true);
+  const failedClock=createDeepSeekTierPolicy({enabled:true,config,clock:()=>{throw Error('clock unavailable');}});assert.equal(failedClock.canAdmit(model),false);
+});
 test('trusted clock selects tier once and reservation spans a peak boundary',()=>{
   let now=Date.parse('2026-10-08T00:59:50Z');const policy=createDeepSeekTierPolicy({enabled:true,config,clock:()=>now});
   const quote=policy.select(model,25000);assert.equal(quote.tier,'off_peak');assert.equal(quote.reserveTier,'peak');

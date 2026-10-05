@@ -28,9 +28,34 @@ test('admission tariff stays frozen across dispatch boundary and expired-window 
   if(url.endsWith('finish_retail')){finishCost=p.p_cost_usd_micros;row={...row,state:'succeeded',version:2,cost_usd_micros:p.p_cost_usd_micros,cost_cny_micros:0,observed_cny_micros:0,settlement_reference:p.p_settlement_reference,result_json:p.p_result,usage_json:p.p_usage,supplier_pending:true};return Response.json({settled:true,replayed:false,record:row});}
   throw Error('unexpected fixture transport');
  }});
+ const publicModel=port.discovery.catalog.models.find(row=>row.id===model);
+ assert.equal(publicModel.callable,true);assert.deepEqual(publicModel.capabilities,['chat']);
+ assert.equal(port.discovery.catalog.models.filter(row=>row.id===model).length,1);
+ assert.equal(publicModel.pricing.conditionalPricing,true);assert.ok(publicModel.pricing.peak.input>publicModel.pricing.input);
+ assert.equal(port.discovery.config.ready.chat,true);assert.equal(port.discovery.v1Models.data.filter(row=>row.id===model).length,1);
  const server=createServer((req,res)=>port.handle(req,res));await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const call=()=>new Promise((resolve,reject)=>{const body=JSON.stringify({model,messages:[{role:'user',content:'Hello'}],max_tokens:1000});const req=request({host:'127.0.0.1',port:server.address().port,path:'/api/gateway',method:'POST',headers:{host:'apiwild.com',authorization:'Bearer fixture.auth.signature','content-type':'application/json','content-length':Buffer.byteLength(body),'idempotency-key':'fixture_request_0001'}},res=>{let body='';res.on('data',c=>body+=c);res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(body)}));});req.on('error',reject);req.end(body);});
  try{const initial=await call();assert.equal(initial.status,200);assert.equal(initial.body.ok,true);assert.equal(finishCost,375);assert.equal(row.reserved_usd_micros,375);
   const previousClocks=clocks;now=Date.parse('2026-10-15T02:00:00Z');const replay=await call();assert.equal(replay.status,200);assert.equal(replay.body.replayed,true);assert.equal(upstreamCalls,1);assert.equal(lookupCount,2);assert.equal(clocks,previousClocks);
+  const expired=port.discovery.read();assert.equal(expired.config.inferenceConfigured,false);assert.equal(expired.config.ready.chat,false);
+  assert.equal(expired.catalog.models.find(row=>row.id===model).callable,false);
+  assert.equal(expired.v1Models.data.find(row=>row.id===model).available,false);assert.equal(upstreamCalls,1);
  }finally{await new Promise(r=>server.close(r));}
+});
+
+test('both conditional models have unique discovery entries and expire without hiding standard routes',()=>{
+ let now=Date.parse('2026-10-08T02:00:00Z');
+ const conditionalModels=['deepseek-v4-flash','deepseek-v4-pro'];
+ const conditionalEntries=conditionalModels.map(model=>({...route,model,upstreamModel:model,supplierSlug:catalog.models.find(row=>row.model_name===model).primary.supplier_slug,supportsTools:true}));
+ const standard={...route,model:'claude-fable-5',upstreamModel:'claude-fable-5',supplierSlug:'viapi'};
+ const acceptedRates=Object.fromEntries(conditionalModels.map(model=>[model,{primary:{...rates['deepseek-v4-flash'].primary,supplierSlug:catalog.models.find(row=>row.model_name===model).primary.supplier_slug,currency:catalog.models.find(row=>row.model_name===model).primary.supplier_currency}}]));
+ const servedVersions={'deepseek-v4-flash':'DeepSeek-V4.1-Flash','deepseek-v4-pro':'DeepSeek-V4-Pro-0813'};
+ const port=createOwnedGatewayFromEnv({env:{...env,APIWILD_GATEWAY_ROUTES_JSON:JSON.stringify([...conditionalEntries,standard]),APIWILD_DEEPSEEK_TARIFF_POLICY_JSON:JSON.stringify({...policy,servedVersions}),APIWILD_DEEPSEEK_SUPPLIER_RATES_JSON:JSON.stringify(acceptedRates)},catalog,clock:()=>now,fetchImpl:()=>assert.fail('Discovery must not use transport.')});
+ const active=port.discovery.read();assert.equal(active.catalog.models.filter(row=>row.callable).length,3);
+ for(const id of conditionalModels){const rows=active.catalog.models.filter(row=>row.id===id);assert.equal(rows.length,1);assert.deepEqual(rows[0].capabilities,['chat']);assert.equal(rows[0].supportsTools,true);}
+ for(const timestamp of ['2026-10-04T23:59:00Z','2026-10-11T23:59:00Z','2026-10-15T00:00:00Z']){
+  now=Date.parse(timestamp);const current=port.discovery.read();assert.equal(current.config.ready.chat,true);
+  assert.deepEqual(current.catalog.models.filter(row=>row.callable).map(row=>row.id),['claude-fable-5']);
+  for(const id of conditionalModels){const row=current.catalog.models.find(row=>row.id===id);assert.equal(row.supportsTools,false);assert.deepEqual(row.capabilities,[]);assert.equal(current.v1Models.data.find(row=>row.id===id).available,false);}
+ }
 });

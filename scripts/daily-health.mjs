@@ -3,19 +3,20 @@ import {appendFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 import {spfIncludesProvider} from './spf-health.mjs';
 import {healthRequest, requireStatus} from './health-request.mjs';
+import {assertLiveness, assertModelCatalog, assertRuntimeConfig, waitForDeployment} from './owned-health-contract.mjs';
 
 const site = 'https://apiwild.com';
 const support = 'https://yautmilnpllojugpmfgy.supabase.co/functions/v1/support-inbound';
-const modes = ['chat', 'code', 'research'];
 const pages = ['/', '/signup', '/login', '/forgot-password', '/auth/complete', '/pricing', '/models', '/console/chat', '/console/code', '/console/research'];
 const protectedPaths = ['/api/account', '/api/workspace', '/api/billing', '/api/usage', '/api/keys', '/api/gateway', '/api/gateway/keys', '/v1/models', '/v1/usage'];
 function requireValue(ok) { if (!ok) throw Object.assign(new Error('Health contract mismatch.'), {code: 'CONTRACT_MISMATCH'}); }
 
 // Dependencies are injected for offline tests. Production probes never carry a
 // customer/provider credential and never invoke a payment, inference or mutation.
-export async function runDailyHealth({request = healthRequest, mx = resolveMx, txt = resolveTxt, requireLaunchReady = false, now = () => new Date()} = {}) {
+export async function runDailyHealth({request = healthRequest, mx = resolveMx, txt = resolveTxt, requireLaunchReady = false,
+  expectedCommit, deploymentWait = waitForDeployment, now = () => new Date()} = {}) {
   const checks = [];
-  let catalog, availability, readiness;
+  let catalogIds, availability, readiness;
   async function check(name, fn) {
     try { await fn(); checks.push({name, ok: true}); }
     catch (error) { checks.push({name, ok: false, code: /^[A-Z0-9_]{1,64}$/.test(error?.code || '') ? error.code : 'CHECK_FAILED'}); }
@@ -26,41 +27,28 @@ export async function runDailyHealth({request = healthRequest, mx = resolveMx, t
     requireValue(/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') || ''));
     return response.json();
   }
+  if (expectedCommit !== undefined) await check('Expected Railway deployment active', () => deploymentWait({site, expectedCommit, request}));
   for (const path of pages) {
     await check(`Page ${path}`, async () => {
       const response = await request(site + path); requireStatus(response, 200);
       requireValue((await response.text()).includes('API WILD'));
     });
   }
-  await check('Service liveness', async () => requireValue((await json('/health/live')).alive === true));
+  await check('Service liveness', async () => assertLiveness(await json('/health/live')));
   await check('Public auth configuration', async () => {
     const body = await json('/api/supabase-config');
     requireValue(typeof body.url === 'string' && new URL(body.url).origin === 'https://yautmilnpllojugpmfgy.supabase.co');
     requireValue(typeof body.publishableKey === 'string' && /^sb_publishable_[A-Za-z0-9_-]+$/.test(body.publishableKey));
   });
   await check('Public model catalogue', async () => {
-    const body = await json('/api/models');
-    requireValue(Array.isArray(body.models) && body.models.length > 0 && typeof body.inferenceAvailable === 'boolean');
-    const ids = body.models.map(model => model?.model_name);
-    requireValue(ids.every(id => typeof id === 'string' && id.length > 0 && id.length <= 160) && new Set(ids).size === ids.length);
-    catalog = body;
+    catalogIds = assertModelCatalog(await json('/api/models'));
   });
   for (const path of protectedPaths) {
     await check(`Authentication boundary ${path}`, async () => requireStatus(await request(site + path), 401));
   }
   await check('Gateway availability metadata', async () => {
     const body = await json('/api/gateway/config');
-    requireValue(typeof body.inferenceEnabled === 'boolean' && body.streaming === true
-      && body.streamingMode === 'buffered-after-settlement' && body.functionCalling === true
-      && body.nativeStreaming === false && body.externalTools === false);
-    requireValue(body.modes && modes.every(mode => typeof body.modes[mode] === 'boolean') && Array.isArray(body.models));
-    requireValue(body.models.every(route => typeof route?.model === 'string' && modes.includes(route.capability) && typeof route.supportsTools === 'boolean'
-      && catalog?.models.some(model => model.model_name === route.model)));
-    if (body.inferenceEnabled) {
-      requireValue(body.models.length > 0 && modes.some(mode => body.modes[mode]));
-      requireValue(modes.every(mode => body.modes[mode] === body.models.some(route => route.capability === mode)));
-    } else requireValue(body.models.length === 0 && modes.every(mode => body.modes[mode] === false));
-    requireValue(catalog?.inferenceAvailable === body.inferenceEnabled);
+    assertRuntimeConfig(body, catalogIds ?? new Set(), expectedCommit);
     availability = body;
   });
   await check('Launch readiness contract', async () => {
@@ -70,7 +58,7 @@ export async function runDailyHealth({request = healthRequest, mx = resolveMx, t
     requireValue(typeof body.ready === 'boolean' && Array.isArray(body.blockers)
       && body.blockers.every(blocker => typeof blocker === 'string' && blocker.length > 0 && blocker.length <= 160));
     if (body.ready) {
-      requireStatus(response, 200); requireValue(body.blockers.length === 0 && availability?.inferenceEnabled === true);
+      requireStatus(response, 200); requireValue(body.blockers.length === 0 && availability?.inferenceConfigured === true);
     } else {
       requireStatus(response, 503); requireValue(body.blockers.length > 0);
     }
@@ -87,7 +75,7 @@ export async function runDailyHealth({request = healthRequest, mx = resolveMx, t
   await check('DMARC record', async () => requireValue((await txt('_dmarc.apiwild.com')).some(row => row.join('').startsWith('v=DMARC1;'))));
 
   const operationalHealthy = checks.every(check => check.ok);
-  const launchReady = operationalHealthy && readiness?.ready === true && availability?.inferenceEnabled === true;
+  const launchReady = operationalHealthy && readiness?.ready === true && availability?.inferenceConfigured === true;
   const launchBlockerCount = readiness?.blockers.length ?? null;
   // Only fixed check labels, booleans, counts and sanitized error codes are logged.
   // Availability is an observation; no checks are silently waived to pass launch.
@@ -104,7 +92,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   if (args.some(arg => arg !== '--require-launch-ready')) {
     console.error('Usage: node scripts/daily-health.mjs [--require-launch-ready]'); process.exitCode = 2;
   } else {
-    const result = await runDailyHealth({requireLaunchReady: args.includes('--require-launch-ready')});
+    const result = await runDailyHealth({requireLaunchReady: args.includes('--require-launch-ready'), expectedCommit: process.env.APIWILD_EXPECTED_COMMIT});
     console.log(result.report);
     if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, result.report + '\n');
     if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT,

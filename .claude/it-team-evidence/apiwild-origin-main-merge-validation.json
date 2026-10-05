@@ -1,0 +1,138 @@
+{
+  "task_id": "apiwild-origin-main-merge-validation",
+  "status": "passed",
+  "validatedBy": "/root/public_status",
+  "validatedAt": "2026-10-05T09:38:52.067Z",
+  "incomingCommit": "b5137872e56abf974e5b55649d5ade46e4d85194",
+  "launchHead": "3fd38f5",
+  "productionReady": false,
+  "summary": "Resolved concurrent owned-discovery changes with buffered compatibility, immutable conditional pricing and separate strict launch acceptance. Public conditional availability expires dynamically; recovery of settled work does not reprice or redispatch.",
+  "review": {
+    "reviewer": "/root/source_launch_audit",
+    "result": "passed",
+    "tests": 42,
+    "evidence": ".claude/it-team-evidence/apiwild-merged-tariff-discovery-review.json"
+  },
+  "checks": [
+    {
+      "command": "node --test --test-concurrency=4 <all applicable tests/*.test.mjs and infra/railway/tests/*.test.mjs>",
+      "tests": 710,
+      "passed": 710,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    {
+      "command": "node --test infra/railway/preparation.test.mjs infra/railway/tests/container-context.test.mjs",
+      "tests": 51,
+      "passed": 51,
+      "exitCode": 0
+    },
+    {
+      "command": "Validate workflow YAML, all focused paths, main-only exact-deployment wait and strict launch job",
+      "testFiles": 20,
+      "exitCode": 0
+    },
+    {
+      "command": "Walk complete preparation-server and allowance-worker relative import graph against closed Docker context/runtime copies",
+      "modules": 34,
+      "exitCode": 0
+    },
+    {
+      "command": "Transpile public content and verify canonical discovery/capability documentation",
+      "exitCode": 0
+    }
+  ],
+  "files": [
+    {
+      "path": ".github/workflows/apiwild.yml",
+      "sha256": "fa182d151352e5581132cb2bb4a4c24fd37eb18a4ca0a47d8ce68d86fb7ccd95"
+    },
+    {
+      "path": "Dockerfile.railway.dockerignore",
+      "sha256": "77f6a8e847e5ea4c69e37c38ffb296a1b5ac12cc2692766ea953287ba12c4f37"
+    },
+    {
+      "path": "app/content.ts",
+      "sha256": "de439c8efbb4cc28e6f871e281e86e64fc058c4a46589afc5930cdd8e370d14d"
+    },
+    {
+      "path": "infra/railway/preparation-server.mjs",
+      "sha256": "ca840be1f46404afe5a2a9fe51a4488d7157b5b47735b27f6439a99ce5fa5bc7"
+    },
+    {
+      "path": "infra/railway/runtime/deepseek-tier-policy.mjs",
+      "sha256": "bd4d9e5bb83c6a4a0bf1cc302a22484cfcd7e95bd303f62faf95ac791df54bb6"
+    },
+    {
+      "path": "infra/railway/runtime/gateway-http.mjs",
+      "sha256": "b618474ba270130bd11d3aef59bbb61a85f9c701b2d04ded14a7a9974d5b4740"
+    },
+    {
+      "path": "infra/railway/runtime/gateway-ingress.mjs",
+      "sha256": "2786a7b05ac59e825ee8aeadf20b07aef2d70a336d2fa2ff8f5b81d227de01d6"
+    },
+    {
+      "path": "infra/railway/runtime/launch-status.mjs",
+      "sha256": "287c41298c59ccf00c9795c90cc3e5adba0c04c7f04ad50540d186de6eb91f4d"
+    },
+    {
+      "path": "infra/railway/runtime/owned-discovery-http.mjs",
+      "sha256": "5411a4aaefc54493e7df25935e91d2ddfa8e1c6048bc5b65c725964b9decb343"
+    },
+    {
+      "path": "infra/railway/runtime/owned-gateway-assembly.mjs",
+      "sha256": "4188f70626f7711340c068fef78d61a7e492fb29f3c608df6843d85fb6dc8776"
+    },
+    {
+      "path": "infra/railway/tests/deepseek-assembly.test.mjs",
+      "sha256": "6bb42c3b29e64383b16d1cb799e1d71e6f4f97ba68e993b5b52f6cd08a8ee76a"
+    },
+    {
+      "path": "infra/railway/tests/deepseek-tier-policy.test.mjs",
+      "sha256": "41d05f6a4b7b45fb7b17ec54e4865ba1f5124ddb272d29581ca28848ac149f8d"
+    },
+    {
+      "path": "infra/railway/tests/gateway-discovery.test.mjs",
+      "sha256": "528efe582a29b64b83a83fca9769e0bb6b204188090a424db679c80d56a9c901"
+    },
+    {
+      "path": "infra/railway/tests/launch-status.test.mjs",
+      "sha256": "970d731df2e8172d39653d527d71e73ceb0eb534a7c1d37af1145e7e452ea1ab"
+    },
+    {
+      "path": "infra/railway/tests/owned-discovery-http.test.mjs",
+      "sha256": "cda84c69aa37aca20e976549acde8cd5e379b961fa4967530f59ba123739f48a"
+    },
+    {
+      "path": "scripts/daily-health.mjs",
+      "sha256": "899b9d50576ae3a7b91b4746aa17fa4c394e798eef3deb03eea971b01c88c2f6"
+    },
+    {
+      "path": "scripts/owned-health-contract.mjs",
+      "sha256": "c9237d979c06855ac8c23a2e4fdb81f07f19670689fa4abd80a99f8a86267f45"
+    },
+    {
+      "path": "tests/daily-health.test.mjs",
+      "sha256": "66e4ebcf1e60961cd89ed69a24bf2a47013321a6d5a5f8e0d4701379dfb04b24"
+    },
+    {
+      "path": "tests/owned-health-contract.test.mjs",
+      "sha256": "61a998045b1d4619685154566a2c8ea7ceaa1917ea09411aa718b8b853dae5d4"
+    }
+  ],
+  "limitations": [
+    "The standalone aaro-usage-postgres.test.mjs remains explicitly excluded; it requires an isolated PostgreSQL18 integration environment.",
+    "Prior production Vite build remains the build evidence; no redundant full UI build was run for this runtime merge. Public documentation text was transpile-checked; runtime package imports and artifact boundaries were retested.",
+    "Offline tests do not certify active inference, checkout, email delivery, supplier debit or customer launch acceptance.",
+    "No commits, pushes, external writes or production calls were performed by this merge worker."
+  ],
+  "sources": [
+    "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax",
+    "https://github.blog/changelog/2026-03-19-github-actions-late-march-2026-updates/"
+  ],
+  "logs": {
+    "unit": "C:/Users/farha/AppData/Local/Temp/apiwild-launch-merge-unit-20261005.log",
+    "artifact": "C:/Users/farha/AppData/Local/Temp/apiwild-launch-merge-artifact-20261005.log"
+  }
+}

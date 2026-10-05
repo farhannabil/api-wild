@@ -16,17 +16,9 @@ async function fixture(fn, options={}) {
   });
   try{await fn(call);}finally{await new Promise(resolve=>server.close(resolve));}
 }
-test('public catalogue publishes retail metadata without exposing private supplier records',async()=>{
-  await fixture(async call=>{
-    const response=await call('/api/models');assert.equal(response.status,200);assert.equal(response.body.models.length,39);
-    assert.equal(response.body.inferenceAvailable,false);
-    assert.deepEqual(response.body.models.map(m=>m.model_name),catalog.models.map(m=>m.model_name));
-    const deepseek=response.body.models.find(m=>m.model_name==='deepseek-v4-flash').apiwild_selling_price;
-    assert.ok(deepseek.peak.input>deepseek.input);assert.equal(typeof deepseek.tier_schedule,'string');assert.equal(deepseek.runtime_tier_selection_active,false);
-    const serialized=JSON.stringify(response.body);
-    for(const field of ['supplier','offer_id','potential_savings','CNY','fx','primary','backup'])assert.ok(!serialized.includes(field),field);
-    assert.equal(response.headers['cache-control'],'no-store');
-  });
+test('launch status does not shadow canonical discovery routes',()=>{
+  const status=createLaunchStatusHttp({});assert.equal(status.matches('/api/models'),false);assert.equal(status.matches('/api/gateway/config'),false);
+  assert.equal(status.matches('/health/live'),true);assert.equal(status.matches('/health/ready'),true);
 });
 test('configured services and enable flags cannot fabricate customer acceptance',async()=>{
   await fixture(async call=>{
@@ -40,10 +32,10 @@ test('configured services and enable flags cannot fabricate customer acceptance'
 test('status reports disabled configuration, rejects writes and forged identity, and preserves exact path routing',async()=>{
   await fixture(async call=>{
     const ready=await call('/health/ready');assert.ok(ready.body.blockers.includes('inference-disabled'));assert.ok(ready.body.blockers.includes('checkout-disabled'));
-    assert.equal((await call('/api/models',{method:'POST'})).status,405);
-    assert.equal((await call('/api/models',{headers:{'oai-authenticated-user-id':'forged'}})).status,403);
-    assert.equal((await call('/api/models?customer=other')).status,503);
-    const head=await call('/api/models',{method:'HEAD'});assert.equal(head.status,200);assert.equal(head.body,null);
+    assert.equal((await call('/health/live',{method:'POST'})).status,405);
+    assert.equal((await call('/health/live',{headers:{'oai-authenticated-user-id':'forged'}})).status,403);
+    assert.equal((await call('/health/ready?customer=other')).status,503);
+    const head=await call('/health/live',{method:'HEAD'});assert.equal(head.status,200);assert.equal(head.body,null);
   });
   assert.throws(()=>createPreparationServer({launchStatusHttp:{matches:()=>true,handle(){}}}));
 });

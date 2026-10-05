@@ -282,6 +282,20 @@ OpenRouter's visible web search, web fetch, image generation, advisor, fusion, d
 
 Owner intervention is limited to fresh credential entry, any actual authentication challenge, upstream funding, and explicit bounded paid acceptance. No more source ZIPs are needed.
 
+## October 5 launch database receipt and current boundary
+
+The in-app browser reached the correct `api-wild-production` Supabase project (`yautmilnpllojugpmfgy`) under the Legacy organization. The root applied the reviewed migrations below with their exact source recorded in the migration ledger in the same transaction; all three returned success, then a separate read-only verification confirmed their versions and security boundaries:
+
+- `20261005083727_supplier_allowance_outbox.sql`
+- `20261005084105_apiwild_welcome_brand_scope.sql`
+- `20261005084607_deepseek_request_tariff_version.sql`
+
+Post-application verification: two existing orders, zero inference requests, zero accepted native package mappings, zero allowance records and zero supplier debit receipts. The single API WILD welcome remained pending. All three new finance tables have RLS enabled and no anon/authenticated SELECT grant. The four checked public allowance/quote/debit/welcome RPCs are invokers, not definers, and permit execution only by the service role. These changes did not send email, move funds, grant customer quota or call a model.
+
+The supplier allowance bridge is dormant infrastructure, not a return to the superseded native customer portal. Do not activate it until an approved package mapping controls the same inference credential and an authoritative actual-CNY debit receipt contract is available. The station dashboard showed available balance and package fund both zero, no native packages and an unconfigured SaaS activation token. This station evidence does not measure unrelated personal-agent account quota; preserve existing agent credentials and routing.
+
+GitHub PR #6 contains the launch code, tests and public documentation. Its original head was `3fd38f5a518f5b96365c7fb0f7fa86b1f8ec3b1f`; the independent owned-discovery/health fix from PR #5 (`b5137872e56abf974e5b55649d5ade46e4d85194`) is being integrated before release. Build/test, deployed service health and real customer acceptance must remain separate results. Paid onboarding is not approved by passing liveness or by this database receipt. Stripe payment/refund testing stays in sandbox, never a live self-charge. No supplier test-spend approval was received in the owner's login-only response.
+
 ## Copy-ready new-chat request
 
 Continue API WILD from this handover and GEN-10. Preserve the Railway website at apiwild.com and latest approved Supabase/Resend/Stripe-owned customer accounts, keys and retail ledger; Subrouter supplies inference privately. Verify current GitHub main and Railway deployment before edits. Latest nullable-key release is ACTIVE; migration, workspace flag, key controls and account save are verified. Continue with remaining Stripe credit fulfillment and restricted upstream configuration, then bounded real acceptance. Finish existing Stripe webhook-to-credit delivery and restricted upstream routing with bounded supplier budgets, obtain only concrete owner credential/funding/test actions, and run the purchase-to-model acceptance with the owner. Keep source publication, deployment and real acceptance distinct; do not revive native portal/SMTP/OAuth work or claim tools/streaming are supported. User prefers “Broski,” clear short updates, and no “checking that now.”

@@ -8,6 +8,7 @@ import {createRetailTokenPricing} from './retail-token-pricing.mjs';
 import {createModelAccounting} from './model-accounting.mjs';
 import {chatInputBytes,usesFunctionTools} from './chat-compatibility.mjs';
 import {createDeepSeekTierPolicy} from './deepseek-tier-policy.mjs';
+import {createOwnedDiscoverySnapshot} from './owned-discovery-http.mjs';
 export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Date.now}){
  if(env.APIWILD_OWNED_GATEWAY_ENABLED!=='true')return undefined;
  const secretKey=env.SUPABASE_SECRET_KEY,publishableKey=env.SUPABASE_PUBLISHABLE_KEY,billingMode=env.APIWILD_BILLING_MODE;
@@ -46,7 +47,8 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
   return {state:'succeeded',costUsdMicros:charge.costUsdMicros,costCnyMicros:0,settlementReference:'usage:'+providerResult.providerResponseId,result:{text:providerResult.text,model:record.model,created:providerResult.created,finishReason:providerResult.finishReason,usage:providerResult.usage,...(providerResult.toolCalls?{toolCalls:providerResult.toolCalls}:{})},usage:{...providerResult.usage,supplierReconciliationPending:true,estimatedSupplierCnyMicros:economics.estimatedSupplierCnyMicros}};
  }});
  const playgroundModels=[...new Map(routes.map(r=>[r.model+'|'+r.capability,{model:r.model,capability:r.capability,maxOutputTokens:r.maxOutputTokens,supportsTools:r.supportsTools===true}])).values()];
- const ingress=createGatewayIngress({rpc,keys,service,origin:'https://apiwild.com',enabled:true,playgroundModels,selectQuote:async({context,model,capability,maxTokens,payload,requestKey,payloadHash})=>{
+ const discovery=createOwnedDiscoverySnapshot({catalog,routes:playgroundModels,rateVersion,tierPolicy,deploymentCommit:env.RAILWAY_GIT_COMMIT_SHA});
+ const ingress=createGatewayIngress({rpc,keys,service,discovery,origin:'https://apiwild.com',enabled:true,playgroundModels,selectQuote:async({context,model,capability,maxTokens,payload,requestKey,payloadHash})=>{
   if(!inferenceEnabled)throw new GatewayError('gateway_inference_disabled');
   if(conditional(model)){
    const prior=await rpc.lookupQuote(context,{keyId:context.keyId??null,requestKey,payloadHash,capability,model});
@@ -62,5 +64,5 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
   const requestRateVersion=selection?.rateVersion??rateVersion;
   return {providerBudgetId:route.providerBudgetId,model,rateVersion:requestRateVersion,reservedUsdMicros:Math.max(1,pricing.charge({model,promptTokens:route.maxInputTokens,completionTokens:maxTokens,requestRateVersion}).costUsdMicros),reservedCnyMicros:route.supplierReserveCnyMicros};
  }});
- return createGatewayHttp({ingress});
+ return createGatewayHttp({ingress,discovery});
 }

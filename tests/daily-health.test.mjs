@@ -3,15 +3,16 @@ import assert from 'node:assert/strict';
 import {runDailyHealth} from '../scripts/daily-health.mjs';
 
 function fixture({active = false, count = 39, responses = {}, dnsFailure = false} = {}) {
-  const models = Array.from({length: count}, (_, i) => ({model_name: `model-${i}`}));
+  const models = Array.from({length: count}, (_, i) => ({id: `model-${i}`, name: `model-${i}`, creator:'Fixture', pricing:{currency:'USD',unit:'per_million_tokens',input:1,output:2}, callable:active && i===0, capabilities:active && i===0?['chat']:[], supportsTools:false,toolCapabilities:[]}));
+  const shared={schemaVersion:1,authority:'apiwild-owned-runtime'};
   const calls = [];
   const json = (value, status = 200) => Response.json(value, {status});
   const defaults = {
-    '/health/live': () => json({alive: true, ready: false}),
+    '/health/live': () => json({alive: true, ready: false, phase:'launch-preparation'}),
     '/api/supabase-config': () => json({url: 'https://yautmilnpllojugpmfgy.supabase.co', publishableKey: 'sb_publishable_fixture'}),
-    '/api/models': () => json({models, inferenceAvailable: active}),
-    '/api/gateway/config': () => json({inferenceEnabled: active, streaming: true, streamingMode: 'buffered-after-settlement', functionCalling: true, nativeStreaming: false, externalTools: false,
-      modes: {chat: active, code: false, research: false}, models: active ? [{model: 'model-0', capability: 'chat', maxOutputTokens: 512, supportsTools: false}] : []}),
+    '/api/models': () => json({...shared,source:'apiwild-approved-retail',count:models.length,models}),
+    '/api/gateway/config': () => json({...shared,deploymentCommit:'a'.repeat(40),enabled:active,inferenceConfigured:active,currency:'usd',rateVersion:'fixture',streaming:true,streamingMode:'buffered-after-settlement',functionCalling:true,nativeStreaming:false,externalTools:false,
+      ready:{chat:active,code:false,research:false,voice:false,transcribe:false,speak:false},models}),
     '/health/ready': () => json({ready: active, phase: 'launch-preparation', blockers: active ? [] : ['fixture-unaccepted-delivery'], checks: {}}, active ? 200 : 503),
   };
   const dependencies = {
@@ -88,19 +89,29 @@ test('readiness status, blockers and availability must agree; no response body c
   }
 });
 
-test('old gateway contract, unknown models or disabled-but-listed routes cannot pass', async () => {
-  const inactive = {inferenceEnabled: false, streaming: true, streamingMode: 'buffered-after-settlement', functionCalling: true, nativeStreaming: false, externalTools: false, modes: {chat: false, code: false, research: false}, models: []};
+test('old gateway contract, unknown models or disabled-but-callable routes cannot pass', async () => {
+  const f=fixture();const inactive=await (await f.dependencies.request('https://apiwild.com/api/gateway/config')).json();
   for (const config of [
-    {models: [{}, {}, {}], ready: {chat: false, code: false, research: false, voice: false}},
-    {...inactive, inferenceEnabled: true, modes: {chat: true, code: false, research: false}, models: [{model: 'unknown-model', capability: 'chat'}]},
-    {...inactive, models: [{model: 'model-0', capability: 'chat'}]},
-    {...inactive, modes: {chat: false, code: false}},
-    {...inactive, streamingMode: 'native'},
-    {...inactive, externalTools: true},
+    {models:[{},{},{}],ready:{chat:false,code:false,research:false,voice:false}},
+    {...inactive,models:[{...inactive.models[0],id:'unknown-model'}]},
+    {...inactive,models:[{...inactive.models[0],callable:true,capabilities:['chat']}]},
+    {...inactive,ready:{chat:false,code:false}},
+    {...inactive,streamingMode:'native'},
+    {...inactive,externalTools:true},
   ]) {
-    const result = await runDailyHealth(fixture({responses: {'/api/gateway/config': () => Response.json(config)}}).dependencies);
-    assert.equal(result.operationalHealthy, false); assert.equal(result.launchReady, false);
+    const result=await runDailyHealth(fixture({responses:{'/api/gateway/config':()=>Response.json(config)}}).dependencies);
+    assert.equal(result.operationalHealthy,false);assert.equal(result.launchReady,false);
   }
+});
+
+test('deployment wait is wired to read-only transport and commit changes remain an operational failure',async()=>{
+  const f=fixture();let waits=0;
+  const result=await runDailyHealth({...f.dependencies,expectedCommit:'a'.repeat(40),deploymentWait:async args=>{waits++;assert.equal(args.expectedCommit,'a'.repeat(40));assert.equal(args.request,f.dependencies.request);}});
+  assert.equal(waits,1);assert.equal(result.operationalHealthy,true);assert.equal(result.launchReady,false);
+  const changed=await runDailyHealth({...f.dependencies,expectedCommit:'b'.repeat(40),deploymentWait:async()=>{}});
+  assert.equal(changed.operationalHealthy,false);assert.equal(changed.launchReady,false);assert.equal(changed.exitCode,1);
+  const failed=await runDailyHealth({...f.dependencies,expectedCommit:'a'.repeat(40),deploymentWait:async()=>{throw Object.assign(Error('private'),{code:'EXPECTED_DEPLOYMENT_NOT_ACTIVE'});}});
+  assert.equal(failed.operationalHealthy,false);assert.doesNotMatch(failed.report,/private/);
 });
 
 test('active readiness cannot hide another failed operational check', async () => {

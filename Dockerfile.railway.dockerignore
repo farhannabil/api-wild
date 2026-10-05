@@ -56,6 +56,7 @@
 !infra/railway/runtime/gateway-service.mjs
 !infra/railway/runtime/owned-billing.mjs
 !infra/railway/runtime/owned-gateway-assembly.mjs
+!infra/railway/runtime/owned-discovery-http.mjs
 !infra/railway/runtime/retail-token-pricing.mjs
 !infra/railway/runtime/model-accounting.mjs
 !infra/railway/runtime/stripe-checkout.mjs

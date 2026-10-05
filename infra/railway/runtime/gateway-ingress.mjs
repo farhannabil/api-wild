@@ -3,6 +3,7 @@ import { GatewayError, cloneJsonObject, strictObject, exactInteger, withDeadline
 import { isCustomerKeyRpc } from './customer-key-rpc.mjs';
 import { gatewayPayloadFingerprint } from './gateway-service.mjs';
 import { normalizeChatRequest, settledChatCompletion, bufferedChatStream } from './chat-compatibility.mjs';
+import { isOwnedDiscoverySnapshot } from './owned-discovery-http.mjs';
 const instances=new WeakSet();
 export const isGatewayIngress=value=>instances.has(value);
 const HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' };
@@ -24,9 +25,10 @@ async function body(request, signal) {
   } finally { signal.removeEventListener('abort', abort); void reader.cancel().catch(() => {}); }
 }
 export function createGatewayIngress(config) {
-  strictObject(config, ['rpc', 'keys', 'service', 'selectQuote', 'origin', 'enabled', 'maxConcurrent', 'playgroundModels']);
+  strictObject(config, ['rpc', 'keys', 'service', 'selectQuote', 'origin', 'enabled', 'maxConcurrent', 'playgroundModels', 'discovery']);
   if (config.origin !== 'https://apiwild.com' || typeof config.rpc?.verifyOwner !== 'function' || typeof config.rpc?.verifyKeyOwner !== 'function' || !isCustomerKeyRpc(config.keys) || typeof config.service?.execute !== 'function' || typeof config.selectQuote !== 'function') throw new GatewayError('gateway_ingress_unconfigured');
   const playgroundModels=(config.playgroundModels??[]).map(row=>{strictObject(row,['model','capability','maxOutputTokens','supportsTools']);if(typeof row.model!=='string'||!['chat','code','research'].includes(row.capability)||(row.supportsTools!==undefined&&typeof row.supportsTools!=='boolean'))throw new GatewayError('gateway_ingress_unconfigured');exactInteger(row.maxOutputTokens,1,32768);return Object.freeze({...row,supportsTools:row.supportsTools===true});});
+  if(config.discovery!==undefined&&!isOwnedDiscoverySnapshot(config.discovery))throw new GatewayError('gateway_ingress_unconfigured');
   const rpc = config.rpc, keys = config.keys, service = config.service, selector = config.selectQuote;
   const origin = config.origin, enabled = config.enabled === true, limit = exactInteger(config.maxConcurrent ?? 4, 1, 16); let active = 0;
   const ingress=Object.freeze({ async handle(request) {
@@ -37,12 +39,6 @@ export function createGatewayIngress(config) {
       const url = new URL(request.url);
       if (request.signal.aborted || url.origin !== origin || url.search || url.hash || (request.headers.has('origin') && request.headers.get('origin') !== origin)) bad(403);
       if ([...request.headers.keys()].some(k => k.startsWith('oai-authenticated-'))) bad(403);
-      if (url.pathname === '/api/gateway/config') {
-        if (request.method !== 'GET') bad(405);
-        return reply(200, { inferenceEnabled: playgroundModels.length > 0, streaming: true, streamingMode: 'buffered-after-settlement', functionCalling: true, nativeStreaming: false, externalTools: false,
-          modes: Object.fromEntries(['chat','code','research'].map(mode => [mode, playgroundModels.some(row => row.capability === mode)])),
-          models: playgroundModels });
-      }
       const authorization = request.headers.get('authorization') || '';
       const keyAuth = /^Bearer aw_(?:live|test)_[a-f0-9]{64}$/.test(authorization);
       const sessionAuth = authorization.length <= 8192 && /^Bearer [A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(authorization);
@@ -51,20 +47,36 @@ export function createGatewayIngress(config) {
       const keyRoute = ['/v1/chat/completions','/v1/models','/v1/usage'].includes(url.pathname);
       if (keyRoute ? !keyAuth
           : !(sessionAuth || (url.pathname === '/api/gateway' && request.method === 'POST' && keyAuth))) bad(401);
-      if(url.pathname==='/api/gateway'&&request.method==='GET'){await rpc.verifyOwner({authorization});return reply(200,{inferenceConfigured:playgroundModels.length>0,streaming:false,externalTools:false,models:playgroundModels});}
+      // GET bodies are rejected before verifying an owner or reading any data.
+      if (request.method === 'GET' && (request.headers.has('transfer-encoding') || (request.headers.has('content-length') && request.headers.get('content-length') !== '0'))) bad();
+      if(url.pathname==='/api/gateway'&&request.method==='GET'){
+        await rpc.verifyOwner({authorization});
+        const current=config.discovery?.read();
+        const models=current?playgroundModels.filter(route=>current.catalog.models.some(model=>model.id===route.model&&model.capabilities.includes(route.capability))):playgroundModels;
+        return reply(200,{inferenceConfigured:models.length>0,streaming:false,externalTools:false,models});
+      }
       if (['/v1/models','/v1/usage'].includes(url.pathname)) {
         if (request.method !== 'GET') bad(405);
-        // Read endpoints use the same chat key permission as this version of the
-        // public completion API. Identity always comes from the verified key.
-        const context = await rpc.verifyKeyOwner({ authorization, capability: 'chat' });
-        if (url.pathname === '/v1/models') return reply(200, { object: 'list', data: [...new Set(playgroundModels.filter(row => row.capability === 'chat').map(row => row.model))].map(id => ({ id, object: 'model', owned_by: 'apiwild' })) });
+        // Read permission is bound to a verified capability, never to a caller
+        // identity. Chat is the SDK default; other scoped keys name their scope.
+        const capability = request.headers.get('x-apiwild-capability') ?? 'chat';
+        if (!['chat','code','research','voice','transcribe','speak'].includes(capability)) bad();
+        const context = await rpc.verifyKeyOwner({ authorization, capability });
+        if (url.pathname === '/v1/models') {
+          if (!config.discovery) bad(503);
+          const current = config.discovery.read();
+          const models = new Map(current.catalog.models.map(model => [model.id, model]));
+          const data = current.v1Models.data.map(model => ({...model,
+            available: models.get(model.id).capabilities.includes(capability),
+            supportsTools: models.get(model.id).toolCapabilities.includes(capability)}));
+          return reply(200, {...current.v1Models, data, inference_available: data.some(model => model.available)});
+        }
         return reply(200, await rpc.usage(context));
       }
       if (url.pathname === '/api/account') {
         if (request.method !== 'GET') bad(405);
         const context = await rpc.verifyOwner({ authorization });
-        await rpc.initializeAccount(context);
-        return reply(200, { customerId: context.customerId, billingMode: context.billingMode, usage: await rpc.usage(context) });
+        return reply(200, {authority:'supabase',user:{id:context.customerId},billingMode:context.billingMode,profileAvailable:false});
       }
       if(url.pathname==='/api/usage'){if(request.method!=='GET')bad(405);const context=await rpc.verifyOwner({authorization});await rpc.initializeAccount(context);return reply(200,await rpc.usage(context));}
       if (['/api/keys','/api/gateway/keys'].includes(url.pathname)) {

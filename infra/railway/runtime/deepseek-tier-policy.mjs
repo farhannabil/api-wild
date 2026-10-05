@@ -39,11 +39,18 @@ export function createDeepSeekTierPolicy({enabled=false,config,clock=Date.now}={
     if(!models.includes(model)||typeof value!=='string')fail();
     for(const tier of ['peak','off_peak'])if(value===version(model,tier))return tier;fail();
   };
+  const admission=(model,maxExecutionMs)=>{
+    exactInteger(maxExecutionMs,1,120000);if(!models.includes(model))fail();
+    const admitted=now(),until=admitted+maxExecutionMs;if(until>=end||until>=calendarEnd)fail();
+    return {admitted,until};
+  };
   const policy=Object.freeze({baseRateVersion:c.baseRateVersion,sourceRevision:c.sourceRevision,calendarVersion:c.calendarVersion,
     models:Object.freeze(models),versions:model=>Object.freeze(['peak','off_peak'].map(tier=>version(model,tier))),
+    // Nonspending current availability only. Never mint a tariff selection or
+    // turn an invalid/expired clock into an active discovery route.
+    canAdmit(model,maxExecutionMs=120000){try{admission(model,maxExecutionMs);return true;}catch{return false;}},
     select(model,maxExecutionMs=120000){
-      exactInteger(maxExecutionMs,1,120000);if(!models.includes(model))fail();
-      const admitted=now(),until=admitted+maxExecutionMs;if(until>=end||until>=calendarEnd)fail();
+      const {admitted,until}=admission(model,maxExecutionMs);
       const tier=deepSeekCalendarTier(admitted);let reserveTier=tier;
       for(let cursor=Math.ceil(admitted/60000)*60000;cursor<=until;cursor+=60000){if(deepSeekCalendarTier(cursor)==='peak')reserveTier='peak';}
       if(deepSeekCalendarTier(until)==='peak')reserveTier='peak';

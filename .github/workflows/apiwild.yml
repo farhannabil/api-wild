@@ -38,6 +38,7 @@ jobs:
           infra/railway/tests/owned-gateway-assembly.test.mjs
           infra/railway/tests/supabase-gateway-rpc.test.mjs
           infra/railway/tests/gateway-discovery.test.mjs
+          infra/railway/tests/owned-discovery-http.test.mjs
           infra/railway/tests/gateway-service.test.mjs
           infra/railway/tests/chat-compatibility.test.mjs
           infra/railway/tests/subrouter-dispatch.test.mjs
@@ -55,9 +56,9 @@ jobs:
           infra/railway/preparation.test.mjs
   production-health:
     needs: build-and-test
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     outputs:
       operational-healthy: ${{ steps.health.outputs.operational-healthy }}
       launch-ready: ${{ steps.health.outputs.launch-ready }}
@@ -70,6 +71,8 @@ jobs:
           node-version: '22'
       - name: Check production routes, access boundaries and email DNS
         id: health
+        env:
+          APIWILD_EXPECTED_COMMIT: ${{ github.sha }}
         run: node scripts/daily-health.mjs
   launch-readiness:
     needs: [build-and-test, production-health]
