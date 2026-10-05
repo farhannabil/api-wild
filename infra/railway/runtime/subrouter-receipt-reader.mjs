@@ -3,6 +3,8 @@ import {strictObject,exactInteger,withDeadline} from './supabase-gateway-rpc.mjs
 import {createSupplierConversionGuard,normalizedQuotaCnyMicros,readSubrouterAccountJson,validateNativeDebit} from './subrouter-supplier-conversion.mjs';
 import {isSupplierRequestIdentity} from './supplier-request-identity.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+// A complete bounded scan is required even after a match, to detect duplicates.
+const MAX_LOG_PAGES=50;
 const fail=()=>Error('supplier_receipt_unverified');
 export function createSubrouterReceiptReader({enabled=false,accessToken,accountUserId,bindings,conversion,fetchImpl=fetch,clock=Date.now,timeoutMs=20000}={}){
  if(enabled!==true)return Object.freeze({readReceipt:async()=>{throw fail();},assertConversion:async()=>{throw fail();}});
@@ -23,7 +25,7 @@ export function createSubrouterReceiptReader({enabled=false,accessToken,accountU
   return withDeadline(async deadline=>{
    const signal=parent?AbortSignal.any([parent,deadline]):deadline;await guard.assertConversion({signal});
    let cursor='first',found;const seen=new Set();let complete=false;
-   for(let page=0;page<10;page++){
+   for(let page=0;page<MAX_LOG_PAGES;page++){
     if(typeof cursor!=='string'||!cursor.length||cursor.length>512||/[\x00-\x20\x7f]/.test(cursor)||seen.has(cursor))throw fail();seen.add(cursor);
     const data=await readSubrouterAccountJson('/api/log/self?cursor='+encodeURIComponent(cursor)+ '&page_size=20',{accessToken,accountUserId,fetchImpl,signal});
     if(!Array.isArray(data.items)||data.items.length>20||data.page_size!==20||typeof data.has_more!=='boolean'||typeof data.next_cursor!=='string')throw fail();
