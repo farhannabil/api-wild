@@ -6,6 +6,7 @@ import {createGatewayHttp} from './gateway-http.mjs';
 import {createSubrouterDispatch} from './subrouter-dispatch.mjs';
 import {createRetailTokenPricing} from './retail-token-pricing.mjs';
 import {createModelAccounting} from './model-accounting.mjs';
+import {createOwnedDiscoverySnapshot} from './owned-discovery-http.mjs';
 export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch}){
  if(env.APIWILD_OWNED_GATEWAY_ENABLED!=='true')return undefined;
  const secretKey=env.SUPABASE_SECRET_KEY,publishableKey=env.SUPABASE_PUBLISHABLE_KEY,billingMode=env.APIWILD_BILLING_MODE;
@@ -27,7 +28,8 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch}){
   const charge=pricing.charge({model:record.model,promptTokens:providerResult.usage.prompt_tokens,completionTokens:providerResult.usage.completion_tokens});
   return {state:'succeeded',costUsdMicros:charge.costUsdMicros,costCnyMicros:0,settlementReference:'usage:'+providerResult.providerResponseId,result:{text:providerResult.text,model:record.model,finishReason:providerResult.finishReason,usage:providerResult.usage},usage:{...providerResult.usage,supplierReconciliationPending:true,estimatedSupplierCnyMicros:economics.estimatedSupplierCnyMicros}};
  }});
- const ingress=createGatewayIngress({rpc,keys,service,origin:'https://apiwild.com',enabled:true,playgroundModels:routes.map(r=>({model:r.model,capability:r.capability,maxOutputTokens:r.maxOutputTokens})),selectQuote:async({model,capability,maxTokens,payload})=>{
+ const discovery=createOwnedDiscoverySnapshot({catalog,routes,rateVersion,deploymentCommit:env.RAILWAY_GIT_COMMIT_SHA});
+ const ingress=createGatewayIngress({rpc,keys,service,discovery,origin:'https://apiwild.com',enabled:true,playgroundModels:routes.map(r=>({model:r.model,capability:r.capability,maxOutputTokens:r.maxOutputTokens})),selectQuote:async({model,capability,maxTokens,payload})=>{
   if(!inferenceEnabled)throw new GatewayError('gateway_inference_disabled');
   const route=routes.find(r=>r.model===model&&r.capability===capability);if(!route||maxTokens>route.maxOutputTokens)throw new GatewayError('gateway_route_unavailable');
   const bytes=Buffer.byteLength(JSON.stringify(payload.body.messages));if(bytes>route.maxInputChars||bytes>route.maxInputTokens)throw new GatewayError('gateway_input_bound',413);
@@ -35,5 +37,5 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch}){
   if(economics.estimatedSupplierCnyMicros>route.supplierReserveCnyMicros)throw new GatewayError('supplier_reserve_below_quote');
   return {providerBudgetId:route.providerBudgetId,model,rateVersion,reservedUsdMicros:Math.max(1,pricing.charge({model,promptTokens:route.maxInputTokens,completionTokens:maxTokens}).costUsdMicros),reservedCnyMicros:route.supplierReserveCnyMicros};
  }});
- return createGatewayHttp({ingress});
+ return createGatewayHttp({ingress,discovery});
 }

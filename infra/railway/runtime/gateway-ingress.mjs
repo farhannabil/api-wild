@@ -2,6 +2,7 @@
 import { GatewayError, cloneJsonObject, strictObject, exactInteger, withDeadline } from './supabase-gateway-rpc.mjs';
 import { isCustomerKeyRpc } from './customer-key-rpc.mjs';
 import { gatewayPayloadFingerprint } from './gateway-service.mjs';
+import { isOwnedDiscoverySnapshot } from './owned-discovery-http.mjs';
 const instances=new WeakSet();
 export const isGatewayIngress=value=>instances.has(value);
 const HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' };
@@ -36,9 +37,10 @@ function chat(raw, native) {
   return { capability, body: { model: raw.model, messages: raw.messages, max_tokens: maxTokens, stream: false, ...(raw.temperature !== undefined ? { temperature: raw.temperature } : {}) } };
 }
 export function createGatewayIngress(config) {
-  strictObject(config, ['rpc', 'keys', 'service', 'selectQuote', 'origin', 'enabled', 'maxConcurrent', 'playgroundModels']);
+  strictObject(config, ['rpc', 'keys', 'service', 'selectQuote', 'origin', 'enabled', 'maxConcurrent', 'playgroundModels', 'discovery']);
   if (config.origin !== 'https://apiwild.com' || typeof config.rpc?.verifyOwner !== 'function' || typeof config.rpc?.verifyKeyOwner !== 'function' || !isCustomerKeyRpc(config.keys) || typeof config.service?.execute !== 'function' || typeof config.selectQuote !== 'function') throw new GatewayError('gateway_ingress_unconfigured');
   const playgroundModels=(config.playgroundModels??[]).map(row=>{strictObject(row,['model','capability','maxOutputTokens']);if(typeof row.model!=='string'||!['chat','code','research'].includes(row.capability))throw new GatewayError('gateway_ingress_unconfigured');exactInteger(row.maxOutputTokens,1,32768);return Object.freeze({...row});});
+  if(config.discovery!==undefined&&!isOwnedDiscoverySnapshot(config.discovery))throw new GatewayError('gateway_ingress_unconfigured');
   const rpc = config.rpc, keys = config.keys, service = config.service, selector = config.selectQuote;
   const origin = config.origin, enabled = config.enabled === true, limit = exactInteger(config.maxConcurrent ?? 4, 1, 16); let active = 0;
   const ingress=Object.freeze({ async handle(request) {
@@ -54,8 +56,29 @@ export function createGatewayIngress(config) {
       const sessionAuth = authorization.length <= 8192 && /^Bearer [A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(authorization);
       // Reject missing/malformed credentials before parsing customer bodies.
       // This is syntax validation only; the verifiers below still establish identity.
-      if (url.pathname === '/v1/chat/completions' ? !keyAuth
+      if (['/v1/chat/completions','/v1/models','/v1/usage'].includes(url.pathname) ? !keyAuth
           : !(sessionAuth || (url.pathname === '/api/gateway' && request.method === 'POST' && keyAuth))) bad(401);
+      if (['/api/account','/v1/models','/v1/usage'].includes(url.pathname)) {
+        if (request.method !== 'GET') bad(405);
+        if (request.headers.has('transfer-encoding') || (request.headers.has('content-length') && request.headers.get('content-length') !== '0')) bad();
+        if (url.pathname === '/api/account') {
+          const context = await rpc.verifyOwner({authorization});
+          return reply(200, {authority:'supabase', user:{id:context.customerId}, billingMode:context.billingMode, profileAvailable:false});
+        }
+        // Customer keys are capability-scoped. Chat is the conventional default;
+        // other scoped clients can name their existing scope for read access.
+        const capability = request.headers.get('x-apiwild-capability') ?? 'chat';
+        if (!['chat','code','research','voice','transcribe','speak'].includes(capability)) bad();
+        const context = await rpc.verifyKeyOwner({authorization, capability});
+        if (url.pathname === '/v1/models') {
+          if (!config.discovery) bad(503);
+          const available = new Set(config.discovery.catalog.models.filter(model => model.capabilities.includes(capability)).map(model => model.id));
+          return reply(200, {...config.discovery.v1Models,
+            data:config.discovery.v1Models.data.map(model => ({...model, available:available.has(model.id)})),
+            inference_available:available.size > 0});
+        }
+        return reply(200, await rpc.usage(context));
+      }
       if(url.pathname==='/api/gateway'&&request.method==='GET'){await rpc.verifyOwner({authorization});return reply(200,{inferenceConfigured:playgroundModels.length>0,streaming:false,externalTools:false,models:playgroundModels});}
       if(url.pathname==='/api/usage'){if(request.method!=='GET')bad(405);const context=await rpc.verifyOwner({authorization});await rpc.initializeAccount(context);return reply(200,await rpc.usage(context));}
       if (['/api/keys','/api/gateway/keys'].includes(url.pathname)) {
