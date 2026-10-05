@@ -8,7 +8,7 @@ import {assertLiveness, assertModelCatalog, assertRuntimeConfig, waitForDeployme
 const site = 'https://apiwild.com';
 const support = 'https://yautmilnpllojugpmfgy.supabase.co/functions/v1/support-inbound';
 const pages = ['/', '/signup', '/login', '/forgot-password', '/auth/complete', '/pricing', '/models', '/console/chat', '/console/code', '/console/research'];
-const protectedPaths = ['/api/account', '/api/workspace', '/api/billing', '/api/usage', '/api/keys', '/api/gateway', '/api/gateway/keys', '/v1/models', '/v1/usage'];
+const protectedPaths = ['/api/account', '/api/workspace', '/api/billing', '/api/usage', '/api/keys', '/api/gateway', '/api/gateway/keys', '/api/research/tools', '/v1/models', '/v1/usage'];
 function requireValue(ok) { if (!ok) throw Object.assign(new Error('Health contract mismatch.'), {code: 'CONTRACT_MISMATCH'}); }
 
 // Dependencies are injected for offline tests. Production probes never carry a

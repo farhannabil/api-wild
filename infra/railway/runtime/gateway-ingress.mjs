@@ -4,6 +4,7 @@ import { isCustomerKeyRpc } from './customer-key-rpc.mjs';
 import { gatewayPayloadFingerprint } from './gateway-service.mjs';
 import { normalizeChatRequest, settledChatCompletion, bufferedChatStream } from './chat-compatibility.mjs';
 import { isOwnedDiscoverySnapshot } from './owned-discovery-http.mjs';
+import { validateResearchToolInput, RESEARCH_TOOL_METADATA } from './research-tools.mjs';
 const instances=new WeakSet();
 export const isGatewayIngress=value=>instances.has(value);
 const HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' };
@@ -25,16 +26,31 @@ async function body(request, signal) {
   } finally { signal.removeEventListener('abort', abort); void reader.cancel().catch(() => {}); }
 }
 export function createGatewayIngress(config) {
-  strictObject(config, ['rpc', 'keys', 'service', 'selectQuote', 'origin', 'enabled', 'maxConcurrent', 'playgroundModels', 'discovery']);
+  strictObject(config, ['rpc', 'keys', 'service', 'selectQuote', 'origin', 'enabled', 'maxConcurrent', 'maxToolConcurrent', 'playgroundModels', 'discovery', 'researchTools', 'clock']);
   if (config.origin !== 'https://apiwild.com' || typeof config.rpc?.verifyOwner !== 'function' || typeof config.rpc?.verifyKeyOwner !== 'function' || !isCustomerKeyRpc(config.keys) || typeof config.service?.execute !== 'function' || typeof config.selectQuote !== 'function') throw new GatewayError('gateway_ingress_unconfigured');
   const playgroundModels=(config.playgroundModels??[]).map(row=>{strictObject(row,['model','capability','maxOutputTokens','supportsTools']);if(typeof row.model!=='string'||!['chat','code','research'].includes(row.capability)||(row.supportsTools!==undefined&&typeof row.supportsTools!=='boolean'))throw new GatewayError('gateway_ingress_unconfigured');exactInteger(row.maxOutputTokens,1,32768);return Object.freeze({...row,supportsTools:row.supportsTools===true});});
   if(config.discovery!==undefined&&!isOwnedDiscoverySnapshot(config.discovery))throw new GatewayError('gateway_ingress_unconfigured');
+  if(config.researchTools!==undefined&&typeof config.researchTools?.execute!=='function')throw new GatewayError('gateway_ingress_unconfigured');
+  if(config.clock!==undefined&&typeof config.clock!=='function')throw new GatewayError('gateway_ingress_unconfigured');
+  const clock=config.clock??Date.now, toolWindows=new Map();
+  // Utilities never reserve model money. Bound their external reads separately,
+  // by verified owner rather than by a caller-controlled key or header.
+  const admitTool=context=>{
+    const now=clock(), owner=context.billingMode+':'+context.customerId;
+    for(const [id,window] of toolWindows)if(now>=window.until)toolWindows.delete(id);
+    let window=toolWindows.get(owner);
+    if(!window){if(toolWindows.size>=2048)throw new GatewayError('research_tools_unavailable');window={until:now+60000,count:0};toolWindows.set(owner,window);}
+    if(window.count>=8)throw new GatewayError('research_tools_rate_limit',429);
+    window.count++;
+  };
   const rpc = config.rpc, keys = config.keys, service = config.service, selector = config.selectQuote;
-  const origin = config.origin, enabled = config.enabled === true, limit = exactInteger(config.maxConcurrent ?? 4, 1, 16); let active = 0;
+  const origin = config.origin, enabled = config.enabled === true, limit = exactInteger(config.maxConcurrent ?? 4, 1, 16), toolLimit=exactInteger(config.maxToolConcurrent??2,1,4); let active = 0, toolsActive=0;
   const ingress=Object.freeze({ async handle(request) {
     if (!(request instanceof Request)) return reply(400, { error: 'Invalid request.' });
-    if (!enabled || active >= limit) return reply(503, { error: 'Gateway unavailable.' });
-    active++;
+    const toolRequest=new URL(request.url).pathname==='/api/research/tools';
+    if (!enabled || (toolRequest?toolsActive>=toolLimit:active>=limit)) return reply(503, { error: 'Gateway unavailable.' });
+    // Free public-source reads cannot exhaust the paid/account request pool.
+    if(toolRequest)toolsActive++;else active++;
     try {
       const url = new URL(request.url);
       if (request.signal.aborted || url.origin !== origin || url.search || url.hash || (request.headers.has('origin') && request.headers.get('origin') !== origin)) bad(403);
@@ -46,14 +62,24 @@ export function createGatewayIngress(config) {
       // This is syntax validation only; the verifiers below still establish identity.
       const keyRoute = ['/v1/chat/completions','/v1/models','/v1/usage'].includes(url.pathname);
       if (keyRoute ? !keyAuth
-          : !(sessionAuth || (url.pathname === '/api/gateway' && request.method === 'POST' && keyAuth))) bad(401);
+          : !(sessionAuth || (['/api/gateway','/api/research/tools'].includes(url.pathname) && request.method === 'POST' && keyAuth))) bad(401);
       // GET bodies are rejected before verifying an owner or reading any data.
       if (request.method === 'GET' && (request.headers.has('transfer-encoding') || (request.headers.has('content-length') && request.headers.get('content-length') !== '0'))) bad();
       if(url.pathname==='/api/gateway'&&request.method==='GET'){
         await rpc.verifyOwner({authorization});
         const current=config.discovery?.read();
         const models=current?playgroundModels.filter(route=>current.catalog.models.some(model=>model.id===route.model&&model.capabilities.includes(route.capability))):playgroundModels;
-        return reply(200,{inferenceConfigured:models.length>0,streaming:false,externalTools:false,models});
+        return reply(200,{inferenceConfigured:models.length>0,streaming:false,externalTools:false,models,...(config.researchTools?{workspaceTools:RESEARCH_TOOL_METADATA,browserVoice:true,audioApi:false}:{})});
+      }
+      if(url.pathname==='/api/research/tools'){
+        if(request.method!=='POST')bad(405);
+        if(!config.researchTools)bad(503);
+        const input=validateResearchToolInput(await withDeadline(signal=>body(request,signal),5000));
+        const context=keyAuth?await rpc.verifyKeyOwner({authorization,capability:'research'}):await rpc.verifyOwner({authorization});
+        if(request.signal.aborted)bad(409);
+        admitTool(context);
+        const result=await withDeadline(signal=>config.researchTools.execute(input,{signal:AbortSignal.any([signal,request.signal])}),7000);
+        return reply(200,result);
       }
       if (['/v1/models','/v1/usage'].includes(url.pathname)) {
         if (request.method !== 'GET') bad(405);
@@ -115,8 +141,13 @@ export function createGatewayIngress(config) {
         {status: 200, headers: {...HEADERS, 'Content-Type': 'text/event-stream; charset=utf-8', 'X-Accel-Buffering': 'no'}});
       return reply(200, completion);
     } catch (error) {
+      if(error instanceof GatewayError&&error.code?.startsWith('research_tools_')){
+        const status=[400,413,429].includes(error.status)?error.status:503;
+        const message=status===429?'Research tools are limited to 8 requests per minute. Please wait and try again.':status===413?'The source or input is too large. Choose a shorter article or input.':status===400?'Use a supported Wikipedia article, a short search query or a valid arithmetic expression.':'The research source is temporarily unavailable. Please try again later.';
+        return reply(status,{error:message,code:error.code,automaticRetry:false});
+      }
       return reply(error instanceof GatewayError && [400,401,402,403,404,405,409,413,415,422].includes(error.status) ? error.status : 503, { error: error?.code==='gateway_customer_limit'?'Your available credits or daily spending limit cannot cover this request.':error?.code==='gateway_key_limit'?'This API key has reached its spending limit.':error?.code==='gateway_inference_disabled'?'Model requests are not activated yet.':error?.code==='gateway_route_unavailable'?'This model is not available for the selected mode.':'Request could not be verified.', code:['gateway_customer_limit','gateway_key_limit','gateway_inference_disabled','gateway_route_unavailable'].includes(error?.code)?error.code:'gateway_request_failed', automaticRetry: false });
-    } finally { active--; }
+    } finally { if(toolRequest)toolsActive--;else active--; }
   } });
   instances.add(ingress);return ingress;
 }

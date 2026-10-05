@@ -71,6 +71,7 @@
 !infra/railway/runtime/supplier-allowance-worker.mjs
 !infra/railway/runtime/subrouter-saas-activation.mjs
 !infra/railway/runtime/gateway-ingress.mjs
+!infra/railway/runtime/research-tools.mjs
 !infra/railway/runtime/gateway-service.mjs
 !infra/railway/runtime/owned-billing.mjs
 !infra/railway/runtime/owned-gateway-assembly.mjs

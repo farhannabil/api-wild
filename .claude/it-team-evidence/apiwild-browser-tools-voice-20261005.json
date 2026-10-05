@@ -1,0 +1,38 @@
+{
+  "task_id": "apiwild-browser-tools-voice-20261005",
+  "status": "passed",
+  "summary": "Implemented editable authenticated utility results, Wikipedia search/summary UI, calculator, UTF-8 text attachments, and explicit-action device-dependent browser dictation/read aloud. Existing paid request and immutable retry flow preserved. Source preparation and review only; production acceptance belongs to the root release receipt.",
+  "files": [
+    "app/console/owned-playground.tsx",
+    "app/console/owned-research-tools.tsx",
+    "app/console/owned-voice-controls.tsx",
+    "lib/owned-research-tools.mjs",
+    "lib/owned-voice-controls.mjs",
+    "tests/owned-research-tools.test.mjs",
+    "tests/owned-voice-controls.test.mjs"
+  ],
+  "checks": [
+    {
+      "command": "node --test tests/owned-research-tools.test.mjs tests/owned-voice-controls.test.mjs",
+      "exitCode": 0,
+      "result": "7 tests passed, including source/link/file/composer boundaries, recognition final/interim separation, explicit permission errors, and finite 60-second deadline cancellation."
+    },
+    {
+      "command": "node --input-type=module -",
+      "exitCode": 0,
+      "result": "Piped TypeScript compiler API script read tsconfig.json, excluded only vite.config.ts, compiled all remaining configured files with noEmit:true and incremental:false, and reported zero diagnostics.",
+      "compilerScript": "import ts from 'typescript'; const configPath=ts.findConfigFile('.',ts.sys.fileExists,'tsconfig.json'); const config=ts.readConfigFile(configPath,ts.sys.readFile); if(config.error)throw Error(ts.flattenDiagnosticMessageText(config.error.messageText,'\\n')); const parsed=ts.parseJsonConfigFileContent(config.config,ts.sys,'.'); const files=parsed.fileNames.filter(name=>!name.endsWith('vite.config.ts')); const program=ts.createProgram(files,{...parsed.options,incremental:false,noEmit:true}); const diagnostics=ts.getPreEmitDiagnostics(program); if(diagnostics.length){process.stderr.write(ts.formatDiagnosticsWithColorAndContext(diagnostics,{getCanonicalFileName:f=>f,getCurrentDirectory:ts.sys.getCurrentDirectory,getNewLine:()=> '\\n'}));process.exitCode=1;}else process.stdout.write('Application TypeScript check passed (deployment-only vite.config.ts excluded: missing local hosting.json).\\n');"
+    }
+  ],
+  "review": {
+    "reviewer": "/root",
+    "result": "passed",
+    "scope": "Independent final review confirmed timer lifetime, stale callbacks, recognition/playback separation, cleanup, input bounds, privacy copy and preserved immutable paid retry behavior."
+  },
+  "limitations": [
+    "Full repository TypeScript command failed solely because pre-existing vite.config.ts imports missing local .openai/hosting.json; application compilation excluding that deployment-only configuration passed.",
+    "Physical microphone recording, browser speech-provider recognition and audible playback were not exercised; device and browser availability varies.",
+    "Hosted transcription/speech/audio API endpoints remain unsupported; browser voice controls explicitly disclose this boundary and possible remote browser/device speech processing.",
+    "Worker did not deploy, access production credentials, invoke paid inference, grant microphone permission or certify live UI acceptance."
+  ]
+}

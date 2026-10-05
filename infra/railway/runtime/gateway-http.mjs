@@ -4,7 +4,7 @@ import {isGatewayIngress} from './gateway-ingress.mjs';
 import {isOwnedDiscoverySnapshot} from './owned-discovery-http.mjs';
 const instances=new WeakSet();
 export const isGatewayHttp=value=>instances.has(value);
-export const isGatewayPath=path=>typeof path==='string'&&(['/api/account','/api/usage','/api/keys','/api/gateway/keys','/api/gateway','/v1/models','/v1/usage','/v1/chat/completions'].includes(path)||/^\/api\/(?:gateway\/)?keys\/[0-9a-f-]{36}$/.test(path));
+export const isGatewayPath=path=>typeof path==='string'&&(['/api/account','/api/usage','/api/keys','/api/gateway/keys','/api/gateway','/api/research/tools','/v1/models','/v1/usage','/v1/chat/completions'].includes(path)||/^\/api\/(?:gateway\/)?keys\/[0-9a-f-]{36}$/.test(path));
 export function createGatewayHttp({ingress,discovery}={}){
  if(!isGatewayIngress(ingress))throw Error('Invalid gateway ingress.');
  if(discovery!==undefined&&!isOwnedDiscoverySnapshot(discovery))throw Error('Invalid gateway discovery.');

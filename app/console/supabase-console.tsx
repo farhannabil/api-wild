@@ -10,7 +10,7 @@ import Billing from '@/app/console/billing-client';
 import OwnedKeys from '@/app/console/owned-keys';
 import OwnedUsage from '@/app/console/owned-usage';
 import Onboarding from '@/app/onboarding/onboarding-client';
-const nav=[['Overview','overview',Activity],['Models','models',Layers],['Chat','chat',MessageSquare],['Usage','usage',Activity],['API keys','api-keys',KeyRound],['Credits','billing',CreditCard],['Account','profile',UserRound]] as const;
+const nav=[['Overview','overview',Activity],['Models','models',Layers],['Chat & voice','chat',MessageSquare],['Research & tools','research',Search],['Usage','usage',Activity],['API keys','api-keys',KeyRound],['Credits','billing',CreditCard],['Account','profile',UserRound]] as const;
 const destination=(page:string)=>page==='models'?'/models':'/console/'+page;
 export default function SupabaseConsole({section}:{section:string}){const[account,setAccount]=useState<any>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[retry,setRetry]=useState(0);useEffect(()=>{
  let live=true,invalidated=false,stopWatching=()=>{};

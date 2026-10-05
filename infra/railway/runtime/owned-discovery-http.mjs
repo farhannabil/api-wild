@@ -1,6 +1,7 @@
 // Owned-runtime discovery. Only approved customer prices cross this boundary.
 import {createRetailTokenPricing} from './retail-token-pricing.mjs';
 import {exactInteger} from './supabase-gateway-rpc.mjs';
+import {RESEARCH_TOOL_METADATA} from './research-tools.mjs';
 
 const snapshots = new WeakSet(), adapters = new WeakSet();
 const paths = ['/api/models', '/api/gateway/config'];
@@ -22,7 +23,7 @@ export const isOwnedDiscoverySnapshot = value => snapshots.has(value);
 export const isOwnedDiscoveryHttp = value => adapters.has(value);
 export const isOwnedDiscoveryPath = value => typeof value === 'string' && paths.includes(value.split('?')[0]);
 
-export function createOwnedDiscoverySnapshot({catalog, routes = [], rateVersion = 'inactive', deploymentCommit = null, tierPolicy}) {
+export function createOwnedDiscoverySnapshot({catalog, routes = [], rateVersion = 'inactive', deploymentCommit = null, tierPolicy, workspaceToolsEnabled = false}) {
   if (!Array.isArray(catalog?.models) || catalog.models.length > 2000 || !Array.isArray(routes) || routes.length > 1000) throw Error('Invalid discovery catalogue.');
   text(rateVersion);
   const pricing = createRetailTokenPricing({models: catalog.models, rateVersion, tierPolicy});
@@ -72,7 +73,8 @@ export function createOwnedDiscoverySnapshot({catalog, routes = [], rateVersion 
       catalog: {...shared, source: 'apiwild-approved-retail', count: current.length, models:current},
       config: {...shared, deploymentCommit:commit, enabled:eligible.length > 0, inferenceConfigured:eligible.length > 0,
         ready,currency:'usd',rateVersion,streaming:true,streamingMode:'buffered-after-settlement',functionCalling:true,
-        nativeStreaming:false,externalTools:false,models:current},
+        nativeStreaming:false,externalTools:false,models:current,
+        ...(workspaceToolsEnabled?{workspaceTools:RESEARCH_TOOL_METADATA,browserVoice:{dictation:'browser-dependent',readAloud:'browser-dependent',audioApi:false}}:{})},
       v1Models: {object:'list',data:current.map(model=>({id:model.id,object:'model',owned_by:model.creator,
         available:model.callable,supportsTools:model.supportsTools,pricing:model.pricing})),rate_version:rateVersion,inference_available:eligible.length > 0},
     });
