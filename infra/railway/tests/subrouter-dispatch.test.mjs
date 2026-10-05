@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createSubrouterDispatch, SUBROUTER_CHAT_ENDPOINT } from '../runtime/subrouter-dispatch.mjs';
 const TOKEN = 'sk-syntheticOnlyNotARealCredential001';
 const BUDGET = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
-const route = () => ({ providerBudgetId: BUDGET, model: 'fixture-alias', upstreamModel: 'fixture-upstream', rateVersion: 'fixture-v1', apiKey: TOKEN, capability: 'chat', maxOutputTokens: 64, maxInputChars: 100 });
+const route = () => ({ providerBudgetId: BUDGET, model: 'fixture-alias', upstreamModel: 'fixture-upstream', rateVersion: 'fixture-v1', apiKey: TOKEN, capability: 'chat', maxOutputTokens: 64, maxInputChars: 1024 });
 const record = () => ({ provider_budget_id: BUDGET, model: 'fixture-alias', rate_version: 'fixture-v1', capability: 'chat', state: 'executing' });
 const payload = () => ({ body: { model: 'fixture-alias', messages: [{ role: 'user', content: 'Synthetic fixture' }], max_tokens: 32 }, format: 'openai' });
 const result = () => ({ id: 'fixture-receipt', model: 'fixture-upstream', usage: { prompt_tokens: 8, completion_tokens: 4 }, choices: [{ message: { role: 'assistant', content: 'Fixture answer' } }] });
@@ -24,7 +24,7 @@ test('unconfigured route, stale rate and nonexecuting records never dispatch', a
   }
 });
 test('strict request bounds reject unsupported tools, streaming, wrong model and token limits before dispatch', async () => {
-  for (const patch of [{ tools: [] }, { stream: true }, { model: 'other' }, { max_tokens: 65 }, { max_tokens: 0 }, { messages: [{ role: 'user', content: 'a'.repeat(101) }] }, { messages: [{ role: 'tool', content: 'unsupported' }] }]) {
+  for (const patch of [{ tools: [] }, { stream: true }, { model: 'other' }, { max_tokens: 65 }, { max_tokens: 0 }, { messages: [{ role: 'user', content: 'a'.repeat(1025) }] }, { messages: [{ role: 'tool', content: 'unsupported' }] }]) {
     const f = fixture(); const p = payload(); Object.assign(p.body, patch); await assert.rejects(f.run({ payload: p })); assert.equal(f.calls.length, 0);
   }
 });

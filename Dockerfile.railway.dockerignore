@@ -29,6 +29,7 @@
 !infra/railway/preflight.mjs
 !infra/railway/preparation-env.mjs
 !infra/railway/preparation-server.mjs
+!infra/railway/allowance-worker.mjs
 !infra/railway/runtime
 !infra/railway/runtime/aaro-usage-ingress.mjs
 !infra/railway/runtime/aaro-usage-bridge.mjs
@@ -45,6 +46,12 @@
 !infra/railway/runtime/subrouter-native-billing.mjs
 !infra/railway/runtime/customer-key-rpc.mjs
 !infra/railway/runtime/gateway-http.mjs
+!infra/railway/runtime/launch-status.mjs
+!infra/railway/runtime/chat-compatibility.mjs
+!infra/railway/runtime/deepseek-tier-policy.mjs
+!infra/railway/runtime/supplier-allowance-operator.mjs
+!infra/railway/runtime/supplier-allowance-worker.mjs
+!infra/railway/runtime/subrouter-saas-activation.mjs
 !infra/railway/runtime/gateway-ingress.mjs
 !infra/railway/runtime/gateway-service.mjs
 !infra/railway/runtime/owned-billing.mjs

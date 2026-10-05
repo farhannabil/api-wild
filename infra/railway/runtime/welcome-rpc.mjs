@@ -87,8 +87,8 @@ function validateKey(serviceRoleKey) {
 }
 
 async function rpc(name, payload, serviceRoleKey, fetchImpl) {
-  const prefix = name === 'claim_confirmed_welcome' ? 'claim' : 'finish';
-  if (!['claim_confirmed_welcome', 'finish_confirmed_welcome'].includes(name)) {
+  const prefix = name.startsWith('claim_') ? 'claim' : 'finish';
+  if (!['claim_confirmed_welcome', 'claim_apiwild_confirmed_welcome', 'finish_confirmed_welcome'].includes(name)) {
     throw new WelcomeRpcError('invalid_operation');
   }
   const body = JSON.stringify(payload);
@@ -106,7 +106,7 @@ async function rpc(name, payload, serviceRoleKey, fetchImpl) {
     try {
       response = await fetchImpl(`${SUPABASE_ORIGIN}/rest/v1/rpc/${name}`, {
         method: 'POST', redirect: 'error', signal: controller.signal,
-        headers: {apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, 'Content-Type': 'application/json'},
+        headers: {apikey: serviceRoleKey, ...(serviceRoleKey.startsWith('sb_secret_') ? {} : {Authorization: `Bearer ${serviceRoleKey}`}), 'Content-Type': 'application/json'},
         body,
       });
     } catch {
@@ -136,13 +136,14 @@ async function rpc(name, payload, serviceRoleKey, fetchImpl) {
   }
 }
 
-export async function claimConfirmedWelcome({serviceRoleKey, limit, fetchImpl = fetch}) {
+export async function claimConfirmedWelcome({serviceRoleKey, limit, brand, fetchImpl = fetch}) {
   validateKey(serviceRoleKey);
+  if (brand !== undefined && brand !== 'apiwild') throw new WelcomeRpcError('invalid_brand_scope');
   if (!Number.isInteger(limit) || limit < 1 || limit > 5) {
     throw new WelcomeRpcError('invalid_limit');
   }
 
-  const data = await rpc('claim_confirmed_welcome', {p_limit: limit}, serviceRoleKey, fetchImpl);
+  const data = await rpc(brand === 'apiwild' ? 'claim_apiwild_confirmed_welcome' : 'claim_confirmed_welcome', {p_limit: limit}, serviceRoleKey, fetchImpl);
 
   if (!Array.isArray(data)) {
     throw new WelcomeRpcError('claim_response_not_array');
@@ -185,6 +186,7 @@ export async function claimConfirmedWelcome({serviceRoleKey, limit, fetchImpl = 
       throw new WelcomeRpcError('claim_job_missing_brand');
     }
     if (!['apiwild', 'aaro'].includes(job.brand_slug)) throw new WelcomeRpcError('claim_job_invalid_brand');
+    if (brand && job.brand_slug !== brand) throw new WelcomeRpcError('claim_job_invalid_brand');
     if (job.template !== 'confirmed-welcome-v1') {
       throw new WelcomeRpcError('claim_job_invalid_template');
     }

@@ -1,0 +1,51 @@
+{
+  "task_id": "apiwild-deepseek-tariffs",
+  "status": "passed",
+  "summary": "Disabled-by-default conditional DeepSeek retail admission policy, accepted supplier reserve bounds, immutable tier versioning and trusted retry quote recovery implemented and independently reviewed locally.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/deepseek-tier-policy.test.mjs infra/railway/tests/deepseek-assembly.test.mjs infra/railway/tests/gateway-quote-lookup.test.mjs infra/railway/tests/retail-token-pricing.test.mjs infra/railway/tests/model-accounting.test.mjs infra/railway/tests/owned-gateway-assembly.test.mjs infra/railway/tests/supabase-gateway-rpc.test.mjs",
+      "exitCode": 0,
+      "passed": 48
+    },
+    {
+      "command": "node infra/railway/tests/deepseek-tariff-postgres.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "exitCode": 0,
+      "passed": 8
+    }
+  ],
+  "review": {
+    "reviewer": "/root",
+    "result": "passed",
+    "evidence": "Independent root message: reviewed final policy/accounting/retail/assembly/RPC/migration with no findings; independently reran 45 runtime plus 3 lookup plus 8 SQL checks, including private wrapper after schema-USAGE fix. Root separately verified live reserve/claim predicate preconditions read-only."
+  },
+  "sources": [
+    "https://api-docs.deepseek.com/quick_start/pricing/",
+    "https://api-docs.deepseek.com/zh-cn/quick_start/pricing/",
+    "https://api-docs.deepseek.com/updates/",
+    "https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm",
+    "https://big5.www.gov.cn/gate/big5/www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm"
+  ],
+  "limitations": [
+    "No production migration, enable flag, paid inference or supplier acceptance performed by this worker.",
+    "Two conditional models require explicit owner-accepted retail admission policy, finite source/calendar window and exact intermediary served-version evidence.",
+    "Explicit accepted supplier off-peak and peak input/output prices are required; maker or retail multipliers are never substituted.",
+    "Supplier debit timing remains unverified; actual native-CNY receipt reconciliation remains a separate disabled production gate.",
+    "PGlite uses one in-memory database connection and does not certify independent concurrent transactions.",
+    "Station allowance-to-inference-key identity, funds, packages and activation token remain missing live inputs per root inspection.",
+    "Runtime remains 37 standard tariffs by default; catalog entries and passing synthetic tests do not prove 39 callable models."
+  ],
+  "file_sha256": {
+    "infra/railway/runtime/deepseek-tier-policy.mjs": "8891375f180301017511e096c567596b82746d9b8d82dcf7268f6dc4ae45230d",
+    "infra/railway/runtime/retail-token-pricing.mjs": "0953f63f22738063f876f4416d8728778d33581d1827cbb2cd48ef57eca6c1e6",
+    "infra/railway/runtime/model-accounting.mjs": "e0cb579bd8f90aa677e97503de6ce1c878d07a6c4ac1af033fcc13453be05034",
+    "infra/railway/runtime/owned-gateway-assembly.mjs": "d5ab059fc19531fe896ea7441fd6418e445d91e653023aeef078d674a56a981b",
+    "infra/railway/runtime/supabase-gateway-rpc.mjs": "f0a7ddebdeca3f7ee8995cbec728e932019d02868257a122121c2c0f7a021ab1",
+    "supabase/migrations/20261005084607_deepseek_request_tariff_version.sql": "4e2d891c06f2874d617725332999fd43162da27ee05f525356247160f273daeb",
+    "infra/railway/tests/deepseek-tier-policy.test.mjs": "8c3a0855234f27f8d1dc76b8d9cca38bb243d94bcd253f9ad31ecd7477bddf5b",
+    "infra/railway/tests/deepseek-assembly.test.mjs": "5ac778194ed3359e4fd069e53b53a608e90cd508b1aa95371c99aa379861ef36",
+    "infra/railway/tests/gateway-quote-lookup.test.mjs": "d82400b0f8fd155d39ad1c3be021ffb2ef3d78b505333d2f659578ad4f71bf47",
+    "infra/railway/tests/deepseek-tariff-postgres.mjs": "62160065fe6809f42324ac14149ae0dc528833008d8020f82cc41bcaa1189c74",
+    "infra/railway/DEEPSEEK_TARIFF_RUNBOOK.md": "793c552e180b4667b9bcdb13950a22e51efdd08ec44deccc7f42f2b0fecdd733"
+  }
+}

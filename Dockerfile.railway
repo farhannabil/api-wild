@@ -15,6 +15,7 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/infra/railway/preparation-server.mjs ./infra/railway/preparation-server.mjs
+COPY --from=build /app/infra/railway/allowance-worker.mjs ./infra/railway/allowance-worker.mjs
 COPY --from=build /app/infra/railway/runtime/aaro-usage-ingress.mjs ./infra/railway/runtime/aaro-usage-ingress.mjs
 COPY --from=build /app/infra/railway/runtime/aaro-usage-bridge.mjs ./infra/railway/runtime/aaro-usage-bridge.mjs
 COPY --from=build /app/infra/railway/runtime/stripe-webhook-ingress.mjs ./infra/railway/runtime/stripe-webhook-ingress.mjs

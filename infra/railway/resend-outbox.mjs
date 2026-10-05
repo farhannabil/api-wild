@@ -58,13 +58,13 @@ async function resendReceipt(fetchImpl, options) {
 export async function processWelcomeOutbox({env = process.env, fetchImpl = fetch, limit = 1} = {}) {
   if (env.EMAIL_AUTOMATION_ENABLED !== 'true') return {enabled: false, claimed: 0};
   if (env.SUPABASE_URL !== SUPABASE_ORIGIN || !env.SUPABASE_SERVICE_ROLE_KEY ||
-      !env.RESEND_API_KEY || !Number.isInteger(limit) || limit < 1 || limit > 5) {
+      !env.RESEND_API_KEY || !Number.isInteger(limit) || limit < 1 || limit > 5 || (env.WELCOME_BRAND !== undefined && env.WELCOME_BRAND !== 'apiwild')) {
     throw new Error('email_worker_configuration_invalid');
   }
   const {claimConfirmedWelcome, finishConfirmedWelcome} = await import('./runtime/welcome-rpc.mjs');
   let jobs;
   try {
-    jobs = await claimConfirmedWelcome({serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY, limit, fetchImpl});
+    jobs = await claimConfirmedWelcome({serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY, limit, brand:env.WELCOME_BRAND, fetchImpl});
   } catch (error) {
     // Translate RPC errors to worker errors, preserving ambiguity markers
     if (error.name === 'WelcomeRpcError') {

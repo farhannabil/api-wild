@@ -1,0 +1,77 @@
+{
+  "task_id": "apiwild-welcome-brand-independent-review",
+  "status": "passed",
+  "reviewer": "/root/public_status",
+  "reviewedAt": "2026-10-05T08:55:58.353Z",
+  "summary": "Independent source and local SQL review of API WILD-only welcome claim, bounded worker entrypoint and modern Supabase secret header support. No findings in changed scope.",
+  "files": [
+    {
+      "path": "infra/railway/runtime/welcome-rpc.mjs",
+      "sha256": "cb7296a6d35806b2296914aa465d5e8dc778d764ec875e8cbc0408bd91fa663a"
+    },
+    {
+      "path": "infra/railway/resend-outbox.mjs",
+      "sha256": "deba447e0bbfa5e718c66a7a90415c21ae309616a07bf8580c339e90bc2a0d00"
+    },
+    {
+      "path": "infra/railway/run-welcome-outbox.mjs",
+      "sha256": "ca1c553dcd721081124ea13b30380bdafb023a5146a536e72c97c9060392ad2d"
+    },
+    {
+      "path": "infra/railway/WELCOME_WORKER_DEPLOYMENT.md",
+      "sha256": "733cf8a791da55827164543f9e6b1c84646bab059dd411aed5976d30daeae34c"
+    },
+    {
+      "path": "supabase/migrations/20261005084105_apiwild_welcome_brand_scope.sql",
+      "sha256": "f54fb4b845c88dc88acc8f6b3bada0242ee2758c97eee348e57412a1ce0349d0"
+    },
+    {
+      "path": "infra/railway/tests/welcome-brand.test.mjs",
+      "sha256": "b028d954a91a5cfca4b5aef48c602cf107d6b8aa49735dabedbce8cd8ae5543d"
+    },
+    {
+      "path": "infra/railway/tests/welcome-brand-postgres.mjs",
+      "sha256": "65c9b98885310fa520f299bb7cc533abee1465b9611ccdbac23d16d1fa11928e"
+    }
+  ],
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/welcome-brand.test.mjs infra/railway/tests/welcome-rpc.test.mjs",
+      "exitCode": 0,
+      "tests": 45,
+      "passed": 45
+    },
+    {
+      "command": "node infra/railway/tests/welcome-brand-postgres.mjs <local-pglite-module>",
+      "exitCode": 0,
+      "groups": 3,
+      "passed": 3
+    },
+    {
+      "command": "node infra/railway/tests/welcome-brand-postgres.mjs <local-pglite-module> after private-schema alignment",
+      "exitCode": 0,
+      "groups": 4,
+      "passed": 4
+    }
+  ],
+  "review": [
+    "New claim is service-role-only, rejects customer JWT authority, uses qualified names with empty search_path, and validates finite batch.",
+    "SQL brand filter applies before cleanup, locking, claiming and daily attempt accounting. AARO rows are byte-for-byte unchanged in local regression.",
+    "Shared ten-attempt UTC budget and per-event attempts/idempotency window are unchanged; processing/ambiguous events are not reclaimed.",
+    "API WILD entrypoint forces brand scope and one-job batch. Entire received batch is validated before any provider send; modern secret key is sent in apikey only.",
+    "Installation creates only a function/grant; no row is enqueued or sent and shared existing RPC is preserved. CLI logs counters/sanitized errors only."
+  ],
+  "limitations": [
+    "Offline synthetic transport and single-connection PGlite only; not independent-session PostgreSQL contention proof.",
+    "No live migration, queue claim, email send, cron activation or inbox acceptance was performed by reviewer."
+  ],
+  "alignmentReview": {
+    "reviewer": "/root",
+    "result": "passed",
+    "note": "Coordinator independently re-reviewed worker public_status changes moving privilege to private apiwild_finance helper with public invoker wrapper and catalog rights assertions. No findings."
+  },
+  "sources": [
+    "https://supabase.com/docs/guides/database/functions",
+    "https://supabase.com/docs/guides/api/securing-your-api"
+  ]
+}

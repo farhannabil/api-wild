@@ -1,0 +1,101 @@
+{
+  "task_id": "apiwild-launch-release-validation",
+  "status": "passed",
+  "validatedBy": "/root/public_status",
+  "validatedAt": "2026-10-05T09:04:13.647Z",
+  "productionReady": false,
+  "checks": [
+    {
+      "command": "node --test --test-concurrency=4 <all tests/*.test.mjs and infra/railway/tests/*.test.mjs except isolated PG18 harness>",
+      "exitCode": 0,
+      "tests": 693,
+      "passed": 693,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "node infra/railway/preflight.mjs",
+      "exitCode": 0,
+      "canBuildNodeArtifact": true,
+      "productionReady": false
+    },
+    {
+      "command": "node node_modules/vite/bin/vite.js build --config vite.railway.config.ts",
+      "exitCode": 0,
+      "result": "Production RSC, client and SSR build completed."
+    },
+    {
+      "command": "node --test infra/railway/preparation.test.mjs infra/railway/tests/container-context.test.mjs",
+      "exitCode": 0,
+      "tests": 51,
+      "passed": 51
+    },
+    {
+      "command": "node infra/railway/tests/welcome-brand-postgres.mjs <local-pglite-module>",
+      "exitCode": 0,
+      "groups": 4,
+      "passed": 4
+    },
+    {
+      "command": "Parse workflow YAML; validate focused test paths and strict launch job",
+      "exitCode": 0,
+      "testFiles": 19
+    },
+    {
+      "command": "Walk preparation-server and allowance-worker complete relative import graph against Docker context/runtime copies",
+      "exitCode": 0,
+      "modules": 33
+    },
+    {
+      "command": "Scan actual dist/client and guarded public asset snapshot for private runtime/credential markers and source paths",
+      "exitCode": 0,
+      "clientFiles": 208,
+      "servedAssets": 206,
+      "servedBytes": 8699739,
+      "privateMarkerFindings": 0,
+      "privatePathsNotServed": true
+    }
+  ],
+  "files": [
+    {
+      "path": ".github/workflows/apiwild.yml",
+      "sha256": "cc92e1cd4fed8b19781c623d0c5e0aa122fb9995566f4cd63b5692460693bca6"
+    },
+    {
+      "path": "Dockerfile.railway",
+      "sha256": "116b8db579874934fdbc42e26da05e679b76808bccd153d0947030b9cf62ebb6"
+    },
+    {
+      "path": "Dockerfile.railway.dockerignore",
+      "sha256": "a455ec5ba8c882a43d01258dd0d870dc1557a116b6e95479f27ccbc88e8419a7"
+    },
+    {
+      "path": "infra/railway/runtime/chat-compatibility.mjs",
+      "sha256": "35cc5ea90c738cc8a886bc1eb4da9f32778bce912feba423906e59e1bb93f99c"
+    },
+    {
+      "path": "infra/railway/runtime/deepseek-tier-policy.mjs",
+      "sha256": "8891375f180301017511e096c567596b82746d9b8d82dcf7268f6dc4ae45230d"
+    },
+    {
+      "path": "infra/railway/runtime/owned-gateway-assembly.mjs",
+      "sha256": "d5ab059fc19531fe896ea7441fd6418e445d91e653023aeef078d674a56a981b"
+    },
+    {
+      "path": "supabase/migrations/20261005084105_apiwild_welcome_brand_scope.sql",
+      "sha256": "f54fb4b845c88dc88acc8f6b3bada0242ee2758c97eee348e57412a1ce0349d0"
+    }
+  ],
+  "limitations": [
+    "aaro-usage-postgres.test.mjs was explicitly excluded because it requires a separate PostgreSQL 18 integration environment. No excluded unit tests or hidden skips.",
+    "PGlite is a single local connection; it does not prove independent-session PostgreSQL contention behavior.",
+    "Build used existing locked local dependency cache and Node 24.21.0; no Docker daemon image build or remote GitHub workflow run was performed.",
+    "Offline validation does not activate inference, checkout, email sending, migrations or customer launch. Live release acceptance remains gated.",
+    "Vite reported nonfatal ineffective dynamic-import notices; build completed successfully."
+  ],
+  "logs": {
+    "unit": "C:/Users/farha/AppData/Local/Temp/apiwild-launch-final-unit-20261005.log",
+    "build": "C:/Users/farha/AppData/Local/Temp/apiwild-launch-final-build-20261005.log",
+    "artifact": "C:/Users/farha/AppData/Local/Temp/apiwild-launch-final-artifact-20261005.log"
+  }
+}

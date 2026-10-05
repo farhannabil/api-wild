@@ -2,6 +2,7 @@
 // The trusted assembler supplies an already accepted, provider-scoped relay key.
 // Never expose this configuration through a customer API or client bundle.
 import { GatewayError, cloneJsonObject, exactInteger, strictObject } from './supabase-gateway-rpc.mjs';
+import { normalizeChatRequest, chatInputBytes, validateAssistantMessage } from './chat-compatibility.mjs';
 
 export const SUBROUTER_CHAT_ENDPOINT = 'https://subrouter.ai/v1/chat/completions';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -36,13 +37,14 @@ export function createSubrouterDispatch(config) {
   if (typeof fetchImpl !== 'function') fail('subrouter_invalid_configuration');
   const routes = new Map(); const secrets = [];
   for (const raw of config.routes) {
-    strictObject(raw, ['providerBudgetId', 'model', 'upstreamModel', 'rateVersion', 'apiKey', 'capability', 'maxOutputTokens', 'maxInputChars']);
+    strictObject(raw, ['providerBudgetId', 'model', 'upstreamModel', 'rateVersion', 'apiKey', 'capability', 'maxOutputTokens', 'maxInputChars', 'supportsTools']);
     const r = { ...raw };
     label(r.providerBudgetId, 36); if (!UUID.test(r.providerBudgetId)) fail('subrouter_invalid_configuration');
     label(r.model); label(r.upstreamModel); label(r.rateVersion);
     if (!['chat', 'code', 'research'].includes(r.capability)) fail('subrouter_unsupported_capability');
     if (typeof r.apiKey !== 'string' || !/^sk-[A-Za-z0-9_-]{16,256}$/.test(r.apiKey)) fail('subrouter_invalid_configuration');
     exactInteger(r.maxOutputTokens, 1, 32768); exactInteger(r.maxInputChars, 1, 60000);
+    if (r.supportsTools !== undefined && typeof r.supportsTools !== 'boolean') fail('subrouter_invalid_configuration');
     const identity = JSON.stringify([r.providerBudgetId, r.model, r.rateVersion, r.capability]);
     if (routes.has(identity)) fail('subrouter_duplicate_route');
     routes.set(identity, Object.freeze(r)); secrets.push(r.apiKey);
@@ -52,33 +54,39 @@ export function createSubrouterDispatch(config) {
     if (!route || record?.state !== 'executing') fail('subrouter_route_unavailable');
     if (!(signal instanceof AbortSignal) || signal.aborted) fail('subrouter_invalid_dispatch_signal');
     const envelope = cloneJsonObject(payload, 65536);
-    strictObject(envelope, ['body', 'format']);
+    strictObject(envelope, ['body', 'format', 'delivery']);
     if (!['native', 'openai'].includes(envelope.format)) fail('subrouter_unsupported_format');
-    const body = strictObject(envelope.body, ['model', 'messages', 'max_tokens', 'stream', 'temperature']);
-    if (body.model !== undefined && body.model !== route.model && body.model !== route.upstreamModel) fail('subrouter_request_model_mismatch');
-    if (body.stream !== undefined && body.stream !== false) fail('subrouter_streaming_not_enabled');
-    if (!Array.isArray(body.messages) || body.messages.length < 1 || body.messages.length > 30) fail('subrouter_invalid_messages');
-    let chars = 0;
-    for (const message of body.messages) {
-      strictObject(message, ['role', 'content']);
-      if (!['system', 'user', 'assistant'].includes(message.role) || typeof message.content !== 'string' || !message.content.length) fail('subrouter_invalid_messages');
-      chars += message.content.length;
+    if (envelope.delivery !== undefined) {
+      strictObject(envelope.delivery, ['stream', 'includeUsage']);
+      if (envelope.format !== 'openai' || envelope.delivery.stream !== true || typeof envelope.delivery.includeUsage !== 'boolean') fail('subrouter_unsupported_format');
     }
-    if (chars > route.maxInputChars || !body.messages.some(m => m.role === 'user')) fail('subrouter_invalid_messages');
+    if (envelope.body?.model !== route.model) fail('subrouter_request_model_mismatch');
+    if (envelope.body?.stream !== undefined && envelope.body.stream !== false) fail('subrouter_streaming_not_enabled');
+    const normalized = normalizeChatRequest(envelope.body, {native: envelope.format === 'native'}), body = normalized.body;
+    if (normalized.usesTools && route.supportsTools !== true) fail('subrouter_tools_not_enabled');
     const maxTokens = exactInteger(body.max_tokens, 1, route.maxOutputTokens);
-    if (body.temperature !== undefined && (typeof body.temperature !== 'number' || !Number.isFinite(body.temperature) || body.temperature < 0 || body.temperature > 2)) fail('subrouter_invalid_temperature');
-    const request = { model: route.upstreamModel, messages: body.messages, max_tokens: maxTokens, stream: false, ...(body.temperature !== undefined ? { temperature: body.temperature } : {}) };
+    const request = {...body, model: route.upstreamModel, stream: false};
+    // Despite the legacy field name, this is a conservative UTF-8 byte bound
+    // over the whole dispatched JSON, including tool schemas and call history.
+    if (chatInputBytes(request) > route.maxInputChars) fail('subrouter_invalid_messages');
     if (secrets.some(secret => JSON.stringify(request).includes(secret))) fail('subrouter_private_payload_rejected');
     try {
       // One request, fixed host, redirects forbidden. No automatic fallback or retry.
       const response = await fetchImpl(SUBROUTER_CHAT_ENDPOINT, { method: 'POST', headers: { Authorization: 'Bearer ' + route.apiKey, 'Content-Type': 'application/json' }, body: JSON.stringify(request), redirect: 'error', cache: 'no-store', signal });
       if (!response.ok || response.redirected) fail('subrouter_dispatch_not_confirmed', true);
       const value = await boundedJson(response, signal);
-      if (!value || typeof value !== 'object' || typeof value.id !== 'string' || !value.id.length || value.id.length > 160 || value.model !== route.upstreamModel) fail('subrouter_response_identity_unconfirmed', true);
+      if (!value || typeof value !== 'object' || typeof value.id !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(value.id) || value.model !== route.upstreamModel) fail('subrouter_response_identity_unconfirmed', true);
       const input = exactInteger(value.usage?.prompt_tokens); const output = exactInteger(value.usage?.completion_tokens, 0, maxTokens);
-      if (!Array.isArray(value.choices) || value.choices.length !== 1 || value.choices[0]?.message?.role !== 'assistant' || typeof value.choices[0].message.content !== 'string' || !value.choices[0].message.content.length || value.choices[0].message.tool_calls?.length) fail('subrouter_invalid_response', true);
+      const total = exactInteger(input + output);
+      if (value.usage.total_tokens !== undefined && value.usage.total_tokens !== total) fail('subrouter_invalid_usage', true);
+      if (!Array.isArray(value.choices) || value.choices.length !== 1 || (value.choices[0]?.index !== undefined && value.choices[0].index !== 0)) fail('subrouter_invalid_response', true);
+      const assistant = validateAssistantMessage(value.choices[0].message, body);
       const finish = value.choices[0].finish_reason;
-      const result = { providerResponseId: value.id, model: value.model, text: value.choices[0].message.content, finishReason: ['stop', 'length', 'content_filter'].includes(finish) ? finish : null, usage: { prompt_tokens: input, completion_tokens: output }, settlementVerified: false };
+      if ((assistant.toolCalls && finish !== 'tool_calls') || (!assistant.toolCalls && finish === 'tool_calls')) fail('subrouter_incomplete_tool_result', true);
+      const result = { providerResponseId: value.id, model: value.model, ...assistant,
+        created: exactInteger(value.created ?? Math.floor(Date.now() / 1000)),
+        finishReason: ['stop', 'length', 'content_filter', 'tool_calls'].includes(finish) ? finish : null,
+        usage: { prompt_tokens: input, completion_tokens: output }, settlementVerified: false };
       if (secrets.some(secret => JSON.stringify(result).includes(secret))) fail('subrouter_private_response_rejected', true);
       return Object.freeze(result);
     } catch { fail('subrouter_dispatch_requires_reconciliation', true); }
