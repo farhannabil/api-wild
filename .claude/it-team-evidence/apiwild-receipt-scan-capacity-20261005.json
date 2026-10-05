@@ -1,0 +1,13 @@
+{
+  "task_id": "apiwild-receipt-scan-capacity-20261005",
+  "status": "passed",
+  "summary": "Raise the fixed native receipt scan bound from200 to1000 rows while preserving full duplicate scans, financial holds and the20-second total deadline.",
+  "checks": [
+    {"command": "node --test infra/railway/tests/subrouter-receipt-reader.test.mjs infra/railway/tests/supplier-debit-sweep.test.mjs", "exitCode": 0, "assertions": 20},
+    {"command": "node --check infra/railway/runtime/subrouter-receipt-reader.mjs", "exitCode": 0},
+    {"command": "node --check infra/railway/tests/subrouter-receipt-reader.test.mjs", "exitCode": 0},
+    {"command": "git diff --check", "exitCode": 0}
+  ],
+  "review": {"reviewer": "/root/sandbox_matrix_qa", "result": "passed"},
+  "limitations": ["Maximum52 read-only requests per receipt; repeated scans remain.", "Histories over1000 rows or scans unable to finish within20seconds remain unverified and held.", "No paid inference or native provider requests occurred in these tests; current public production acceptance is recorded separately."]
+}
