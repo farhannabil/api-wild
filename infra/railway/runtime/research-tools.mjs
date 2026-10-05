@@ -7,10 +7,13 @@ import {Readable} from 'node:stream';
 import {GatewayError, strictObject} from './supabase-gateway-rpc.mjs';
 
 const HOST = 'en.wikipedia.org';
+const SEARCH_HOST = 'html.duckduckgo.com';
 const MAX_BODY = 65536;
+const MAX_SEARCH_BODY = 262144;
 export const RESEARCH_TOOL_METADATA = Object.freeze({
   tools: Object.freeze(['search', 'read', 'calculate']),
-  searchSource: 'English Wikipedia',
+  searchSource: 'DuckDuckGo web search',
+  searchSources: Object.freeze(['web', 'wikipedia']),
   allowedReadHosts: Object.freeze([HOST]),
   readMode: 'article-summary',
   externalActions: false,
@@ -43,12 +46,15 @@ function articleUrl(raw) {
 }
 
 export function validateResearchToolInput(input) {
-  try {strictObject(input, ['tool', 'query', 'url', 'expression']);} catch {invalid('Invalid research tool input.');}
+  try {strictObject(input, ['tool', 'query', 'source', 'url', 'expression']);} catch {invalid('Invalid research tool input.');}
   if (!input || typeof input !== 'object' || Array.isArray(input)
       || !['search', 'read', 'calculate'].includes(input.tool)) invalid('Choose search, read or calculate.');
   const field = {search: 'query', read: 'url', calculate: 'expression'}[input.tool];
-  if (Object.keys(input).some(key => !['tool', field].includes(key))) invalid('Unknown research tool input field.');
-  if (input.tool === 'search') return Object.freeze({tool: 'search', query: plain(input.query, 200)});
+  if (Object.keys(input).some(key => !['tool', field, ...(input.tool === 'search' ? ['source'] : [])].includes(key))) invalid('Unknown research tool input field.');
+  if (input.tool === 'search') {
+    if (input.source !== undefined && !['web', 'wikipedia'].includes(input.source)) invalid('Choose web or Wikipedia search.');
+    return Object.freeze({tool: 'search', query: plain(input.query, 200), ...(input.source ? {source: input.source} : {})});
+  }
   if (input.tool === 'read') return Object.freeze({tool: 'read', url: articleUrl(input.url).url});
   const expression = plain(input.expression, 120);
   // Parse during validation; unsupported expressions never reach a transport.
@@ -129,11 +135,11 @@ function abortable(promise, signal) {
   });
 }
 
-function pinnedFetch(url, {signal, address}) {
+function pinnedFetch(url, {signal, address, headers}) {
   return new Promise((resolve, reject) => {
     const request = https.get(url, {
-      signal, agent: false, rejectUnauthorized: true, servername: HOST,
-      headers: {accept: 'application/json', 'user-agent': 'APIWILD-Research/1.0 (https://apiwild.com)'},
+      signal, agent: false, rejectUnauthorized: true, servername: new URL(url).hostname,
+      headers: {accept: headers.accept, 'user-agent': 'APIWILD-Research/1.0 (https://apiwild.com)'},
       lookup: (_hostname, options, callback) => options.all
         ? callback(null, [{address, family: 4}]) : callback(null, address, 4),
     }, response => {
@@ -148,13 +154,14 @@ function pinnedFetch(url, {signal, address}) {
   });
 }
 
-async function readJson(response, expectedUrl, signal) {
+async function readBody(response, expectedUrl, signal, {html = false} = {}) {
+  const maxBody = html ? MAX_SEARCH_BODY : MAX_BODY;
   if (!response || response.status !== 200 || !response.ok || response.url !== expectedUrl
-      || !/^application\/json(?:\s*;|$)/i.test(response.headers?.get('content-type') || '')) {
+      || !(html ? /^text\/html(?:\s*;|$)/i : /^application\/json(?:\s*;|$)/i).test(response.headers?.get('content-type') || '')) {
     await response?.body?.cancel?.().catch(() => {}); throw unavailable();
   }
   const length = response.headers.get('content-length');
-  if (length !== null && (!/^\d+$/.test(length) || Number(length) > MAX_BODY)) {
+  if (length !== null && (!/^\d+$/.test(length) || Number(length) > maxBody)) {
     await response.body?.cancel?.().catch(() => {}); throw new ResearchToolError('The research source response is too large.', 'response_limit');
   }
   if (!response.body?.getReader) throw unavailable();
@@ -164,19 +171,73 @@ async function readJson(response, expectedUrl, signal) {
       const {done, value} = await abortable(reader.read(), signal);
       if (done) break;
       size += value.byteLength;
-      if (size > MAX_BODY) throw new ResearchToolError('The research source response is too large.', 'response_limit');
+      if (size > maxBody) throw new ResearchToolError('The research source response is too large.', 'response_limit');
       chunks.push(value);
     }
-    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    const body = Buffer.concat(chunks).toString('utf8');
+    return html ? body : JSON.parse(body);
   } finally {await reader.cancel().catch(() => {}); reader.releaseLock();}
+}
+
+function entities(value) {
+  return value.replace(/&(?:amp|lt|gt|quot|apos|nbsp|#39|#\d{1,7}|#x[0-9a-f]{1,6});/gi, match => {
+    const named = {'&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&apos;': "'", '&nbsp;': ' '};
+    if (named[match.toLowerCase()]) return named[match.toLowerCase()];
+    const point = /^&#x/i.test(match) ? parseInt(match.slice(3, -1), 16) : Number(match.slice(2, -1));
+    return point > 0 && point <= 0x10ffff && !(point >= 0xd800 && point <= 0xdfff) ? String.fromCodePoint(point) : '';
+  });
 }
 
 function sourceText(value, max) {
   if (typeof value !== 'string') throw unavailable();
   // Remove markup; React/JSON clients must still render these values as text.
-  return value.replace(/<[^>]*>/g, '').replace(/&(?:amp|lt|gt|quot|#39);/g, match =>
-    ({'&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'"}[match]))
-    .replace(/[\x00-\x1f\x7f]/g, ' ').trim().slice(0, max);
+  return entities(value.replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, '').replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, '').replace(/<[^>]*>/g, ''))
+    .replace(/[\x00-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+function attribute(tag, name) {
+  const matches = [...tag.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)].filter(match => match[1].toLowerCase() === name);
+  return matches.length === 1 ? entities(matches[0][2] ?? matches[0][3]) : null;
+}
+
+function resultUrl(raw) {
+  if (!raw || raw.length > 4096 || /[\x00-\x20\x7f\\]/.test(raw)) return null;
+  let url;
+  try {
+    url = new URL(raw, 'https://duckduckgo.com');
+    // Extract the destination locally; never follow the search-engine redirect.
+    if (['duckduckgo.com', SEARCH_HOST].includes(url.hostname) && url.pathname === '/l/') {
+      const targets = url.searchParams.getAll('uddg');
+      if (targets.length !== 1 || /[\x00-\x20\x7f\\]/.test(targets[0])) return null;
+      url = new URL(targets[0]);
+    } else if (!/^https?:\/\//i.test(raw)) return null;
+  } catch {return null;}
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.port || url.href.length > 2048
+      || /[\x00-\x20\x7f\\]/.test(url.href) || isIP(url.hostname) || !url.hostname.includes('.')
+      || url.hostname.endsWith('.') || /(?:^|\.)(?:localhost|local|internal|intranet|lan|home|onion|invalid|test|example)$/.test(url.hostname)
+      || !url.hostname.split('.').every(label => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(label))) return null;
+  return url.href;
+}
+
+function webResults(html) {
+  // A challenge is an unavailable source, never a result or a retry target.
+  if (/anomaly-modal|challenge-form|\/anomaly\.js|g-recaptcha|h-captcha/i.test(html)) throw unavailable();
+  const cards = [...html.matchAll(/<div\b[^>]*\bclass\s*=\s*(["'])([^"']*\bweb-result\b[^"']*)\1[^>]*>/gi)];
+  const results = [], seen = new Set();
+  for (let index = 0; index < cards.length && results.length < 5; index++) {
+    if (/\bresult--ad\b/.test(cards[index][2])) continue;
+    const card = html.slice(cards[index].index + cards[index][0].length, cards[index + 1]?.index ?? html.length);
+    const links = [...card.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a\s*>/gi)];
+    const link = links.find(match => attribute(match[1], 'class')?.split(/\s+/).includes('result__a'));
+    if (!link) continue;
+    const url = resultUrl(attribute(link[1], 'href'));
+    const title = sourceText(link[2], 300);
+    const snippetLink = links.find(match => attribute(match[1], 'class')?.split(/\s+/).includes('result__snippet'));
+    const snippet = snippetLink ? sourceText(snippetLink[2], 600) : '';
+    if (url && title && !seen.has(url)) {seen.add(url); results.push({title, url, snippet});}
+  }
+  if (!results.length && !/class\s*=\s*["'][^"']*\bno-results\b|No results found/i.test(html)) throw unavailable();
+  return results;
 }
 
 export function createResearchTools({fetchImpl = pinnedFetch, lookupImpl = dnsLookup, timeoutMs = 5000} = {}) {
@@ -190,16 +251,23 @@ export function createResearchTools({fetchImpl = pinnedFetch, lookupImpl = dnsLo
     signal?.addEventListener('abort', abort, {once: true});
     const timer = setTimeout(abort, timeoutMs);
     try {
-      const addresses = await abortable(lookupImpl(HOST, {all: true, family: 4, verbatim: true}), controller.signal);
+      const webSearch = input.tool === 'search' && input.source !== 'wikipedia';
+      const host = webSearch ? SEARCH_HOST : HOST;
+      const addresses = await abortable(lookupImpl(host, {all: true, family: 4, verbatim: true}), controller.signal);
       if (!Array.isArray(addresses) || !addresses.length || addresses.length > 20
           || addresses.some(row => row.family !== 4 || !publicAddress(row.address))) throw unavailable();
       const title = input.tool === 'read' ? articleUrl(input.url).title : null;
-      const target = input.tool === 'search'
+      const target = webSearch ? `https://${SEARCH_HOST}/html/?${new URLSearchParams({q: input.query})}` : input.tool === 'search'
         ? `https://${HOST}/w/api.php?${new URLSearchParams({action: 'query', format: 'json', formatversion: '2', list: 'search', srsearch: input.query, srlimit: '5', srprop: 'snippet', utf8: '1'})}`
         : `https://${HOST}/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
       const response = await abortable(fetchImpl(target, {signal: controller.signal, redirect: 'error', credentials: 'omit',
-        headers: {accept: 'application/json'}, address: addresses[0].address}), controller.signal);
-      const data = await readJson(response, target, controller.signal);
+        headers: {accept: webSearch ? 'text/html' : 'application/json'}, address: addresses[0].address}), controller.signal);
+      const data = await readBody(response, target, controller.signal, {html: webSearch});
+      if (webSearch) {
+        const results = webResults(data);
+        return {ok: true, tool: 'search', source: 'DuckDuckGo web search', query: input.query, results,
+          citations: results.map(({title, url}) => ({title, url}))};
+      }
       if (input.tool === 'search') {
         if (!Array.isArray(data?.query?.search) || data.query.search.length > 5) throw unavailable();
         const results = data.query.search.map(row => {

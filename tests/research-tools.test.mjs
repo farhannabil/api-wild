@@ -21,8 +21,103 @@ function fixture(data = searchData, override = {}) {
 const rejectCode = (operation, code = 'research_tools_invalid_input', status = 400) =>
   assert.rejects(operation, error => error instanceof GatewayError && error.code === code && error.status === status);
 
-test('metadata identifies the limited source and read-only behavior', () => {
-  assert.equal(RESEARCH_TOOL_METADATA.searchSource, 'English Wikipedia');
+// Structural fixture taken from an actual official DuckDuckGo HTML response:
+// organic web-result cards, result__a and result__snippet, plus encoded /l/ links.
+const webCard = (url = '//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.canada.ca%2Fen.html&amp;rut=abc',
+  title = 'Home - Canada.ca', snippet = '<b>Official</b> Government of Canada website.', extraClass = '') =>
+  `<div class="result results_links results_links_deep web-result ${extraClass}"><div class="links_main result__body"><h2 class="result__title"><a rel="nofollow" class="result__a" href="${url}">${title}</a></h2><a class="result__snippet" href="${url}">${snippet}</a></div></div>`;
+function webFixture(html = webCard(), override = {}) {
+  const calls = [], hosts = [];
+  const utility = createResearchTools({lookupImpl: async host => {hosts.push(host); return publicLookup();}, fetchImpl: async (url, options) => {
+    calls.push({url, options}); return response(url, null, {headers: new Headers({'content-type': 'text/html; charset=UTF-8'}), body: new Response(html).body, ...override});
+  }});
+  return {utility, calls, hosts};
+}
+
+test('default search returns general web results and decodes redirects locally without visiting result sites', async () => {
+  const {utility, calls, hosts} = webFixture();
+  const result = await utility.execute({tool: 'search', query: 'Canada official "&" government'});
+  assert.equal(result.source, 'DuckDuckGo web search');
+  assert.deepEqual(result.results, [{title: 'Home - Canada.ca', url: 'https://www.canada.ca/en.html', snippet: 'Official Government of Canada website.'}]);
+  assert.deepEqual(result.citations, [{title: 'Home - Canada.ca', url: 'https://www.canada.ca/en.html'}]);
+  assert.deepEqual(hosts, ['html.duckduckgo.com']);
+  assert.equal(calls.length, 1);
+  assert.equal(new URL(calls[0].url).pathname, '/html/');
+  assert.equal(new URL(calls[0].url).searchParams.get('q'), 'Canada official "&" government');
+  assert.equal(calls[0].options.headers.accept, 'text/html');
+  assert.equal(calls[0].options.redirect, 'error');
+  assert.equal(calls[0].options.credentials, 'omit');
+});
+
+test('web results are bounded, deduplicated, sanitized and exclude advertisements', async () => {
+  const html = webCard('https://ads.microsoft.com/', 'Ad', '', 'result--ad') + webCard() + webCard()
+    + Array.from({length: 7}, (_, index) => webCard(`http://www.mozilla.org/article${index}?a=1&amp;b=2`,
+      'A &quot;title&quot; &#x1f1e8; &#127464;' + 'x'.repeat(400), '<script>private();</script><b>Context</b>' + 'x'.repeat(700))).join('');
+  const result = await webFixture(html).utility.execute({tool: 'search', query: 'test', source: 'web'});
+  assert.equal(result.results.length, 5);
+  assert.equal(result.results[0].title, 'Home - Canada.ca');
+  assert.equal(result.results[1].url, 'http://www.mozilla.org/article0?a=1&b=2');
+  assert.equal(result.results[1].title.length, 300);
+  assert.equal(result.results[1].snippet.length, 600);
+  assert.ok(!result.results[1].snippet.includes('private'));
+  assert.ok(result.results[1].title.startsWith('A "title"'));
+});
+
+test('unsafe and malformed web links are never returned or fetched', async () => {
+  const bad = ['javascript:alert(1)', 'data:text/html,hello', 'ftp://www.mozilla.org/', 'https://user:pass@www.mozilla.org/',
+    'https://127.0.0.1/', 'https://[::1]/', 'https://2130706433/', 'https://169.254.169.254/', 'https://localhost/',
+    'https://server.local/', 'https://server.internal/', 'https://server.lan/', 'https://server.home/', 'https://www.mozilla.org:444/', 'https://www.mozilla.org./',
+    '/relative', '//duckduckgo.com/l/?uddg=javascript%3Aalert(1)', '//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.mozilla.org%2F&amp;uddg=https%3A%2F%2Fgithub.com%2F',
+    '//duckduckgo.com/l/?uddg=https%3A%2F%2Fgithub.com%2F%0Asecret', 'https://www.mozilla.org/&#10;secret'];
+  const {utility, calls} = webFixture(bad.map(url => webCard(url)).join('') + webCard('https://github.com/', 'Safe'));
+  const result = await utility.execute({tool: 'search', query: 'test'});
+  assert.deepEqual(result.results.map(row => row.url), ['https://github.com/']);
+  assert.equal(calls.length, 1);
+});
+
+test('web challenges, unknown markup and redirects fail closed; explicit no-results is supported', async () => {
+  for (const html of ['<form id="challenge-form">solve this</form>', '<div class="anomaly-modal">Challenge</div>', '<html>Something changed</html>', webCard('javascript:alert(1)')]) {
+    await rejectCode(() => webFixture(html).utility.execute({tool: 'search', query: 'test'}), 'research_tools_source_unavailable', 503);
+  }
+  assert.deepEqual((await webFixture('<div class="no-results">No results found</div>').utility.execute({tool: 'search', query: 'test'})).results, []);
+  for (const override of [{status: 202, ok: false}, {status: 302, ok: false}, {url: 'https://duckduckgo.com/anomaly'}, {headers: new Headers({'content-type': 'application/json'})}]) {
+    await rejectCode(() => webFixture(webCard(), override).utility.execute({tool: 'search', query: 'test'}), 'research_tools_source_unavailable', 503);
+  }
+});
+
+test('web source selection is strict and response bytes remain bounded', async () => {
+  for (const input of [{tool: 'search', query: 'test', source: 'unknown'}, {tool: 'read', url: 'https://en.wikipedia.org/wiki/Canada', source: 'web'}, {tool: 'calculate', expression: '1+1', source: 'web'}]) {
+    assert.throws(() => validateResearchToolInput(input), error => error.code === 'research_tools_invalid_input');
+  }
+  await rejectCode(() => webFixture(webCard(), {headers: new Headers({'content-type': 'text/html', 'content-length': '262145'})}).utility.execute({tool: 'search', query: 'test'}), 'research_tools_too_large', 413);
+  await rejectCode(() => webFixture('x'.repeat(262145)).utility.execute({tool: 'search', query: 'test'}), 'research_tools_too_large', 413);
+});
+
+test('production web transport retains its TLS hostname while pinning the vetted address', async () => {
+  const previous = https.get; let captured;
+  https.get = (url, options, callback) => {
+    captured = {url, options};
+    const incoming = Readable.from([Buffer.from(webCard())]);
+    incoming.statusCode = 200; incoming.headers = {'content-type': 'text/html'};
+    queueMicrotask(() => callback(incoming)); return new EventEmitter();
+  };
+  try {
+    const result = await createResearchTools({lookupImpl: publicLookup}).execute({tool: 'search', query: 'Canada'});
+    assert.equal(result.results[0].url, 'https://www.canada.ca/en.html');
+    assert.equal(captured.options.servername, 'html.duckduckgo.com');
+    assert.equal(captured.options.rejectUnauthorized, true);
+    assert.equal(captured.options.agent, false);
+    assert.equal(captured.options.headers.authorization, undefined);
+    assert.equal(captured.options.headers.cookie, undefined);
+    assert.equal(captured.options.headers.accept, 'text/html');
+    const address = await new Promise((resolve, reject) => captured.options.lookup('html.duckduckgo.com', {}, (error, ip, family) => error ? reject(error) : resolve({ip, family})));
+    assert.deepEqual(address, {ip: '208.80.154.224', family: 4});
+  } finally {https.get = previous;}
+});
+
+test('metadata separates general web search from the restricted read-only article reader', () => {
+  assert.equal(RESEARCH_TOOL_METADATA.searchSource, 'DuckDuckGo web search');
+  assert.deepEqual(RESEARCH_TOOL_METADATA.searchSources, ['web', 'wikipedia']);
   assert.equal(RESEARCH_TOOL_METADATA.modelCalls, false);
   assert.deepEqual(RESEARCH_TOOL_METADATA.allowedReadHosts, ['en.wikipedia.org']);
   assert.ok(Object.isFrozen(RESEARCH_TOOL_METADATA.tools));
@@ -30,7 +125,7 @@ test('metadata identifies the limited source and read-only behavior', () => {
 
 test('search encodes the query, returns bounded text and exact public citations', async () => {
   const {utility, calls} = fixture();
-  const result = await utility.execute({tool: 'search', query: 'Canada "&" Montréal'});
+  const result = await utility.execute({tool: 'search', source: 'wikipedia', query: 'Canada "&" Montréal'});
   assert.deepEqual(result.results, [{title: 'Canada', url: 'https://en.wikipedia.org/wiki/Canada', snippet: 'Canada & "Québec"'}]);
   assert.deepEqual(result.citations, [{title: 'Canada', url: 'https://en.wikipedia.org/wiki/Canada'}]);
   const target = new URL(calls[0].url);
@@ -68,9 +163,9 @@ test('calculator rejects execution, invalid arithmetic and excessive complexity'
 });
 
 test('strict input validation rejects extra fields, getters and inherited objects', () => {
-  for (const input of [null, [], {tool: 'shell', query: 'ls'}, {tool: 'search', query: 'test', secret: 'private'},
-    {tool: 'search', query: 'test', expression: '1+2'}, {tool: 'search', query: 'x'.repeat(201)},
-    {tool: 'search', query: 'a\nsecret'}, Object.create({tool: 'search', query: 'test'})]) {
+  for (const input of [null, [], {tool: 'shell', query: 'ls'}, {tool: 'search', source: 'wikipedia', query: 'test', secret: 'private'},
+    {tool: 'search', source: 'wikipedia', query: 'test', expression: '1+2'}, {tool: 'search', source: 'wikipedia', query: 'x'.repeat(201)},
+    {tool: 'search', source: 'wikipedia', query: 'a\nsecret'}, Object.create({tool: 'search', source: 'wikipedia', query: 'test'})]) {
     assert.throws(() => validateResearchToolInput(input), error => error.code === 'research_tools_invalid_input');
   }
   const getter = {tool: 'search'};
@@ -95,7 +190,7 @@ test('all DNS answers must be global IPv4; mixed public/private answers fail clo
     let fetched = false;
     const utility = createResearchTools({lookupImpl: async () => [...await publicLookup(), {address, family: address === '::1' ? 6 : 4}],
       fetchImpl: () => {fetched = true;}});
-    await rejectCode(() => utility.execute({tool: 'search', query: 'test'}), 'research_tools_source_unavailable', 503);
+    await rejectCode(() => utility.execute({tool: 'search', source: 'wikipedia', query: 'test'}), 'research_tools_source_unavailable', 503);
     assert.equal(fetched, false);
   }
 });
@@ -109,7 +204,7 @@ test('production HTTPS transport pins the verified DNS address and sends no auth
     queueMicrotask(() => callback(incoming)); return new EventEmitter();
   };
   try {
-    const result = await createResearchTools({lookupImpl: publicLookup}).execute({tool: 'search', query: 'Canada'});
+    const result = await createResearchTools({lookupImpl: publicLookup}).execute({tool: 'search', source: 'wikipedia', query: 'Canada'});
     assert.equal(result.results.length, 1);
     const address = await new Promise((resolve, reject) => captured.options.lookup('untrusted-rebind.example', {}, (error, ip, family) => error ? reject(error) : resolve({ip, family})));
     assert.deepEqual(address, {ip: '208.80.154.224', family: 4});
@@ -126,41 +221,41 @@ test('production HTTPS transport pins the verified DNS address and sends no auth
 test('redirects, identity changes, non-JSON and upstream failures are rejected', async () => {
   for (const override of [{status: 302, ok: false}, {url: 'https://localhost/'}, {status: 500, ok: false},
     {headers: new Headers({'content-type': 'text/html'})}]) {
-    await rejectCode(() => fixture(searchData, override).utility.execute({tool: 'search', query: 'Canada'}), 'research_tools_source_unavailable', 503);
+    await rejectCode(() => fixture(searchData, override).utility.execute({tool: 'search', source: 'wikipedia', query: 'Canada'}), 'research_tools_source_unavailable', 503);
   }
 });
 
 test('provider results are strictly bounded and article ambiguity is not silently accepted', async () => {
   for (const data of [{query: {search: Array(6).fill(searchData.query.search[0])}}, {query: {search: [{title: 'https://evil.example', snippet: 'bad'}]}},
     {query: {search: [{title: 'Canada', snippet: null}]}}, {error: {info: 'private provider text'}}]) {
-    await assert.rejects(() => fixture(data).utility.execute({tool: 'search', query: 'Canada'}), error => error instanceof GatewayError);
+    await assert.rejects(() => fixture(data).utility.execute({tool: 'search', source: 'wikipedia', query: 'Canada'}), error => error instanceof GatewayError);
   }
   await rejectCode(() => fixture({type: 'disambiguation', title: 'Test', extract: 'Pick one'}).utility.execute({tool: 'read', url: 'https://en.wikipedia.org/wiki/Test'}), 'research_tools_source_unavailable', 503);
 });
 
 test('declared and streamed response sizes are limited', async () => {
-  await rejectCode(() => fixture(searchData, {headers: new Headers({'content-type': 'application/json', 'content-length': '65537'})}).utility.execute({tool: 'search', query: 'test'}), 'research_tools_too_large', 413);
-  await rejectCode(() => fixture({query: {search: []}, ignored: 'x'.repeat(65536)}).utility.execute({tool: 'search', query: 'test'}), 'research_tools_too_large', 413);
+  await rejectCode(() => fixture(searchData, {headers: new Headers({'content-type': 'application/json', 'content-length': '65537'})}).utility.execute({tool: 'search', source: 'wikipedia', query: 'test'}), 'research_tools_too_large', 413);
+  await rejectCode(() => fixture({query: {search: []}, ignored: 'x'.repeat(65536)}).utility.execute({tool: 'search', source: 'wikipedia', query: 'test'}), 'research_tools_too_large', 413);
 });
 
 test('deadline bounds DNS and response waiting, and abort propagates to fetch', async () => {
   const hungDns = createResearchTools({timeoutMs: 100, lookupImpl: () => new Promise(() => {}), fetchImpl: () => {throw Error('No fetch');}});
   const started = Date.now();
-  await rejectCode(() => hungDns.execute({tool: 'search', query: 'test'}), 'research_tools_source_unavailable', 503);
+  await rejectCode(() => hungDns.execute({tool: 'search', source: 'wikipedia', query: 'test'}), 'research_tools_source_unavailable', 503);
   assert.ok(Date.now() - started < 1500);
   let fetchSignal;
   const hungFetch = createResearchTools({timeoutMs: 100, lookupImpl: publicLookup, fetchImpl: (_url, {signal}) => {
     fetchSignal = signal; return new Promise(() => {});
   }});
-  await rejectCode(() => hungFetch.execute({tool: 'search', query: 'test'}), 'research_tools_source_unavailable', 503);
+  await rejectCode(() => hungFetch.execute({tool: 'search', source: 'wikipedia', query: 'test'}), 'research_tools_source_unavailable', 503);
   assert.equal(fetchSignal.aborted, true);
   const controller = new AbortController(); controller.abort();
-  await rejectCode(() => fixture().utility.execute({tool: 'search', query: 'test'}, {signal: controller.signal}), 'research_tools_source_unavailable', 503);
+  await rejectCode(() => fixture().utility.execute({tool: 'search', source: 'wikipedia', query: 'test'}, {signal: controller.signal}), 'research_tools_source_unavailable', 503);
 });
 
 test('raw upstream errors are replaced with a stable sanitized gateway error', async () => {
   const utility = createResearchTools({lookupImpl: publicLookup, fetchImpl: () => {throw Error('secret key and private network details');}});
-  await assert.rejects(() => utility.execute({tool: 'search', query: 'test'}), error => error.message === 'research_tools_source_unavailable' && error.status === 503);
+  await assert.rejects(() => utility.execute({tool: 'search', source: 'wikipedia', query: 'test'}), error => error.message === 'research_tools_source_unavailable' && error.status === 503);
 });
 
 test('deadline also bounds a stalled response body', async () => {
@@ -168,6 +263,6 @@ test('deadline also bounds a stalled response body', async () => {
   const utility = createResearchTools({timeoutMs: 100, lookupImpl: publicLookup, fetchImpl: async url => response(url, {}, {
     body: new ReadableStream({pull() {return new Promise(() => {});}, cancel() {cancelled = true;}}),
   })});
-  await rejectCode(() => utility.execute({tool: 'search', query: 'test'}), 'research_tools_source_unavailable', 503);
+  await rejectCode(() => utility.execute({tool: 'search', source: 'wikipedia', query: 'test'}), 'research_tools_source_unavailable', 503);
   assert.equal(cancelled, true);
 });

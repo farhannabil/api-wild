@@ -1,0 +1,37 @@
+{
+  "task_id": "apiwild-general-web-customer-frontend-20261005",
+  "status": "passed",
+  "summary": "Added manual DuckDuckGo web search UI with explicit Wikipedia alternative; preserved Wikipedia-only summary reader, untrusted editable source context and paid-request boundaries. Corrected current public feature scope and stale customer onboarding activation sentence.",
+  "files": [
+    "app/console/owned-research-tools.tsx",
+    "lib/owned-research-tools.mjs",
+    "tests/owned-research-tools.test.mjs",
+    "app/content.ts",
+    "app/onboarding/onboarding-client.tsx"
+  ],
+  "checks": [
+    {
+      "command": "node --test tests/owned-research-tools.test.mjs",
+      "exitCode": 0,
+      "result": "4 tests passed: preserves existing composer edits; UTF-8 file and binary/size boundaries; web versus Wikipedia context, public HTTP/HTTPS source links and unsafe URL rejection; read HTTPS and calculation response validation."
+    },
+    {
+      "command": "node --input-type=module - (TypeScript compiler API, configured application files excluding vite.config.ts)",
+      "exitCode": 0,
+      "result": "Application TypeScript check passed with no diagnostics; noEmit:true, incremental:false. Only pre-existing deployment-only vite.config.ts omitted because local hosting.json is absent."
+    }
+  ],
+  "review": {
+    "reviewer": "/root/general_web_backend",
+    "result": "passed",
+    "scope": "Independent inspection confirmed backend source protocol, explicit source/no-result/error states, bounded links and context, privacy/docs and onboarding text only; raw controls/backslashes, hostname labels and private suffix alignment correction re-reviewed."
+  },
+  "limitations": [
+    "Source preparation only; root owns deployment and actual signed-in Railway-origin web search acceptance.",
+    "Public DuckDuckGo HTML search is best-effort; challenge or unavailable source reports an error. Wikipedia is an explicit user choice, never a silent substitute.",
+    "General web reader is not implemented; read remains English Wikipedia article summaries.",
+    "Hosted audio APIs deferred to next sprint; existing browser voice controls remain device-dependent.",
+    "No credentials, payment/provider/account settings, onboarding data or immutable paid request/retry behavior changed.",
+    "Fresh live Stripe customer payment fulfilment, confirmation email and browser/hardware acceptance remain root-owned."
+  ]
+}
