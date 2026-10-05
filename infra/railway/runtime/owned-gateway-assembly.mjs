@@ -57,7 +57,7 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
  }});
  const playgroundModels=[...new Map(routes.map(r=>[r.model+'|'+r.capability,{model:r.model,capability:r.capability,maxOutputTokens:r.maxOutputTokens,supportsTools:r.supportsTools===true}])).values()];
  const discovery=createOwnedDiscoverySnapshot({catalog,routes:playgroundModels,rateVersion,tierPolicy,deploymentCommit:env.RAILWAY_GIT_COMMIT_SHA,workspaceToolsEnabled:true});
- const ingress=createGatewayIngress({rpc,keys,service,discovery,researchTools:createResearchTools(),origin:'https://apiwild.com',enabled:true,playgroundModels,selectQuote:async({context,model,capability,maxTokens,payload,requestKey,payloadHash})=>{
+ const ingress=createGatewayIngress({rpc,keys,service,discovery,researchTools:createResearchTools({observeFailure:record=>console.log(JSON.stringify({researchSourceFailure:record}))}),origin:'https://apiwild.com',enabled:true,playgroundModels,selectQuote:async({context,model,capability,maxTokens,payload,requestKey,payloadHash})=>{
   if(!inferenceEnabled)throw new GatewayError('gateway_inference_disabled');
   if(conditional(model)){
    const prior=await rpc.lookupQuote(context,{keyId:context.keyId??null,requestKey,payloadHash,capability,model});
