@@ -1,0 +1,23 @@
+{
+  "task_id": "apiwild-advanced-tools-layout-20261005",
+  "status": "passed",
+  "summary": "Improve button spacing, focus/disabled states and narrow-screen stacking only in new research/voice details; correct Research-only sidebar highlight.",
+  "checks": [
+    {
+      "command": "node node_modules/vite/bin/vite.js build --config vite.railway.config.ts",
+      "exitCode": 0
+    },
+    {
+      "command": "Independent exact TSX transformation and scoped CSS comparison",
+      "exitCode": 0
+    }
+  ],
+  "review": {
+    "reviewer": "/root/advanced_tools_backend",
+    "result": "passed"
+  },
+  "limitations": [
+    "No new inference, microphone, playback or payment test; existing accepted functional evidence retains its scope.",
+    "Production styles and active navigation require root post-deploy visual verification."
+  ]
+}
