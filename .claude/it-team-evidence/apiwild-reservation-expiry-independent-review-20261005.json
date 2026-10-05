@@ -1,0 +1,41 @@
+{
+  "task_id": "apiwild-reservation-expiry-independent-review-20261005",
+  "status": "passed",
+  "summary": "Independent source and isolated database review of the one-request expiry operator. No findings.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/reservation-expiry-operator.test.mjs",
+      "exitCode": 0,
+      "passed": 6
+    },
+    {
+      "command": "node infra/railway/tests/reservation-expiry-postgres.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "exitCode": 0,
+      "passed": 4
+    }
+  ],
+  "review": {
+    "reviewer": "/root/public_status",
+    "result": "passed",
+    "author": "/root/source_launch_audit",
+    "findings": []
+  },
+  "sourceHashes": {
+    "infra/railway/runtime/reservation-expiry-operator.mjs": "795ece69954c846c194a9cb31c82af4fd8c943cd47276354cf5236f52b537ba9",
+    "infra/railway/reservation-expiry.mjs": "f2a6b88c9275a15e84a9b768e31af7d39c08fcaadeea95e62d72abdc58f974c7",
+    "infra/railway/tests/reservation-expiry-operator.test.mjs": "c1f9278e18da48178b6a32fc2c1db5685506d6a6c942eef5a9387fb0a489d774",
+    "infra/railway/tests/reservation-expiry-postgres.mjs": "be59f25059baf43dcd314796b308475202bd3e8b98a5b19ce0d6bb217875524b",
+    "infra/railway/RESERVATION_EXPIRY_RUNBOOK.md": "fe3096c4d6686c145e308c3d65ea6f3f247f0e12da57cbe5c68c923238ecf2b2"
+  },
+  "verified": [
+    "Default-disabled and --check no-network behavior.",
+    "One exact original-Supabase RPC, one owner/request/version, bounded time and response bytes, no automatic retry or supplier dispatch.",
+    "SQL authority cancels expired reserved requests exactly once, refuses stale/future/foreign-owner/public-role calls, and leaves executing/uncertain/settled supplier-pending records unchanged.",
+    "Output excludes secrets, account identity, model content and supplier receipts."
+  ],
+  "limitations": [
+    "Fixture credentials and isolated PGlite only; no live cleanup occurred.",
+    "PGlite uses one connection and does not certify independent-transaction concurrency.",
+    "This operator does not reconcile actual supplier CNY liability or make launch ready."
+  ]
+}

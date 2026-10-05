@@ -1,0 +1,38 @@
+{
+  "task_id": "apiwild-reservation-expiry",
+  "status": "passed",
+  "summary": "A disabled-by-default nonpublic operator safely expires one explicitly identified never-dispatched reservation through the existing database RPC. It never enumerates customers or releases ambiguous supplier liabilities.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/reservation-expiry-operator.test.mjs",
+      "exitCode": 0,
+      "passed": 6
+    },
+    {
+      "command": "node infra/railway/tests/reservation-expiry-postgres.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "exitCode": 0,
+      "passed": 4
+    }
+  ],
+  "review": {
+    "reviewer": "/root/public_status",
+    "result": "passed",
+    "evidence": ".claude/it-team-evidence/apiwild-reservation-expiry-independent-review-20261005.json"
+  },
+  "existing_authority": "Original API WILD Supabase project; service-role-only public.apiwild_gateway_expire(text,uuid,bigint). Existing SQL locks and exact owner/state/version/expiry checks remain authoritative. No new migration.",
+  "limitations": [
+    "No external write, production cleanup, secret inspection, paid provider call, scheduled sweep or customer enumeration performed by this worker.",
+    "Execution requires an explicitly verified owner/request/current version, original project server credential, and APIWILD_RESERVATION_EXPIRY_ENABLED=true. Local --check makes no network request.",
+    "Timeout or unknown response can follow a committed cancellation; operator reports unconfirmed and never retries automatically.",
+    "Executing, uncertain and settled supplier-pending work remain held; actual-CNY receipt access is still an independent external acceptance gate.",
+    "PGlite tests use one isolated in-memory database connection, not independent production transaction concurrency.",
+    "Container packaging is owned by the other worker and independently reviewed by /root/source_launch_audit; evidence apiwild-expiry-packaging-review.json."
+  ],
+  "file_sha256": {
+    "infra/railway/runtime/reservation-expiry-operator.mjs": "795ece69954c846c194a9cb31c82af4fd8c943cd47276354cf5236f52b537ba9",
+    "infra/railway/reservation-expiry.mjs": "f2a6b88c9275a15e84a9b768e31af7d39c08fcaadeea95e62d72abdc58f974c7",
+    "infra/railway/tests/reservation-expiry-operator.test.mjs": "c1f9278e18da48178b6a32fc2c1db5685506d6a6c942eef5a9387fb0a489d774",
+    "infra/railway/tests/reservation-expiry-postgres.mjs": "be59f25059baf43dcd314796b308475202bd3e8b98a5b19ce0d6bb217875524b",
+    "infra/railway/RESERVATION_EXPIRY_RUNBOOK.md": "fe3096c4d6686c145e308c3d65ea6f3f247f0e12da57cbe5c68c923238ecf2b2"
+  }
+}

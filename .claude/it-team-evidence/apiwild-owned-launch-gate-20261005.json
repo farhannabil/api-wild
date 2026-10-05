@@ -1,0 +1,27 @@
+{
+  "task_id": "apiwild-owned-launch-gate-20261005",
+  "status": "passed",
+  "summary": "Correct the supplier acceptance label for API WILD-owned accounts and wallet; preserve all actual acceptance gates and blocked readiness.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/launch-status.test.mjs tests/daily-health.test.mjs tests/owned-health-contract.test.mjs",
+      "exitCode": 0,
+      "passed": 19
+    }
+  ],
+  "review": {
+    "reviewer": "/root",
+    "result": "passed",
+    "receipt": "Parent independently reviewed the three-file budget label correction and approved guards intact."
+  },
+  "sourceHashes": {
+    "infra/railway/runtime/launch-status.mjs": "36e1eb4d46ffd503218171eee5f66e1f76fdc161193a163a48189a96f5ca511b",
+    "infra/railway/tests/launch-status.test.mjs": "6c6022be4c617b2c14c49c8af8bc417a5aef1318b1452cea668d2968abbbf9d8",
+    "API_WILD_HANDOVER.md": "40fd69536da7d4b24dccc1d09488e03b3b5ae2714ee47b1396c50a607e79e527"
+  },
+  "limitations": [
+    "Readiness remains HTTP503 and ready:false until actual reviewed acceptance.",
+    "No upstream credential, funding, model call, payment, email, or production acceptance was changed by this task.",
+    "The native supplier allowance bridge remains dormant and optional; restricted funding, budget, response and supplier debit acceptance remain required."
+  ]
+}

@@ -25,6 +25,10 @@ test('configured services and enable flags cannot fabricate customer acceptance'
     const live=await call('/health/live');assert.equal(live.status,200);assert.equal(live.body.alive,true);assert.equal(live.body.ready,false);
     const ready=await call('/health/ready');assert.equal(ready.status,503);assert.equal(ready.body.ready,false);assert.equal(ready.body.checks.acceptance,'not-recorded');
     assert.ok(ready.body.blockers.includes('supplier-debit-acceptance'));
+    assert.ok(ready.body.blockers.includes('supplier-budget-acceptance'));
+    assert.ok(!ready.body.blockers.includes('supplier-allowance-acceptance'));
+    assert.ok(ready.body.blockers.includes('customer-session-acceptance'));
+    assert.ok(ready.body.blockers.includes('payment-lifecycle-acceptance'));
     assert.ok(!ready.body.blockers.includes('inference-disabled'));
     assert.equal(ready.body.checks.sourceCommit,'a'.repeat(40));
   },{accountConfigured:true,billingConfigured:true,inferenceConfigured:true,checkoutEnabled:true,sourceCommit:'a'.repeat(40)});

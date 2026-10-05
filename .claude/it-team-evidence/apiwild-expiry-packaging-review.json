@@ -1,0 +1,28 @@
+{
+  "task_id": "apiwild-expiry-packaging-review",
+  "status": "passed",
+  "reviewer": "/root/source_launch_audit",
+  "summary": "Independent review of public_status expiry-worker packaging changes only; no findings.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/container-context.test.mjs",
+      "exitCode": 0,
+      "passed": 4
+    }
+  ],
+  "verified": [
+    "Dockerfile adds an explicit runtime COPY for the one-request expiry CLI; its helper is included by the existing runtime directory COPY.",
+    "Closed build-context allowlist adds exactly the CLI and helper; existing secret/database/dependency exclusions remain intact.",
+    "Import graph test now verifies preparation, allowance and expiry entrypoints and their local dependencies.",
+    "Preparation-server CMD, non-root USER node, production readiness recipe and default-disabled operator behavior remain unchanged."
+  ],
+  "findings": [],
+  "limitations": [
+    "Static packaging/import-graph verification only; this reviewer did not build or deploy a Docker image or run the operator against production."
+  ],
+  "file_sha256": {
+    "Dockerfile.railway": "8e747fe3b11b52f58fba9dd398c7e70e84089d295e467c42d4447b16bf4efe35",
+    "Dockerfile.railway.dockerignore": "9a44856c8ca9dacf0d04e7d4baf1d447771945a26d230e8dfa9490af7f688a18",
+    "infra/railway/tests/container-context.test.mjs": "9f5a2fba6c55ebeb51d3663dadb244f2d71584735480c81487cc381d0f69c8c0"
+  }
+}
