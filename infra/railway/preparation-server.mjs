@@ -1,6 +1,8 @@
 import {createOwnedBillingFromEnv} from './runtime/owned-billing.mjs';
 import {createWorkspacePolicyHttpFromEnv} from './runtime/workspace-policy-http.mjs';
 import {createOwnedGatewayFromEnv} from './runtime/owned-gateway-assembly.mjs';
+import {createSupplierDebitSweepFromEnv} from './runtime/supplier-debit-sweep.mjs';
+import {loadReleaseAcceptance} from './runtime/release-acceptance.mjs';
 import {isGatewayHttp,isGatewayPath} from './runtime/gateway-http.mjs';
 import {createLaunchStatusHttp,isLaunchStatusHttp} from './runtime/launch-status.mjs';
 import {createOwnedDiscoveryHttp,createOwnedDiscoverySnapshot,isOwnedDiscoveryHttp,isOwnedDiscoveryPath} from './runtime/owned-discovery-http.mjs';
@@ -216,17 +218,34 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   const nativeAuthHttp = createNativeAuthHttp({enabled:process.env.NATIVE_AUTH_ENABLED==='true',customerOperationsEnabled:process.env.NATIVE_CUSTOMER_ENABLED==='true',keyWritesEnabled:process.env.NATIVE_KEY_WRITES_ENABLED==='true',nativeCheckoutEnabled:process.env.NATIVE_CHECKOUT_ENABLED==='true',relayEnabled:process.env.NATIVE_RELAY_ENABLED==='true',allowedModels});
   const catalog=JSON.parse(await fs.readFile(path.join(root,'data/selected-supplier-models.json'),'utf8'));
   const gatewayHttp=createOwnedGatewayFromEnv({env:process.env,catalog});
+  // Local preview never starts financial background work. Production requires
+  // both explicit debit/sweep flags; an import alone cannot start the worker.
+  const supplierSweep=createSupplierDebitSweepFromEnv({env:listener.local?{}:process.env,
+    write:result=>console.log(JSON.stringify({supplierReconciliation:result}))});
   const discoveryHttp=createOwnedDiscoveryHttp({snapshot:gatewayHttp?.discovery??createOwnedDiscoverySnapshot({catalog,deploymentCommit:process.env.RAILWAY_GIT_COMMIT_SHA})});
   const ownedBilling=await createOwnedBillingFromEnv(process.env);
   const workspacePolicyHttp=createWorkspacePolicyHttpFromEnv(process.env);
+  let configuredModels=[],supplierConversion;try{
+    configuredModels=[...new Set(JSON.parse(process.env.APIWILD_GATEWAY_ROUTES_JSON??'[]').map(route=>route.model))];
+    supplierConversion=JSON.parse(process.env.APIWILD_SUPPLIER_CONVERSION_JSON??'null');
+  }catch{}
+  const releaseVersion=process.env.APIWILD_RETAIL_RATE_VERSION;
+  const acceptance=listener.local?null:await loadReleaseAcceptance({directory:path.join(root,'infra/railway/release'),version:releaseVersion,configuredModels,conversion:supplierConversion});
   const launchStatusHttp=createLaunchStatusHttp({sourceCommit:process.env.RAILWAY_GIT_COMMIT_SHA,
+    acceptance,version:releaseVersion,configuredModels,conversion:supplierConversion,billingMode:process.env.APIWILD_BILLING_MODE,
+    // Match the mode selected by createOwnedBillingFromEnv, including its default.
+    checkoutBillingMode:process.env.BILLING_MODE||'live',sweepEnabled:supplierSweep.enabled,
+    availableModels:()=>gatewayHttp?.discovery.read().catalog.models.filter(model=>model.callable===true).map(model=>model.id)??[],
     accountConfigured:Boolean(gatewayHttp),
     billingConfigured:process.env.OWN_BILLING_ENABLED==='true'&&Boolean(process.env.STRIPE_SECRET_KEY&&process.env.STRIPE_WEBHOOK_SECRET&&process.env.STRIPE_CREDIT_PRICE_ID&&process.env.SUPABASE_SECRET_KEY),
     inferenceConfigured:Boolean(gatewayHttp)&&process.env.APIWILD_INFERENCE_ENABLED==='true',
     checkoutEnabled:process.env.APIWILD_CHECKOUT_ENABLED==='true'});
   const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, launchStatusHttp, discoveryHttp});
-  frontend.once('error', () => backend.server.close());
+  frontend.once('error', () => {void supplierSweep.stop();backend.server.close();});
+  const shutdown=()=>{void supplierSweep.stop();frontend.close();backend.server.close();};
+  process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
   frontend.listen(listener.port, listener.host, () => {
-    console.log(`Guarded ${listener.local ? 'local' : 'Railway'} UI preparation listening; readiness remains closed.`);
+    supplierSweep.start();
+    console.log(`Guarded ${listener.local ? 'local' : 'Railway'} UI preparation listening; readiness requires valid release evidence.`);
   });
 }

@@ -27,7 +27,7 @@ test('closed Docker context includes the catalogue imported by the application',
 test('closed Docker context and runtime contain preparation and operator import graphs', async () => {
   const ignore = (await readFile(new URL('Dockerfile.railway.dockerignore', root), 'utf8')).split(/\r?\n/);
   const docker = await readFile(new URL('Dockerfile.railway', root), 'utf8');
-  const queue = ['infra/railway/preparation-server.mjs', 'infra/railway/allowance-worker.mjs', 'infra/railway/reservation-expiry.mjs']; const visited = new Set();
+  const queue = ['infra/railway/preparation-server.mjs', 'infra/railway/allowance-worker.mjs', 'infra/railway/reservation-expiry.mjs', 'infra/railway/supplier-debit.mjs']; const visited = new Set();
   while (queue.length) {
     const file = queue.shift(); if (visited.has(file)) continue; visited.add(file);
     assert.ok(ignore.includes('!' + file), 'Missing build-context source: ' + file);
@@ -41,6 +41,10 @@ test('closed Docker context and runtime contain preparation and operator import 
     }
   }
   for (const excluded of ['**/.env*', '**/*.pem', '**/*.key', '**/*.p12', '**/*.sqlite*', '**/*.db', '**/node_modules', '**/.git']) assert.ok(ignore.includes(excluded));
+  for (const localOnly of ['infra/railway/sandbox-e2e.mjs','infra/railway/runtime/sandbox-e2e-harness.mjs']) {
+    assert.ok(!ignore.includes('!'+localOnly), 'Local acceptance harness must not ship in production');
+    assert.ok(!docker.includes('/app/'+localOnly), 'Local acceptance entry point must not be copied');
+  }
 });
 
 test('candidate liveness never replaces the production readiness recipe', async () => {

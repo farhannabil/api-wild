@@ -1,0 +1,44 @@
+{
+  "task_id": "apiwild-sandbox-harness-packaging-review",
+  "status": "passed",
+  "reviewer": "/root/source_launch_audit",
+  "author": "/root/public_status",
+  "at": "2026-10-05T10:48:23.912Z",
+  "findings": [],
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/sandbox-e2e-harness.test.mjs",
+      "passed": 7,
+      "exitCode": 0
+    },
+    {
+      "command": "node --test infra/railway/tests/container-context.test.mjs",
+      "passed": 4,
+      "exitCode": 0
+    }
+  ],
+  "reviewedBoundaries": [
+    "Exact confirmed test owner, Stripe sandbox account, test budget and one bounded MiniMax model attempt.",
+    "Genuine webhook signature and canonical CLI account/price/session/PaymentIntent reads precede real financial projection. No fake credit.",
+    "Durable checkpoint precedes mutations; request identity saved before claim; ambiguous work is not repeated.",
+    "Private unprinted loopback transport nonce, raw credentials remain in memory, key revoked before refund.",
+    "Refund unknown balance remains explicitly unknown if suspended; root must verify final ledger separately.",
+    "Production Docker excludes sandbox harness, includes receipt/sweep dependency graph and explicit one-request CLI.",
+    "CI adds three focused test paths only, preserving existing health/readiness gates."
+  ],
+  "limitations": [
+    "All harness transports during tests were synthetic fixtures; no real financial/provider operation occurred in reviewer tests.",
+    "Actual production Stripe API-key transport is not certified by the harness-only canonical CLI transport.",
+    "Exit0 indicates harness closure, not customer end-to-end acceptance."
+  ],
+  "file_sha256": {
+    "infra/railway/runtime/sandbox-e2e-harness.mjs": "ce1ecc359841e1a1102557795885cb2668840d979d8d8926b711b7ca8d9b8165",
+    "infra/railway/sandbox-e2e.mjs": "b58479c444f0775521f08ea776b125e375165942379a3707a1fd21b3cf098b79",
+    "infra/railway/tests/sandbox-e2e-harness.test.mjs": "50afd780fed019b767330d77e88083aa24ca720584dbd263a801a56ef7441927",
+    "infra/railway/SANDBOX_E2E_RUNBOOK.md": "8c88bf32595b496aaafb2fd1751486ececb1ec5514eb64f76889673880b2f7ec",
+    "Dockerfile.railway": "47686754a1987e99b7e1b7ec3a879119100e73f44b5c5e3d05997299c6d6b560",
+    "Dockerfile.railway.dockerignore": "68bccbe3f49434a31f3c1f97455b4020a5c5795e15ad08a6a228787b336a16c6",
+    "infra/railway/tests/container-context.test.mjs": "521a884817d79e5ff5e77a86951a4008de608baaa3154fe8f95ebb406cab3742",
+    ".github/workflows/apiwild.yml": "6d0f9f647e5a49b09e0ff353f982230c5ece45ffe9c6340202bd02b71ae7ffca"
+  }
+}

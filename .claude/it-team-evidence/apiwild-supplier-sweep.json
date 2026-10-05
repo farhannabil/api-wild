@@ -1,0 +1,38 @@
+{
+  "task_id": "apiwild-supplier-sweep",
+  "status": "passed",
+  "at": "2026-10-05T10:48:23.907Z",
+  "summary": "Read-only five-request current-day list plus disabled-by-default single-flight existing-server reconciliation worker.",
+  "checks": [
+    {
+      "kind": "focused-runtime",
+      "passed": 53,
+      "exitCode": 0
+    },
+    {
+      "kind": "isolated-pglite-0.5.8",
+      "passed": 3,
+      "exitCode": 0
+    }
+  ],
+  "review": {
+    "reviewer": "/root/public_status",
+    "result": "passed",
+    "evidence": ".claude/it-team-evidence/apiwild-supplier-sweep-independent-review.json"
+  },
+  "limitations": [
+    "No external database mutation, paid call, customer balance change, credential configuration, deployment or source publication performed by this implementation worker.",
+    "Actual native ledger is USD quota; CNY is conservatively normalized with pinned published settings, not claimed to be a native CNY API field.",
+    "Current-day bounded supplier log search can hold older or over-limit receipts. No historical filter or API was invented.",
+    "Local isolated PostgreSQL does not prove independent-connection production contention or live customer acceptance."
+  ],
+  "file_sha256": {
+    "infra/railway/runtime/supplier-debit-sweep.mjs": "7cadce0c81c48e7e8206d2d45533b850b0d16c6a7878f8adf44c33a60b411b5c",
+    "infra/railway/runtime/supplier-pending-list.mjs": "857d9536f70a9bbd69332135fce85425e710157f2b8bbec0d8f00751f856d1de",
+    "infra/railway/preparation-server.mjs": "cf49a169ba54834f1b9c3612e0fdb7472ddcf1139659f8a772273fb7a0fba296",
+    "supabase/migrations/20261005104158_supplier_pending_list.sql": "3d50acc01c987b7fe9cc7cc5e47a0d11e844a80dc73946970701d39a2217a9de",
+    "infra/railway/tests/supplier-debit-sweep.test.mjs": "932163504be8a86cca70a45409e6d39c496394fc93ffd7d6290eaf001d3cbebb",
+    "infra/railway/tests/supplier-pending-list-postgres.mjs": "8b5eb495ec311e447697a4be548021ec1c6c19a1e5beaac131ed510e090a1186",
+    "infra/railway/SUPPLIER_SWEEP_RUNBOOK.md": "4ee6603bb49e33ed5dc345dd31c4e66e76ccec61da3804097b202f4b1debe9aa"
+  }
+}

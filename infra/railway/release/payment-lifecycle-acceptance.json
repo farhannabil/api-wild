@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "gate": "payment-lifecycle-acceptance",
+  "status": "passed",
+  "ownerApproved": true,
+  "observedAt": "2026-10-05T12:02:01.450Z",
+  "scope": "sandbox-lifecycle-and-live-configuration",
+  "checks": {
+    "sandboxPayment": true,
+    "signedWebhookCredit": true,
+    "retailDebit": true,
+    "idempotentReplay": true,
+    "refundReversal": true,
+    "testKeyRevoked": true,
+    "liveConfiguration": true
+  },
+  "referenceDigests": [
+    "4d8c1902afdffc9855e9852ae65f5ac0406760dfddba4bd146bdc8b91109a274",
+    "e5748f03d8b38af017745262b165d6a56af766fa40226555f7b7ff1668fc7f3f",
+    "852869d77a64c59e6870e519fd18aaf6c52535fde80c076acf1525bbb908f33d"
+  ]
+}

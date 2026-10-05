@@ -1,0 +1,50 @@
+{
+  "task_id": "apiwild-sandbox-harness",
+  "status": "passed",
+  "at": "2026-10-05T10:49:28.120Z",
+  "summary": "Prepare one bounded loopback-only genuine sandbox checkout, owned test-mode gateway and authoritative supplier-receipt acceptance path; package production receipt modules while excluding the harness.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/sandbox-e2e-harness.test.mjs",
+      "passed": 7,
+      "exitCode": 0
+    },
+    {
+      "command": "combined receipt, sweep, harness, assembly, preparation and container tests",
+      "passed": 99,
+      "exitCode": 0
+    },
+    {
+      "command": "all68 applicable tests/*.test.mjs and infra/railway/tests/*.test.mjs plus preparation.test.mjs; isolated PG18 harness excluded",
+      "passed": 786,
+      "exitCode": 0,
+      "log": "../apiwild-receipt-harness-regression-20261005.log"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "review": {
+    "reviewer": "/root/source_launch_audit",
+    "result": "passed",
+    "evidence": ".claude/it-team-evidence/apiwild-sandbox-independent-review.json"
+  },
+  "limitations": [
+    "No Stripe write, supplier call or external mutation by this worker. Unit fixtures are not real acceptance.",
+    "Root alone performs approved sandbox payment/provider receipt/refund acceptance with secure environment.",
+    "CLI canonical transport does not certify production HTTP Stripe API key acceptance.",
+    "Current UTC-day-only bounded supplier scan can leave old or busy-account receipts held; no blind release.",
+    "Sandbox process exit0 means closed, not accepted launch."
+  ],
+  "file_sha256": {
+    "infra/railway/runtime/sandbox-e2e-harness.mjs": "ce1ecc359841e1a1102557795885cb2668840d979d8d8926b711b7ca8d9b8165",
+    "infra/railway/sandbox-e2e.mjs": "b58479c444f0775521f08ea776b125e375165942379a3707a1fd21b3cf098b79",
+    "infra/railway/tests/sandbox-e2e-harness.test.mjs": "50afd780fed019b767330d77e88083aa24ca720584dbd263a801a56ef7441927",
+    "infra/railway/SANDBOX_E2E_RUNBOOK.md": "8c88bf32595b496aaafb2fd1751486ececb1ec5514eb64f76889673880b2f7ec",
+    "Dockerfile.railway": "47686754a1987e99b7e1b7ec3a879119100e73f44b5c5e3d05997299c6d6b560",
+    "Dockerfile.railway.dockerignore": "68bccbe3f49434a31f3c1f97455b4020a5c5795e15ad08a6a228787b336a16c6",
+    "infra/railway/tests/container-context.test.mjs": "521a884817d79e5ff5e77a86951a4008de608baaa3154fe8f95ebb406cab3742",
+    ".github/workflows/apiwild.yml": "6d0f9f647e5a49b09e0ff353f982230c5ece45ffe9c6340202bd02b71ae7ffca"
+  }
+}
