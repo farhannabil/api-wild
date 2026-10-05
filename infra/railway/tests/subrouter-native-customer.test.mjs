@@ -14,3 +14,5 @@ test('oversized receipts remain bounded and sanitized',async()=>{const r=createN
 test('log projection excludes customer content, IP and untrusted provider extras',async()=>{const f=fixture({id:42},{items:[{id:1,model_name:'exact',quota:5,content:'private prompt',ip:'private address',other:{key:'secret'}}],total:1});const r=await f.reader.read('logs');assert.deepEqual(r.items,[{id:1,model_name:'exact',quota:5}]);});
 
 test('key fields cannot smuggle nested credentials through presentation projection',async()=>{const f=fixture({id:42},[{id:1,name:{secret:'private'},used_quota:7}]);assert.deepEqual(await f.reader.read('keys'),[{id:1,used_quota:7}]);});
+
+test('native null empty logs normalize without hiding malformed or nonempty histories',async()=>{for(const data of [{items:null,total:0},{items:null}]){const f=fixture({id:42},data);assert.deepEqual((await f.reader.read('logs')).items,[]);}for(const data of [{items:null,total:1},{items:{}},{items:'bad'},{}]){const f=fixture({id:42},data);await assert.rejects(f.reader.read('logs'),{code:'native_invalid_response'});}});

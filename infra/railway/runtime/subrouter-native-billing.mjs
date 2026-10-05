@@ -50,8 +50,10 @@ export function createNativeBilling(config={}){
    if(!['info','history'].includes(operation))fail('native_billing_unknown_operation',400);await identity();
    if(operation==='info')return presentation(await info());
    const data=await transport('/api/dist/topup/history?page=1&page_size=20');
-   if(!object(data)||!Array.isArray(data.items)||data.items.length>20)fail('native_billing_invalid_response');
-   return {authority:'subrouter-native-station',items:data.items.map(item=>{if(!object(item))fail('native_billing_invalid_response');return scalar(item,['id','trade_no','amount','display_amount','currency','bonus_amount','credited_quota','create_time','payment_method','status']);}),creditsGranted:false};
+   if(!object(data))fail('native_billing_invalid_response');
+   const items=data.items===null&&(data.total===0||data.total===undefined)?[]:data.items;
+   if(!Array.isArray(items)||items.length>20)fail('native_billing_invalid_response');
+   return {authority:'subrouter-native-station',items:items.map(item=>{if(!object(item))fail('native_billing_invalid_response');return scalar(item,['id','trade_no','amount','display_amount','currency','bonus_amount','credited_quota','create_time','payment_method','status']);}),creditsGranted:false};
   },
   async checkout(input){
    if(!enabled||!checkoutEnabled)fail('native_checkout_disabled');

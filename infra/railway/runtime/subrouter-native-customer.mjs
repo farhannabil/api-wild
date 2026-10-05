@@ -39,8 +39,11 @@ export function createNativeCustomerReader(config={}){
    return data.map(row=>clean(row,['id','name','status','created_time','accessed_time','expired_time','remain_quota','used_quota','unlimited_quota','model_limits_enabled','model_limits']));
   }
   if(operation==='logs'){
-   if(!data||!Array.isArray(data.items))fail('native_invalid_response');
-   return {authority:'subrouter-native-station',items:data.items.map(row=>clean(row,['id','created_at','type','model_name','prompt_tokens','completion_tokens','quota','request_id','upstream_request_id','use_time','is_stream','token_name'])),total:data.total};
+   if(!data||typeof data!=='object'||Array.isArray(data))fail('native_invalid_response');
+   // Native frontend treats a null empty list as no records (Go nil slice).
+   const items=data.items===null&&(data.total===0||data.total===undefined)?[]:data.items;
+   if(!Array.isArray(items))fail('native_invalid_response');
+   return {authority:'subrouter-native-station',items:items.map(row=>clean(row,['id','created_at','type','model_name','prompt_tokens','completion_tokens','quota','request_id','upstream_request_id','use_time','is_stream','token_name'])),total:data.total};
   }
   if(operation==='usage')return {authority:'subrouter-native-station',data:clean(data,['quota','used_quota','request_count','package_used_quota'])};
   if(operation==='logStats')return {authority:'subrouter-native-station',data:clean(data,['quota','rpm','tpm','token'])};
