@@ -19,6 +19,7 @@
 !data
 !data/models.json
 !data/subrouter-catalogue.json
+!data/selected-supplier-models.json
 !assets
 !assets/**
 !public
