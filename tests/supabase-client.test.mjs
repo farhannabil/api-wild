@@ -8,7 +8,7 @@ const require=createRequire(import.meta.url);
 function load(file,overrides={}){
  const module={exports:{}};
  const source=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
- vm.runInNewContext(source,{module,exports:module.exports,Error,Promise,AbortSignal,fetch:overrides.fetch,require:n=>n==='@supabase/supabase-js'?overrides.sdk:n.startsWith('@/')?load(n.replace('@/','')+'.ts'):require(n)});
+ vm.runInNewContext(source,{module,exports:module.exports,Error,Promise,AbortSignal,fetch:overrides.fetch,require:n=>n==='@supabase/supabase-js'?overrides.sdk:n.startsWith('@/')?load(n.replace('@/','')+(n.endsWith('.mjs')?'':'.ts')):require(n)});
  return module.exports;
 }
 test('temporary config failure can recover without reloading the page; concurrent calls share a client',async()=>{
@@ -24,7 +24,7 @@ test('incomplete auth configuration never creates a client and remains retryable
 test('profile validation rejects corrupt preferences before saving and normalizes names',()=>{
  const{onboardingSchema}=load('lib/onboarding-schema.ts');
  const{buildingOptions}=load('lib/customer-options.ts');
- const valid={name:' Sample ',company:' Project ',budget:100,accountType:'personal',domain:'',phone:'',country:'CA',building:[buildingOptions[0]],compliance:[],project:''};
+ const valid={name:' Sample ',company:' Project ',phone:'+14165550123',budget:100,accountType:'personal',domain:'',country:'CA',building:[buildingOptions[0]],compliance:[],project:''};
  assert.equal(onboardingSchema.parse(valid).name,'Sample');
  for(const patch of [{name:'  '},{country:'XX'},{budget:-1},{budget:1.2},{building:[]},{building:Array(4).fill(buildingOptions[0])},{compliance:['made-up']},{project:'x'.repeat(501)}])assert.equal(onboardingSchema.safeParse({...valid,...patch}).success,false);
 });

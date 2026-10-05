@@ -6,3 +6,17 @@ test('Supabase-only assembly serves owned keys without upstream credentials or b
  const server=createServer((req,res)=>port.handle(req,res));await new Promise(r=>server.listen(0,'127.0.0.1',r));try{const response=await new Promise((resolve,reject)=>{const req=request({host:'127.0.0.1',port:server.address().port,path:'/api/gateway/keys',headers:{host:'apiwild.com',authorization:'Bearer fixture.session.signature'}},res=>{let body='';res.on('data',x=>body+=x);res.on('end',()=>resolve({status:res.statusCode,body:JSON.parse(body)}));});req.on('error',reject);req.end();});assert.equal(response.status,200);assert.deepEqual(response.body,{keys:[]});assert.equal(calls.length,3);assert.ok(calls.every(url=>url.startsWith('https://yautmilnpllojugpmfgy.supabase.co/')));}finally{await new Promise(r=>server.close(r));}
 });
 test('explicit inference activation requires configured upstream while missing enable flag makes no transport',()=>{assert.equal(createOwnedGatewayFromEnv({env:{},catalog:{models:[]}}),undefined);assert.throws(()=>createOwnedGatewayFromEnv({env:{...env,APIWILD_INFERENCE_ENABLED:'true'},catalog:{models:[]}}),/upstream key/);});
+
+import {readFile} from 'node:fs/promises';
+const fullCatalog=JSON.parse(await readFile(new URL('../../../data/selected-supplier-models.json',import.meta.url),'utf8'));
+const route={providerBudgetId:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',model:'claude-fable-5',upstreamModel:'claude-fable-5',capability:'chat',maxOutputTokens:1000,maxInputTokens:1000,maxInputChars:1000,supplierReserveCnyMicros:1,supplierSlug:'viapi'};
+const activeEnv={...env,APIWILD_INFERENCE_ENABLED:'true',SUBROUTER_API_KEY:'sk-syntheticFixtureOnly000000',APIWILD_RETAIL_RATE_VERSION:'fixture-v1'};
+test('activated route must identify its selected catalog supplier',()=>{
+ for(const supplierSlug of [undefined,'different-supplier'])assert.throws(()=>createOwnedGatewayFromEnv({env:{...activeEnv,APIWILD_GATEWAY_ROUTES_JSON:JSON.stringify([{...route,supplierSlug}])},catalog:fullCatalog}),/supplier/);
+});
+test('insufficient supplier reservation is rejected before reserve or paid dispatch',async()=>{
+ const calls=[];const port=createOwnedGatewayFromEnv({env:{...activeEnv,APIWILD_GATEWAY_ROUTES_JSON:JSON.stringify([route])},catalog:fullCatalog,fetchImpl:async(url)=>{calls.push(url);if(url.endsWith('/auth/v1/user'))return Response.json({id:customer,email:'fixture@example.test',email_confirmed_at:new Date().toISOString(),is_anonymous:false});if(url.endsWith('account_initialize'))return Response.json({initialized:true,customer_id:customer,billing_mode:'test'});throw Error('Unexpected transport');}});
+ const server=createServer((req,res)=>port.handle(req,res));await new Promise(r=>server.listen(0,'127.0.0.1',r));try{
+  const response=await new Promise((resolve,reject)=>{const body=JSON.stringify({model:route.model,messages:[{role:'user',content:'Hello'}],max_tokens:100});const req=request({host:'127.0.0.1',port:server.address().port,path:'/api/gateway',method:'POST',headers:{host:'apiwild.com',authorization:'Bearer fixture.session.signature','content-type':'application/json','content-length':Buffer.byteLength(body),'idempotency-key':'fixture-request-0001'}},res=>{res.resume();res.on('end',()=>resolve(res.statusCode));});req.on('error',reject);req.end(body);});assert.equal(response,503);assert.equal(calls.length,2);assert.ok(calls.every(url=>url.startsWith('https://yautmilnpllojugpmfgy.supabase.co/')));
+ }finally{await new Promise(r=>server.close(r));}
+});
