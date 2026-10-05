@@ -2,6 +2,7 @@
 // Native station owns payment fulfillment and quota. This adapter never writes
 // a Supabase balance or grants credit from a checkout URL/return-page parameter.
 import {NATIVE_STATION_ORIGIN,NativeCustomerError} from './subrouter-native-customer.mjs';
+export const MINIMUM_TOPUP_CENTS=3000;
 const RETURN_URL='https://apiwild.com/api-account/billing?payment=return';
 const fail=(code,status=503)=>{throw new NativeCustomerError(code,status);};
 const cancel=value=>{try{Promise.resolve(value?.cancel()).catch(()=>{});}catch{}};
@@ -38,9 +39,9 @@ export function createNativeBilling(config={}){
  async function identity(){if(!enabled)fail('native_billing_disabled');const self=await transport('/api/dist/user/self');if(!object(self)||self.id!==userId)fail('native_owner_mismatch',403);}
  async function info(){const data=await transport('/api/dist/topup/info');if(!object(data))fail('native_billing_invalid_response');return data;}
  function presentation(data){
-  const configured=data.currency==='USD'&&data.exchange_rate===1&&data.enable_stripe_topup===true&&Array.isArray(data.pay_methods)&&data.pay_methods.some(method=>method?.type==='stripe');
+  const configured=data.currency==='USD'&&data.exchange_rate===1&&data.enable_stripe_topup===true&&Number.isFinite(data.stripe_min_topup)&&data.stripe_min_topup>0&&data.stripe_min_topup<=250&&Array.isArray(data.pay_methods)&&data.pay_methods.some(method=>method?.type==='stripe');
   return {authority:'subrouter-native-station',currency:typeof data.currency==='string'?data.currency:null,checkoutEnabled:checkoutEnabled&&configured,
-   stripeConfigured:configured,stripeMinTopup:Number.isFinite(data.stripe_min_topup)?data.stripe_min_topup:null,
+   minimumTopupUsd:MINIMUM_TOPUP_CENTS/100,stripeConfigured:configured,stripeMinTopup:Number.isFinite(data.stripe_min_topup)?data.stripe_min_topup:null,
    amountTiers:Array.isArray(data.amount_tiers)?data.amount_tiers.slice(0,50).filter(object).map(tier=>scalar(tier,['amount','bonus'])):[],
    creditsGranted:false};
  }
@@ -54,7 +55,7 @@ export function createNativeBilling(config={}){
   },
   async checkout(input){
    if(!enabled||!checkoutEnabled)fail('native_checkout_disabled');
-   if(!object(input)||Object.keys(input).some(key=>!['amountCents','currency'].includes(key))||input.currency!=='USD'||!Number.isSafeInteger(input.amountCents)||input.amountCents<500||input.amountCents>25000)fail('native_billing_invalid_request',400);
+   if(!object(input)||Object.keys(input).some(key=>!['amountCents','currency'].includes(key))||input.currency!=='USD'||!Number.isSafeInteger(input.amountCents)||input.amountCents<MINIMUM_TOPUP_CENTS||input.amountCents>25000)fail('native_billing_invalid_request',400);
    await identity();const configuration=await info(),status=presentation(configuration);
    // No inferred currency conversion or tier bonus. The station must explicitly
    // support USD and its exact 1:1 payment-unit rate before checkout is exposed.

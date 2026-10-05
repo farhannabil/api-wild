@@ -1,6 +1,6 @@
 // Native token and quota authority stays upstream. No owner key or local credit ledger.
 import {createHash} from 'node:crypto';
-const ENDPOINT='https://subrouter.ai/v1/chat/completions';
+const ENDPOINT='https://apiwild.subrouter.ai/v1/chat/completions';
 const json=(status,value)=>Response.json(value,{status,headers:{'cache-control':'private, no-store','x-content-type-options':'nosniff'}});
 const hash=value=>createHash('sha256').update(value).digest('hex');
 export function createNativeRelayApi({enabled=false,allowedModels=[],fetchImpl=fetch}={}){
