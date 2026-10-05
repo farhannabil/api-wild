@@ -1,5 +1,17 @@
 # API WILD — agent handover
 
+## Verified Stripe completion checkpoint — October 5
+
+This checkpoint supersedes the earlier refund-release BUILDING status below.
+
+- Refund fix commit `74303cb6b15f2d15d42243499101ce27d7550751` was verified **ACTIVE / Deployment successful** in Railway deployment `82fc9043-e4f3-474a-a861-cd033b90fd0e`. The newer documentation commit does not itself establish a newer production runtime.
+- Live one-time USD credit product/price, restricted server billing key, signing secret, API WILD checkout branding and 13 owned webhook subscriptions are configured. Minimum purchase is USD30. The live unpaid expiration event and its replay returned HTTP200; both private live checkout sessions were expired without payment and no production credit was granted.
+- Authorized Stripe sandbox checkout paid USD30. Genuine Stripe-signed events exercised the application handlers and SQL-backed ledger in an isolated local acceptance harness: one +3000-cent credit, cumulative partial refund -2000, final refund -1000, ending at zero. Payment/refund duplicates returned `replayed=true` without duplicate ledger entries. These are sandbox/local ledger results, not paid production acceptance.
+- Canonical Stripe Refund objects omit `livemode`; the released fix allows omission while retaining event/account/canonical PaymentIntent mode and ownership checks. All 63 focused billing tests passed. Dispute paths have automated coverage, not a real dispute acceptance run.
+- No real card was charged. The earlier self-charge acceptance plan is superseded: [Stripe testing guidance](https://docs.stripe.com/testing) requires sandbox testing rather than live-mode tests with real payment details.
+- Public credit purchases and inference remain disabled pending dedicated restricted upstream credentials, accepted supplier budgets/FX/reserves, and bounded inference delivery/reconciliation. Full API WILD launch remains incomplete. The earlier nullable-key release and owner-confirmed live spending-limit save remain verified.
+
+
 Updated October 05, 2026, 12:13 AM America/Toronto. Owner: Farhan / Gen X Intel. Issue: [Build AI model API resale platform](https://linear.app/genxintel/issue/GEN-10/build-ai-model-api-resale-platform).
 
 ## Early October 5 wrap-up checkpoint
