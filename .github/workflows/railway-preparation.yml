@@ -2,13 +2,15 @@ name: Railway source preparation checks
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
   pull_request:
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
   group: apiwild-railway-preparation-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   guarded-node-build:
     runs-on: ubuntu-latest
