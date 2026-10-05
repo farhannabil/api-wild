@@ -1,0 +1,49 @@
+{
+  "task_id": "apiwild-general-web-backend-20261005",
+  "status": "passed",
+  "summary": "Implemented default general web search using the official DuckDuckGo HTML endpoint, preserving explicit Wikipedia fallback, restricted article reader and arithmetic. No paid provider, credential, budget, authorization or billing pipeline changes.",
+  "checks": [
+    {
+      "command": "node --test tests/research-tools.test.mjs",
+      "exitCode": 0,
+      "passed": 21
+    },
+    {
+      "command": "node --input-type=module (stdin: import createResearchTools; execute default search for Canada official government)",
+      "exitCode": 0,
+      "checkedAt": "2026-10-05T14:46:51.941Z",
+      "actualSource": "DuckDuckGo web search",
+      "actualResultCount": 5,
+      "resultDomains": [
+        "www.canada.ca",
+        "www.pm.gc.ca",
+        "gazette.gc.ca"
+      ]
+    }
+  ],
+  "review": {
+    "reviewer": "/root",
+    "result": "passed",
+    "scope": "Root independently reviewed pinned DNS/TLS, strict source parsing, body limits, challenge handling and absence of result-site fetches; root reported 51/51 focused integration checks passed.",
+    "additionalIndependentReviewer": "/root/launch_customer_frontend"
+  },
+  "limitations": [
+    "DuckDuckGo HTML search is a best-effort public source, not a purchased API or SLA. Challenges and outages fail closed without bypass or automatic retries.",
+    "Root must verify the deployed exact commit and authenticated search from the Railway production origin.",
+    "Article reading remains restricted to English Wikipedia summaries; returned search destination URLs are never fetched by the server."
+  ],
+  "files": [
+    "infra/railway/runtime/research-tools.mjs",
+    "tests/research-tools.test.mjs"
+  ],
+  "sourceProtocol": {
+    "defaultSource": "DuckDuckGo web search",
+    "optionalSource": "wikipedia",
+    "optionalSourceLabel": "English Wikipedia",
+    "maxResults": 5,
+    "searchBodyBytes": 262144,
+    "deadlineMs": 5000
+  },
+  "externalAccountWrites": false,
+  "paidModelCalls": false
+}

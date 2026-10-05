@@ -1,0 +1,37 @@
+{
+  "task_id": "apiwild-general-web-launch-review-20261005",
+  "status": "passed",
+  "summary": "Reviewed general web search, honest onboarding/credits copy and enabled-route-only customer model selection.",
+  "checks": [
+    {
+      "exitCode": 0,
+      "command": "All top-level application tests",
+      "passed": 387
+    },
+    {
+      "exitCode": 0,
+      "command": "Focused search/auth/discovery/assembly integration suite",
+      "passed": 51
+    },
+    {
+      "exitCode": 0,
+      "command": "Railway Vite build"
+    }
+  ],
+  "review": {
+    "reviewer": "/root",
+    "result": "passed",
+    "modelSelectionGuard": "Preserves current unavailable model for existing conversation or pending immutable retry; no paid auto redispatch.",
+    "additionalIndependentReviewers": [
+      "/root/general_web_backend",
+      "/root/launch_customer_frontend"
+    ]
+  },
+  "limitations": [
+    "Exact final deployment and authenticated Railway search acceptance pending root post-deploy verification.",
+    "Hosted audio deferred by owner to next sprint.",
+    "No real card charged; prior genuine sandbox payment-to-model lifecycle keeps its original scope.",
+    "Supplier ¥50 lifetime authorization and restricted key expiry unchanged."
+  ],
+  "externalAccountWrites": false
+}
