@@ -17,7 +17,7 @@
 
 4. Generate the accepted conversion with exported `pinSupplierConversion({status,observedAt,validUntil})` from the exact public `/api/status` data. Both `price` and `usd_exchange_rate` must match; quota denomination must be500000, display currency CNY and `display_in_currency=true`. Set an explicit expiry no later than30 days. Keep this exact config stable across retries. Never substitute a current timestamp when replaying a fact.
 5. Inference-enabled assembly also requires this config and checks public conversion before every actual dispatch. Missing/expired/drifted settings prevent paid dispatch. A clock/settings check cannot lock upstream FX across an in-flight request; any subsequently observed drift keeps reconciliation held.
-6. The database request must already be a final `succeeded` or `failed` row with `supplier_pending=true`, the exact owner, and the same-response UUID `providerRequestId` recorded in private usage and settlement reference. An unrelated direct supplier test has no eligible customer request and cannot be retroactively treated as customer acceptance.
+6. The database request must already be a final `succeeded` or `failed` row with `supplier_pending=true`, the exact owner, and the same-response `providerRequestId` recorded in private usage and settlement reference. UUID is the default contract. The separately reviewed bangai migration permits exactly eight lowercase hexadecimal characters only for its four named approved models, with bangai retained in immutable private usage and matching the native receipt provider. An unrelated direct supplier test has no eligible customer request and cannot be retroactively treated as customer acceptance.
 
 ## One explicit request
 
@@ -35,7 +35,7 @@ node infra/railway/supplier-debit.mjs --check --owner test:supabase:aaaaaaaa-aaa
 - Only GET `/api/status` and documented GET `/api/log/self?cursor=...&page_size=20` are used upstream. The latter defaults to the supplier's current day. Historical filter parameter names have not been verified, so this implementation does not invent them.
 - At most10 pages of20 rows,262144 bytes per response and one finite deadline. Every page must finish; duplicate matches, cursor loops, unknown wallet/source/provider/key/model, fractional quota and changed settings fail closed.
 - Public settings are checked before and after reading the log. The same accepted snapshot produces a stable fact/digest. Once a request is reconciled, the private pending reader returns null; a repeated one-request operation does not create another debit.
-- No scheduler or automatic sweep is installed by this change. Older/out-of-window receipts remain held for an explicitly reviewed recovery path.
+- The separately enabled production supplier sweep uses this reader. Older/out-of-window receipts remain held for an explicitly reviewed recovery path; see `SUPPLIER_SWEEP_RUNBOOK.md`.
 
 ## Verification
 

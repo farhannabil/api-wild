@@ -1,0 +1,36 @@
+{
+  "task_id": "apiwild-owned-text-modes-20261005",
+  "status": "passed",
+  "summary": "Added six standalone real-assembly/local-HTTP regression tests for configured Chat, Code and Research text modes. The same model, supplier budget, retail rate and reservation limits are retained; key scope, database denial, malformed input and completed replay cannot introduce extra spend.",
+  "changed_files": ["infra/railway/tests/owned-text-modes.test.mjs"],
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/owned-text-modes.test.mjs infra/railway/tests/gateway-ingress.test.mjs",
+      "exitCode": 0,
+      "tests": 18,
+      "passed": 18,
+      "skipped": 0
+    },
+    {
+      "command": "node --check infra/railway/tests/owned-text-modes.test.mjs",
+      "exitCode": 0
+    }
+  ],
+  "review": {
+    "reviewer": "/root/release_review",
+    "result": "passed",
+    "note": "Independently read all assertions, reran the combined 18-test suite with no skips, and confirmed the frozen file hash. Evidence accurately distinguishes mocked remote transport and simulated SQL denial from actual database policy or live supplier proof."
+  },
+  "limitations": [
+    "Supabase and supplier transports are entirely mocked. Only loopback HTTP uses a real socket; no paid or external request occurred.",
+    "The workspace assertion verifies a database denial stops the assembled runtime before claim or dispatch. It does not independently prove SQL workspace policy.",
+    "The representative fixed MiniMax route exercises all three configured modes; this is not a customer-paid acceptance test of every production route.",
+    "The release owner controls route activation, shared budget, production configuration, deployment and live verification. No assembler, runtime, production configuration or pricing source was modified by this test task."
+  ],
+  "fileHashes": [
+    {
+      "path": "infra/railway/tests/owned-text-modes.test.mjs",
+      "sha256": "0eb00c389ba443b2e2d9f4a4beb94655680586b9bf46c17c526bc3a6dec3adcd"
+    }
+  ]
+}

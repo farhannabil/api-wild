@@ -3,6 +3,7 @@
 // Never expose this configuration through a customer API or client bundle.
 import { GatewayError, cloneJsonObject, exactInteger, strictObject } from './supabase-gateway-rpc.mjs';
 import { normalizeChatRequest, chatInputBytes, validateAssistantMessage } from './chat-compatibility.mjs';
+import {isSupplierRequestIdentity} from './supplier-request-identity.mjs';
 
 export const SUBROUTER_CHAT_ENDPOINT = 'https://subrouter.ai/v1/chat/completions';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -37,10 +38,11 @@ export function createSubrouterDispatch(config) {
   if (typeof fetchImpl !== 'function') fail('subrouter_invalid_configuration');
   const routes = new Map(); const secrets = [];
   for (const raw of config.routes) {
-    strictObject(raw, ['providerBudgetId', 'model', 'upstreamModel', 'rateVersion', 'apiKey', 'capability', 'maxOutputTokens', 'maxInputChars', 'supportsTools']);
+    strictObject(raw, ['providerBudgetId', 'model', 'upstreamModel', 'rateVersion', 'apiKey', 'capability', 'maxOutputTokens', 'maxInputChars', 'supportsTools', 'supplierSlug']);
     const r = { ...raw };
     label(r.providerBudgetId, 36); if (!UUID.test(r.providerBudgetId)) fail('subrouter_invalid_configuration');
     label(r.model); label(r.upstreamModel); label(r.rateVersion);
+    if(r.supplierSlug!==undefined&&(typeof r.supplierSlug!=='string'||!/^[a-z0-9][a-z0-9_-]{0,99}$/.test(r.supplierSlug)))fail('subrouter_invalid_configuration');
     if (!['chat', 'code', 'research'].includes(r.capability)) fail('subrouter_unsupported_capability');
     if (typeof r.apiKey !== 'string' || !/^sk-[A-Za-z0-9_-]{16,256}$/.test(r.apiKey)) fail('subrouter_invalid_configuration');
     exactInteger(r.maxOutputTokens, 1, 32768); exactInteger(r.maxInputChars, 1, 60000);
@@ -79,7 +81,7 @@ export function createSubrouterDispatch(config) {
       // The wallet log identifies this exact HTTP response by x-request-id.
       // Preserve completion identity separately; neither ID is customer output.
       const providerRequestId = response.headers.get('x-request-id');
-      if (providerRequestId !== null && !UUID.test(providerRequestId)) fail('subrouter_request_identity_unconfirmed', true);
+      if (providerRequestId !== null && !isSupplierRequestIdentity(providerRequestId,{supplierSlug:route.supplierSlug,model:route.model})) fail('subrouter_request_identity_unconfirmed', true);
       const input = exactInteger(value.usage?.prompt_tokens); const output = exactInteger(value.usage?.completion_tokens, 0, maxTokens);
       const total = exactInteger(input + output);
       if (value.usage.total_tokens !== undefined && value.usage.total_tokens !== total) fail('subrouter_invalid_usage', true);

@@ -36,7 +36,7 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
  const base={supabaseOrigin:SUPABASE_ORIGIN,secretKey,publishableKey,billingMode,fetchImpl};
  const auth=createGatewayRpc(base),keys=createCustomerKeyRpc({supabaseOrigin:SUPABASE_ORIGIN,secretKey,billingMode,verifyOwner:async raw=>{const context=await auth.verifyOwner(raw);await auth.initializeAccount(context);return context;},fetchImpl});
  const rpc=createGatewayRpc({...base,keyVerifier:keys,retailSettlement:true});
- const upstreamDispatch=createSubrouterDispatch({fetchImpl,routes:routes.map(({maxInputTokens,supplierReserveCnyMicros,supplierRole,supplierSlug,...r})=>r)});
+ const upstreamDispatch=createSubrouterDispatch({fetchImpl,routes:routes.map(({maxInputTokens,supplierReserveCnyMicros,supplierRole,...r})=>r)});
  let conversionGuard;if(inferenceEnabled){try{conversionGuard=createSupplierConversionGuard({conversion:JSON.parse(env.APIWILD_SUPPLIER_CONVERSION_JSON),fetchImpl,clock});}catch{throw new GatewayError('supplier_conversion_unverified');}}
  const dispatch=async work=>{if(conditional(work.record.model))tierPolicy.assertDispatch(work.record.model,work.record.rate_version);await conversionGuard.assertConversion({signal:work.signal});return upstreamDispatch(work);};
  const service=createGatewayService({rpc,dispatch,verifySettlement:async({record,providerResult})=>{
@@ -49,7 +49,7 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
   // Prefer the response's wallet-log correlation ID. Existing SQL binds the
   // receipt to this immutable reference; completion ID remains private evidence.
   const supplierCorrelationId=providerResult.providerRequestId??providerResult.providerResponseId;
-  return {state:'succeeded',costUsdMicros:charge.costUsdMicros,costCnyMicros:0,settlementReference:'usage:'+supplierCorrelationId,result:{text:providerResult.text,model:record.model,created:providerResult.created,finishReason:providerResult.finishReason,usage:providerResult.usage,...(providerResult.toolCalls?{toolCalls:providerResult.toolCalls}:{})},usage:{...providerResult.usage,supplierReconciliationPending:true,estimatedSupplierCnyMicros:economics.estimatedSupplierCnyMicros,providerCompletionId:providerResult.providerResponseId,...(providerResult.providerRequestId?{providerRequestId:providerResult.providerRequestId}:{})}};
+  return {state:'succeeded',costUsdMicros:charge.costUsdMicros,costCnyMicros:0,settlementReference:'usage:'+supplierCorrelationId,result:{text:providerResult.text,model:record.model,created:providerResult.created,finishReason:providerResult.finishReason,usage:providerResult.usage,...(providerResult.toolCalls?{toolCalls:providerResult.toolCalls}:{})},usage:{...providerResult.usage,supplierReconciliationPending:true,estimatedSupplierCnyMicros:economics.estimatedSupplierCnyMicros,providerCompletionId:providerResult.providerResponseId,supplierSlug:route.supplierSlug,...(providerResult.providerRequestId?{providerRequestId:providerResult.providerRequestId}:{})}};
  }});
  const playgroundModels=[...new Map(routes.map(r=>[r.model+'|'+r.capability,{model:r.model,capability:r.capability,maxOutputTokens:r.maxOutputTokens,supportsTools:r.supportsTools===true}])).values()];
  const discovery=createOwnedDiscoverySnapshot({catalog,routes:playgroundModels,rateVersion,tierPolicy,deploymentCommit:env.RAILWAY_GIT_COMMIT_SHA});
