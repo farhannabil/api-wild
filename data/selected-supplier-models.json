@@ -66,7 +66,8 @@
         "processing": "standard",
         "checked_date": "2026-10-04",
         "cache_write": 0.375
-      }
+      },
+      "openrouter_reference": null
     },
     {
       "model_name": "MiniMax-M3",
@@ -131,6 +132,15 @@
           "cache_read": 0.12
         },
         "context_note": "Current effective standard rate, not crossed-out list price; priority is 1.5x."
+      },
+      "openrouter_reference": {
+        "model_id": "minimax/minimax-m3",
+        "input": 0.3,
+        "output": 1.2,
+        "source": "https://openrouter.ai/minimax/minimax-m3",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -207,6 +217,15 @@
         "cache_write_1h": 20,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-fable-5",
+        "input": 10,
+        "output": 50,
+        "source": "https://openrouter.ai/anthropic/claude-fable-5",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -283,6 +302,15 @@
         "cache_write_1h": 20,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-fable-5.1",
+        "input": 10,
+        "output": 50,
+        "source": "https://openrouter.ai/anthropic/claude-fable-5.1",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -359,6 +387,15 @@
         "cache_write_1h": 2,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-haiku-4.5",
+        "input": 1,
+        "output": 5,
+        "source": "https://openrouter.ai/anthropic/claude-haiku-4.5",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -418,6 +455,15 @@
         "cache_write_1h": 2,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-haiku-4.5",
+        "input": 1,
+        "output": 5,
+        "source": "https://openrouter.ai/anthropic/claude-haiku-4.5",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": true,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -494,6 +540,15 @@
         "cache_write_1h": 10,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-opus-4.6",
+        "input": 5,
+        "output": 25,
+        "source": "https://openrouter.ai/anthropic/claude-opus-4.6",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -570,6 +625,15 @@
         "cache_write_1h": 10,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-opus-4.7",
+        "input": 5,
+        "output": 25,
+        "source": "https://openrouter.ai/anthropic/claude-opus-4.7",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -646,6 +710,15 @@
         "cache_write_1h": 10,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-opus-4.8",
+        "input": 5,
+        "output": 25,
+        "source": "https://openrouter.ai/anthropic/claude-opus-4.8",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -722,6 +795,15 @@
         "cache_write_1h": 10,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-opus-5",
+        "input": 5,
+        "output": 25,
+        "source": "https://openrouter.ai/anthropic/claude-opus-5",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -798,6 +880,15 @@
         "cache_write_1h": 8,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-opus-5.5",
+        "input": 4,
+        "output": 20,
+        "source": "https://openrouter.ai/anthropic/claude-opus-5.5",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -874,6 +965,15 @@
         "cache_write_1h": 6,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-sonnet-4.6",
+        "input": 3,
+        "output": 15,
+        "source": "https://openrouter.ai/anthropic/claude-sonnet-4.6",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -950,6 +1050,15 @@
         "cache_write_1h": 4,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-sonnet-5",
+        "input": 2,
+        "output": 10,
+        "source": "https://openrouter.ai/anthropic/claude-sonnet-5",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1026,6 +1135,15 @@
         "cache_write_1h": 4,
         "identity_source": "https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions",
         "context_note": "Global standard API rates; US-only inference premium and optional fast mode are separate."
+      },
+      "openrouter_reference": {
+        "model_id": "anthropic/claude-sonnet-5.5",
+        "input": 2,
+        "output": 10,
+        "source": "https://openrouter.ai/anthropic/claude-sonnet-5.5",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1108,7 +1226,8 @@
           "cache_read": 0.006
         },
         "context_note": "Official legacy v4-flash names now serve v4.1 Flash; original v4 model retired. Supplier equivalence unverified."
-      }
+      },
+      "openrouter_reference": null
     },
     {
       "model_name": "deepseek-v4-pro",
@@ -1189,6 +1308,15 @@
           "cache_read": 0.044
         },
         "context_note": "Peak hours have 2x rates; aliases and pinned version require checking."
+      },
+      "openrouter_reference": {
+        "model_id": "deepseek/deepseek-v4-pro",
+        "input": 0.20879999999999999,
+        "output": 0.41759999999999997,
+        "source": "https://openrouter.ai/deepseek/deepseek-v4-pro",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1244,6 +1372,15 @@
         "checked_date": "2026-10-04",
         "modality": "text input / text output including thinking",
         "context_note": "Paid standard tier. Audio, storage, grounding and batch prices differ."
+      },
+      "openrouter_reference": {
+        "model_id": "google/gemini-2.5-flash-lite",
+        "input": 0.09999999999999999,
+        "output": 0.39999999999999997,
+        "source": "https://openrouter.ai/google/gemini-2.5-flash-lite",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1316,6 +1453,15 @@
         "checked_date": "2026-10-04",
         "modality": "text input / text output including thinking",
         "context_note": "Paid standard tier. Audio, storage, grounding and batch prices differ."
+      },
+      "openrouter_reference": {
+        "model_id": "google/gemini-3.1-flash-lite",
+        "input": 0.25,
+        "output": 1.5,
+        "source": "https://openrouter.ai/google/gemini-3.1-flash-lite",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1399,6 +1545,15 @@
           "output": 18,
           "cache_read": 0.4
         }
+      },
+      "openrouter_reference": {
+        "model_id": "google/gemini-3.1-pro-preview",
+        "input": 2,
+        "output": 12,
+        "source": "https://openrouter.ai/google/gemini-3.1-pro-preview",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1454,6 +1609,15 @@
         "checked_date": "2026-10-04",
         "modality": "text input / text output including thinking",
         "context_note": "Paid standard tier. Audio, storage, grounding and batch prices differ."
+      },
+      "openrouter_reference": {
+        "model_id": "google/gemini-3.5-flash",
+        "input": 1.5,
+        "output": 9,
+        "source": "https://openrouter.ai/google/gemini-3.5-flash",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1509,6 +1673,15 @@
         "checked_date": "2026-10-04",
         "modality": "text input / text output including thinking",
         "context_note": "Paid standard tier. Audio, storage, grounding and batch prices differ."
+      },
+      "openrouter_reference": {
+        "model_id": "google/gemini-3.5-flash-lite",
+        "input": 0.3,
+        "output": 2.5,
+        "source": "https://openrouter.ai/google/gemini-3.5-flash-lite",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1582,6 +1755,15 @@
         "modality": "text input / text output including thinking",
         "context_note": "Paid standard tier. Audio, storage, grounding and batch prices differ.",
         "promotion": "Rates valid through 2026-12-31; input/output/cache double from 2027-01-01."
+      },
+      "openrouter_reference": {
+        "model_id": "google/gemini-3.8-flash",
+        "input": 0.75,
+        "output": 3.75,
+        "source": "https://openrouter.ai/google/gemini-3.8-flash",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1636,6 +1818,15 @@
         "processing": "standard",
         "checked_date": "2026-10-04",
         "cache_storage_note": "Limited-time free storage; expiry not established."
+      },
+      "openrouter_reference": {
+        "model_id": "z-ai/glm-5.1",
+        "input": 1.4,
+        "output": 4.4,
+        "source": "https://openrouter.ai/z-ai/glm-5.1",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1707,6 +1898,15 @@
         "processing": "standard",
         "checked_date": "2026-10-04",
         "cache_storage_note": "Limited-time free storage; expiry not established."
+      },
+      "openrouter_reference": {
+        "model_id": "z-ai/glm-5.2",
+        "input": 0.0992,
+        "output": 8,
+        "source": "https://openrouter.ai/z-ai/glm-5.2",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1778,6 +1978,15 @@
         "processing": "standard",
         "checked_date": "2026-10-04",
         "cache_storage_note": "Limited-time free storage; expiry not established."
+      },
+      "openrouter_reference": {
+        "model_id": "z-ai/glm-5.3",
+        "input": 1.4,
+        "output": 4.4,
+        "source": "https://openrouter.ai/z-ai/glm-5.3",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1848,6 +2057,15 @@
         "source": "https://docs.z.ai/guides/overview/pricing",
         "processing": "standard",
         "checked_date": "2026-10-04"
+      },
+      "openrouter_reference": {
+        "model_id": "z-ai/glm-5.3-flash",
+        "input": 0.15,
+        "output": 0.5,
+        "source": "https://openrouter.ai/z-ai/glm-5.3-flash",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1918,6 +2136,15 @@
         "source": "https://docs.z.ai/guides/overview/pricing",
         "processing": "standard",
         "checked_date": "2026-10-04"
+      },
+      "openrouter_reference": {
+        "model_id": "z-ai/glm-5.3-flashx",
+        "input": 0.37,
+        "output": 1.25,
+        "source": "https://openrouter.ai/z-ai/glm-5.3-flashx",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -1991,6 +2218,15 @@
         "checked_date": "2026-10-04",
         "context_note": "Model-specific context premiums and processing tiers apply; not included in base rates.",
         "cache_write": null
+      },
+      "openrouter_reference": {
+        "model_id": "openai/gpt-5.5",
+        "input": 5,
+        "output": 30,
+        "source": "https://openrouter.ai/openai/gpt-5.5",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2048,6 +2284,15 @@
         "context_note": "Model-specific context premiums and processing tiers apply; not included in base rates.",
         "cache_write": 5,
         "match_note": "Official model page explicitly documents gpt-5.6 alias routing to Sol."
+      },
+      "openrouter_reference": {
+        "model_id": "openai/gpt-5.6-sol",
+        "input": 2,
+        "output": 10,
+        "source": "https://openrouter.ai/openai/gpt-5.6-sol",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2121,6 +2366,15 @@
         "checked_date": "2026-10-04",
         "context_note": "Model-specific context premiums and processing tiers apply; not included in base rates.",
         "cache_write": 0.25
+      },
+      "openrouter_reference": {
+        "model_id": "openai/gpt-5.6-luna",
+        "input": 0.19999999999999998,
+        "output": 1.2,
+        "source": "https://openrouter.ai/openai/gpt-5.6-luna",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2194,6 +2448,15 @@
         "checked_date": "2026-10-04",
         "context_note": "Model-specific context premiums and processing tiers apply; not included in base rates.",
         "cache_write": 5
+      },
+      "openrouter_reference": {
+        "model_id": "openai/gpt-5.6-sol",
+        "input": 2,
+        "output": 10,
+        "source": "https://openrouter.ai/openai/gpt-5.6-sol",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2267,6 +2530,15 @@
         "checked_date": "2026-10-04",
         "context_note": "Model-specific context premiums and processing tiers apply; not included in base rates.",
         "cache_write": 2.5
+      },
+      "openrouter_reference": {
+        "model_id": "openai/gpt-5.6-terra",
+        "input": 2,
+        "output": 12,
+        "source": "https://openrouter.ai/openai/gpt-5.6-terra",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2351,6 +2623,15 @@
           "cache_write": 25
         },
         "context_note": "Short versus long context; confirm threshold on model page before quoting a long-context request."
+      },
+      "openrouter_reference": {
+        "model_id": "openai/gpt-6-astra",
+        "input": 10,
+        "output": 50,
+        "source": "https://openrouter.ai/openai/gpt-6-astra",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2435,6 +2716,15 @@
           "cache_write": 0.25
         },
         "context_note": "Short versus long context; confirm threshold on model page before quoting a long-context request."
+      },
+      "openrouter_reference": {
+        "model_id": "openai/gpt-6-luna",
+        "input": 0.09999999999999999,
+        "output": 0.5,
+        "source": "https://openrouter.ai/openai/gpt-6-luna",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2508,6 +2798,15 @@
         "checked_date": "2026-10-04",
         "context_note": "Model-specific context premiums and processing tiers apply; not included in base rates.",
         "cache_write": 2.5
+      },
+      "openrouter_reference": {
+        "model_id": "openai/gpt-6-sol",
+        "input": 2,
+        "output": 10,
+        "source": "https://openrouter.ai/openai/gpt-6-sol",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2592,6 +2891,15 @@
           "cache_write": 5
         },
         "context_note": "Short versus long context; confirm threshold on model page before quoting a long-context request."
+      },
+      "openrouter_reference": {
+        "model_id": "openai/gpt-6.1-sol",
+        "input": 2,
+        "output": 10,
+        "source": "https://openrouter.ai/openai/gpt-6.1-sol",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2673,6 +2981,15 @@
           "output": 12,
           "cache_read": 0.6
         }
+      },
+      "openrouter_reference": {
+        "model_id": "x-ai/grok-4.5",
+        "input": 2,
+        "output": 6,
+        "source": "https://openrouter.ai/x-ai/grok-4.5",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2754,6 +3071,15 @@
           "output": 12,
           "cache_read": 1
         }
+      },
+      "openrouter_reference": {
+        "model_id": "x-ai/grok-4.6",
+        "input": 2,
+        "output": 6,
+        "source": "https://openrouter.ai/x-ai/grok-4.6",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     },
     {
@@ -2835,6 +3161,15 @@
           "output": 12,
           "cache_read": 1
         }
+      },
+      "openrouter_reference": {
+        "model_id": "x-ai/grok-4.7",
+        "input": 2,
+        "output": 6,
+        "source": "https://openrouter.ai/x-ai/grok-4.7",
+        "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
+        "matched_dated_alias": false,
+        "time_tier_applicability": "unspecified"
       }
     }
   ],

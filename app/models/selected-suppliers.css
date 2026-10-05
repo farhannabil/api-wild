@@ -5,3 +5,5 @@
 .selected-price-tier>strong{font-size:15px;font-weight:600}.selected-price-tier+.selected-price-tier{border-top:1px solid #e0e7f3;padding-top:12px;margin-top:12px}
 
 .selected-reference-tiers{font-size:12px;color:#586475;margin-top:14px}.selected-reference-tiers summary{cursor:pointer;color:#205bd5;line-height:1.6}.selected-reference-tiers .selected-price-tier{margin-top:12px}
+
+.selected-comparison-toggle{display:block;margin-top:16px;font-size:12px;color:#205bd5;text-align:left;line-height:1.6}.selected-comparison-panel{margin-top:16px;padding-top:14px;border-top:1px solid #e0e4eb}.selected-comparison-panel p{font-size:11px;line-height:1.8;color:#687180;margin:10px 0}.selected-comparison-scroll{overflow-x:auto;max-width:100%}.selected-comparison-panel table{border-collapse:collapse;min-width:420px;width:100%;font-size:11px;text-align:left}.selected-comparison-panel th,.selected-comparison-panel td{padding:9px 7px;border-bottom:1px solid #edf0f5;white-space:nowrap}.selected-comparison-panel th{font-weight:500;color:#586475}.selected-comparison-panel .selected-comparison-status strong{font-weight:600;color:#29374d}
