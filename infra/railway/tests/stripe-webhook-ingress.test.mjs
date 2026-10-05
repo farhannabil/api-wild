@@ -44,7 +44,8 @@ async function server(t,ingress){
 }
 function call(port,{raw,signature}=envelope(),extra={}){
   return new Promise((resolve,reject)=>{
-    const req=httpRequest({host:'127.0.0.1',port,path:STRIPE_WEBHOOK_PATH,method:'POST',headers:{'content-type':'application/json','stripe-signature':signature},...extra},res=>{
+    // Rejection closes the connection; don't reuse a socket from a prior probe.
+    const req=httpRequest({agent:false,host:'127.0.0.1',port,path:STRIPE_WEBHOOK_PATH,method:'POST',headers:{'content-type':'application/json','stripe-signature':signature},...extra},res=>{
       const chunks=[];res.on('data',chunk=>chunks.push(chunk));res.on('end',()=>resolve({status:res.statusCode,headers:res.headers,body:Buffer.concat(chunks).toString()}));res.on('error',reject);
     });req.on('error',reject);req.setTimeout(3000,()=>req.destroy(new Error('Offline request deadline')));req.end(['GET','HEAD'].includes(extra.method)?undefined:raw);
   });

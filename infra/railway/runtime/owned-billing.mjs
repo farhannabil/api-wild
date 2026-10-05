@@ -13,12 +13,15 @@ export async function createOwnedBillingFromEnv(env,{fetchImpl=fetch,stripeClien
  let stripe,checkout,webhook;
  const readReady=enabled&&account&&secret;
  const ready=readReady&&apiKey&&env.STRIPE_WEBHOOK_SECRET&&env.STRIPE_CREDIT_PRICE_ID;
+ // Credential entry enables signed fulfillment, never credit sales by itself.
+ // Release this separate switch only after bounded delivery acceptance.
+ const checkoutReady=ready&&env.APIWILD_CHECKOUT_ENABLED==='true';
  const call=async(path,body)=>json(await fetchImpl(SUPABASE_ORIGIN+path,{method:body?'POST':'GET',headers:{apikey:secret,...(secret?.startsWith('sb_secret_')?{}:{authorization:'Bearer '+secret}),'content-type':'application/json'},body:body?JSON.stringify(body):undefined,redirect:'error',signal:AbortSignal.timeout(12000)}));
  const rpc=(name,p)=>call('/rest/v1/rpc/'+name,p);
  if(ready){
   if(!new RegExp('^(sk|rk)_'+mode+'_[A-Za-z0-9]+$').test(apiKey))throw error();
   stripe=stripeClient??new (await import('stripe')).default(apiKey,{maxNetworkRetries:0,timeout:15000});
-  checkout=createOwnStripeCheckout({enabled:true,billingMode:mode,accountId:account,priceId:env.STRIPE_CREDIT_PRICE_ID,stripeClient:stripe,register:rpc,resolveCustomer:async owner=>{
+  if(checkoutReady)checkout=createOwnStripeCheckout({enabled:true,billingMode:mode,accountId:account,priceId:env.STRIPE_CREDIT_PRICE_ID,stripeClient:stripe,register:rpc,resolveCustomer:async owner=>{
    const existing=await rpc('apiwild_stripe_customer',{p_owner:owner});if(existing.customerId)return existing.customerId;
    const created=await stripe.customers.create({metadata:{apiwild_owner:owner}},{idempotencyKey:'apiwild-owner-'+createHash('sha256').update(owner).digest('hex')});
    const bound=await rpc('apiwild_stripe_customer',{p_owner:owner,p_customer:created.id});return bound.customerId;
@@ -38,7 +41,7 @@ export async function createOwnedBillingFromEnv(env,{fetchImpl=fetch,stripeClien
    const user=await json(authResponse);
    if(!uuid.test(user.id)||!user.email_confirmed_at||user.is_anonymous===true)throw error(401);const owner=mode+':supabase:'+user.id;
    const initialized=await rpc('apiwild_gateway_account_initialize',{p_owner:owner});if(initialized.initialized!==true||initialized.customer_id!==user.id||initialized.billing_mode!==mode)throw error();
-   if(path==='/api/billing'&&req.method==='GET'){const info=await rpc('apiwild_billing_read',{p_owner:owner});return send(res,200,{...info,checkoutEnabled:Boolean(ready)&&info.suspended===false,minimumTopupCents:3000})}
+   if(path==='/api/billing'&&req.method==='GET'){const info=await rpc('apiwild_billing_read',{p_owner:owner});return send(res,200,{...info,checkoutEnabled:Boolean(checkoutReady)&&info.suspended===false,minimumTopupCents:3000})}
    if(path==='/api/billing/reconcile'&&req.method==='GET'){const session=url.searchParams.get('sessionId');if(!new RegExp('^cs_'+mode+'_[A-Za-z0-9]+$').test(session||''))throw error(400);return send(res,200,await rpc('apiwild_billing_read',{p_owner:owner,p_session:session}))}
    if(path!=='/api/billing/checkout'||req.method!=='POST')throw error(405);
    if(!checkout)throw error();
