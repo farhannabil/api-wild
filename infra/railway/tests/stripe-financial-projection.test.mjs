@@ -103,6 +103,16 @@ await test('refund projection fetches full canonical list and sums succeeded ref
   await f.client.handle(envelope('charge.refunded','ch_Fixture'));
   assert.equal(f.projects[0].params.p_fact.refunded_cents,1400);assert.equal(f.projects[0].params.p_fact.received_cents,2800);
 });
+await test('real Stripe refund objects without livemode use verified event, account and PaymentIntent mode',async()=>{
+  for(const [type,id] of [['refund.created','re_Fixture'],['charge.refunded','ch_Fixture']]){
+    const f=fixture();delete f.objects['refunds/re_Fixture'].livemode;
+    f.objects['refunds?payment_intent=pi_Fixture&limit=100'].data=[{id:'re_one',payment_intent:'pi_Fixture',currency:'usd',status:'succeeded',amount:1000}];
+    await f.client.handle(envelope(type,id));assert.equal(f.projects[0].params.p_fact.refunded_cents,1000);
+  }
+  const f=fixture();delete f.objects['refunds/re_Fixture'].livemode;
+  f.objects['payment_intents/pi_Fixture'].livemode=false;
+  await assert.rejects(f.client.handle(envelope('refund.created','re_Fixture')));assert.equal(f.projects.length,0);
+});
 await test('refund paginated/duplicate/mixed-PI/mode/currency/oversized totals stay unprojected',async()=>{
   const valid={id:'re_one',payment_intent:'pi_Fixture',livemode:true,currency:'usd',status:'succeeded',amount:1400};
   for(const changes of [{has_more:true},{data:[valid,valid]},{data:[{...valid,payment_intent:'pi_other'}]},

@@ -127,7 +127,9 @@ export function createStripeFinancialProjection(config){
             subtotal_cents:s.amount_subtotal,total_cents:s.amount_total,tax_cents:s.total_details.amount_tax,discount_cents:0,status:s.status,payment_status:s.payment_status};
         }else if(operation==='refund'){
           const prefix=event.type==='charge.refunded'?'ch':'re',id=identifier(event.data.object.id,prefix);
-          const source=await read((prefix==='ch'?'charges/':'refunds/')+id,signal);modeCheck(source);
+          const source=await read((prefix==='ch'?'charges/':'refunds/')+id,signal);
+          // Refund objects omit livemode; their signed event, account and PaymentIntent bind the mode.
+          if(prefix==='ch'||Object.hasOwn(source,'livemode'))modeCheck(source);
           if(source.id!==id||source.currency!=='usd')fail('stripe_invalid_fact');
           const pi=await payment(source.payment_intent,signal);
           if(pi.metadata.funding_mode!=='one_time')fail('stripe_order_mismatch');
@@ -135,7 +137,7 @@ export function createStripeFinancialProjection(config){
           if(refunds.object!=='list'||refunds.has_more!==false||!Array.isArray(refunds.data)||refunds.data.length>100)fail('stripe_refund_review_required');
           let total=0n;const seen=new Set();
           for(const r of refunds.data){
-            identifier(r?.id,'re');modeCheck(r);cents(r.amount,1);
+            identifier(r?.id,'re');if(Object.hasOwn(r,'livemode'))modeCheck(r);cents(r.amount,1);
             if(seen.has(r.id)||r.payment_intent!==pi.id||r.currency!==pi.currency
               ||!['pending','requires_action','succeeded','failed','canceled'].includes(r.status))fail('stripe_refund_mismatch');
             seen.add(r.id);if(r.status==='succeeded')total+=BigInt(r.amount);
