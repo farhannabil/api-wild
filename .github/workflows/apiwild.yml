@@ -43,6 +43,8 @@ jobs:
           infra/railway/tests/chat-compatibility.test.mjs
           infra/railway/tests/subrouter-dispatch.test.mjs
           infra/railway/tests/subrouter-request-binding.test.mjs
+          infra/railway/tests/supplier-request-identity.test.mjs
+          infra/railway/tests/owned-text-modes.test.mjs
           infra/railway/tests/subrouter-receipt-reader.test.mjs
           infra/railway/tests/supplier-debit-sweep.test.mjs
           infra/railway/tests/sandbox-e2e-harness.test.mjs
@@ -51,6 +53,7 @@ jobs:
           infra/railway/tests/supplier-allowance.test.mjs
           infra/railway/tests/supplier-allowance-operator.test.mjs
           infra/railway/tests/reservation-expiry-operator.test.mjs
+          infra/railway/tests/reservation-expiry-sweep.test.mjs
           infra/railway/tests/deepseek-tier-policy.test.mjs
           infra/railway/tests/deepseek-assembly.test.mjs
           infra/railway/tests/gateway-quote-lookup.test.mjs

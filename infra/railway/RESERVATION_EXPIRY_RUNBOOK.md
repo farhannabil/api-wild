@@ -1,6 +1,6 @@
 # One-request reservation cleanup
 
-- This nonpublic operator uses the existing service-role-only `apiwild_gateway_expire(text, uuid, bigint)` RPC. No migration, scheduler, customer enumeration or supplier endpoint is added.
+- This nonpublic operator uses the service-role-only `apiwild_gateway_expire(text, uuid, bigint)` RPC. The production server can also run the bounded expiry worker after the reviewed `20261005121036_reservation_expiry_sweep.sql` migration and explicit enablement.
 - The database alone checks the exact owner, request, current version, state and expiry under its existing locks. Only expired `reserved` work can become `cancelled`. `executing`, `uncertain` and settled supplier-pending requests are never released by this RPC.
 - Execution is disabled unless `APIWILD_RESERVATION_EXPIRY_ENABLED=true` is supplied in the trusted server environment. `SUPABASE_SECRET_KEY` must belong to the original API WILD Supabase project. Do not put credentials in commands, repository files or logs.
 
@@ -20,7 +20,13 @@
 
 - Exit 0 means confirmed cancellation (or successful local check). Exit 2 means unchanged/held. Exit 3 means disabled, invalid configuration or unconfirmed outcome. An unconfirmed response may follow a committed database operation: investigate the exact record through the owner lane before another manual attempt. There is no automatic retry.
 - The operator sends exactly one bounded request to the fixed original Supabase RPC. Output contains only a disposition, never request results, account references, supplier receipt content or credentials.
-- **Separate remaining acceptance gate:** supplier-pending liabilities still need an authoritative actual-CNY receipt reader linked to the exact credential, upstream response and model. Token counts, quota units, estimated prices and logs lacking a final debit amount cannot clear those holds. This cleanup operator does not make supplier reconciliation or product launch ready.
+- Supplier-pending liabilities use the separate actual wallet-debit reader. Native USD quota is conservatively normalized into CNY using the audited, pinned supplier settings. Estimates cannot clear those holds; reservation expiry never substitutes for supplier reconciliation.
+
+## Bounded production worker
+
+- `APIWILD_RESERVATION_EXPIRY_ENABLED=true` enables a single-flight pass after startup and then every60 seconds after completion. Local preview never starts it.
+- Each pass selects at most5 expired pristine reservations in the configured billing mode and supplier key references. The cancellation RPC rechecks version, state, expiry and all financial/response evidence under locks.
+- Supplier-pending, executing, uncertain, overrun or already-settled requests remain unchanged. Shutdown aborts current network work and prevents another candidate from starting.
 
 ## Local checks
 

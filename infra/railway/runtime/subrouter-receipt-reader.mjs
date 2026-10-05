@@ -1,6 +1,7 @@
 // GET-only reader for the documented account log. No inference/payment request.
 import {strictObject,exactInteger,withDeadline} from './supabase-gateway-rpc.mjs';
 import {createSupplierConversionGuard,normalizedQuotaCnyMicros,readSubrouterAccountJson,validateNativeDebit} from './subrouter-supplier-conversion.mjs';
+import {isSupplierRequestIdentity} from './supplier-request-identity.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const fail=()=>Error('supplier_receipt_unverified');
 export function createSubrouterReceiptReader({enabled=false,accessToken,accountUserId,bindings,conversion,fetchImpl=fetch,clock=Date.now,timeoutMs=20000}={}){
@@ -18,7 +19,7 @@ export function createSubrouterReceiptReader({enabled=false,accessToken,accountU
  const guard=createSupplierConversionGuard({conversion,fetchImpl,clock});const c=guard.conversion;
  return Object.freeze({assertConversion:guard.assertConversion,async readReceipt(query,{signal:parent}={}){
   strictObject(query,['keyReference','upstreamResponseId','model']);const binding=trusted.get(query.keyReference);
-  if(!binding||!UUID.test(query.upstreamResponseId)||!Object.hasOwn(binding.modelProviders,query.model))throw fail();
+  if(!binding||!Object.hasOwn(binding.modelProviders,query.model)||!isSupplierRequestIdentity(query.upstreamResponseId,{supplierSlug:binding.modelProviders[query.model],model:query.model}))throw fail();
   return withDeadline(async deadline=>{
    const signal=parent?AbortSignal.any([parent,deadline]):deadline;await guard.assertConversion({signal});
    let cursor='first',found;const seen=new Set();let complete=false;

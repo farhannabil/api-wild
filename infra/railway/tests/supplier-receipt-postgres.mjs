@@ -16,7 +16,7 @@ try{
  create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  grant usage on schema auth to service_role;create table auth.users(id uuid primary key,email_confirmed_at timestamptz,is_anonymous boolean default false);
  create table public.customer_profiles(user_id uuid primary key,onboarding_completed_at timestamptz);`);
- for(const file of ['20261003060000_apiwild_gateway_portability.sql','20261005010000_apiwild_stripe_projection.sql','20261005030000_retail_supplier_separation.sql','20261005083727_supplier_allowance_outbox.sql','20261005103212_supplier_receipt_reader.sql'])await db.exec(fs.readFileSync(root+'supabase/migrations/'+file,'utf8'));
+ for(const file of ['20261003060000_apiwild_gateway_portability.sql','20261005010000_apiwild_stripe_projection.sql','20261005030000_retail_supplier_separation.sql','20261005083727_supplier_allowance_outbox.sql','20261005103212_supplier_receipt_reader.sql','20261005104158_supplier_pending_list.sql','20261005121900_bangai_request_identity.sql'])await db.exec(fs.readFileSync(root+'supabase/migrations/'+file,'utf8'));
  await db.query('insert into auth.users values($1,now(),false)',[customer]);await db.query('select public.apiwild_gateway_account_initialize($1)',[owner]);
  await db.query("insert into apiwild_finance.provider_budgets values($1,'apiwild','test','CNY',$2,true,10000,10000,'v1',array['model'])",[budget,key]);
  await check('guarded request read returns exact identity only, never content; wrong owner and unfinished remain null',async()=>{
@@ -50,6 +50,27 @@ try{
  await check('legacy exact-CNY fact remains compatible and foreign or reused receipt cannot be substituted',async()=>{
   const r=await request(),f=fact(r);delete f.native_debit;assert.equal((await apply(r,f)).reconciled,true);
   const other=await request();await assert.rejects(apply(other,{...fact(other),receipt_id:f.receipt_id}));await assert.rejects(apply(other,{...fact(other),key_reference:randomUUID()}));
+ });
+ await check('four short bangai IDs require the recorded pair and native audit; replay stays exactly once',async()=>{
+  const pendingIds=async()=>{let cursor=null;const ids=[];for(let page=0;page<20;page++){
+   const rows=await call('apiwild_supplier_pending_list',['test',[key],cursor?.createdAt??null,cursor?.requestId??null]);assert.ok(rows.length<=5);ids.push(...rows.map(row=>row.requestId));if(rows.length<5)return ids;cursor=rows.at(-1);
+  }assert.fail('Finite fixture scan did not complete');};
+  const pairs=[['claude-opus-4-6','c2ea8134'],['claude-opus-4-7','b9b162d7'],['gpt-6-astra','afda6e04'],['gpt-6-sol','df8fae53']];
+  for(const [model,correlation]of pairs){
+   const r=await request({correlation});await db.query("update apiwild_finance.gateway_requests set model=$2,usage_json=usage_json||'{\"supplierSlug\":\"bangai\"}'::jsonb where id=$1",[r.id,model]);
+   const read=await call('apiwild_supplier_request_read',[owner,r.id]);assert.equal(read.upstreamResponseId,correlation);assert.equal(read.model,model);
+   assert.ok((await pendingIds()).includes(r.id));assert.deepEqual(await call('apiwild_supplier_pending_list',['live',[key],null,null]),[]);assert.deepEqual(await call('apiwild_supplier_pending_list',['test',[randomUUID()],null,null]),[]);
+   const f={...fact(r),model,native_debit:{...native(),provider_slug:'bangai'}};
+   const noAudit={...f};delete noAudit.native_debit;await assert.rejects(apply(r,noAudit));await assert.rejects(apply(r,{...f,native_debit:{...f.native_debit,provider_slug:'other'}}));
+   assert.equal((await apply(r,f)).reconciled,true);assert.equal((await apply(r,f)).replayed,true);
+   assert.equal((await pendingIds()).includes(r.id),false);
+  }
+  for(const patch of [{model:'model',supplierSlug:'bangai'},{model:'claude-opus-4-6',supplierSlug:'other'},{model:'claude-opus-4-6',supplierSlug:null}]){
+   const r=await request({correlation:'c2ea8134'});await db.query('update apiwild_finance.gateway_requests set model=$2,usage_json=usage_json||jsonb_build_object(\'supplierSlug\',$3::text) where id=$1',[r.id,patch.model,patch.supplierSlug]);
+   assert.equal(await call('apiwild_supplier_request_read',[owner,r.id]),null);assert.equal((await pendingIds()).includes(r.id),false);await assert.rejects(apply(r,{...fact(r),model:patch.model,native_debit:{...native(),provider_slug:'bangai'}}));
+   assert.equal((await db.query('select supplier_pending from apiwild_finance.gateway_requests where id=$1',[r.id])).rows[0].supplier_pending,true);
+  }
+  for(const role of ['anon','authenticated']){await db.exec('set role '+role);await assert.rejects(db.query('select public.apiwild_supplier_pending_list($1,$2,null,null)',['test',[key]]));await db.exec('reset role');}
  });
  await check('one shared budget permits 39 models, rejects 40/null, and monetary cap stays unchanged',async()=>{
   const models=Array.from({length:39},(_,i)=>'model_'+i);await db.query('update apiwild_finance.provider_budgets set models=$2 where id=$1',[budget,models]);

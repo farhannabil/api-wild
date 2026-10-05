@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "accepted",
   "version": "apiwild-launch-20261005",
-  "issuedAt": "2026-10-05T12:02:01.450Z",
+  "issuedAt": "2026-10-05T12:40:37.046Z",
   "validUntil": "2026-11-04T10:25:19.000Z",
   "acceptedModels": [
     "MiniMax-M2.7-highspeed",
@@ -11,6 +11,8 @@
     "claude-fable-5-1",
     "claude-haiku-4-5",
     "claude-haiku-4-5-20251001",
+    "claude-opus-4-6",
+    "claude-opus-4-7",
     "claude-opus-5",
     "claude-opus-5-5",
     "claude-sonnet-4-6",
@@ -19,13 +21,15 @@
     "gemini-3.1-flash-lite",
     "gemini-3.1-pro-preview",
     "glm-5.3-flashx",
+    "gpt-6-astra",
+    "gpt-6-sol",
     "grok-4.5"
   ],
   "conversionSha256": "1ab01f38aa6f6948ff53ef3fdcfbf5063f30acc09fbfcd982f816dc7843a4f3f",
   "checkpoints": {
-    "customer-session-acceptance": "b0e0d2bab3525b3166af0a120dd2a7926a74c224ff40ff0959a529c770bb235c",
-    "payment-lifecycle-acceptance": "8bd04ffadcc73401c0c00f1922e8daf32e3acafa8898e2027b2d1f91dd473b4a",
-    "supplier-budget-acceptance": "793f69eba5962f5aba5c4d78b633441dd3641e081a9402f1da350e4544a96971",
-    "supplier-debit-acceptance": "6eecd3399ba090ba1f98ee627ea3a47f3545ba44f91ac338db9487ea4761755d"
+    "customer-session-acceptance": "605383fd00e85e59ec4ccf1a8d8871aa05ca838fc0649600f0e2e8762551de58",
+    "payment-lifecycle-acceptance": "fcd649ea479f3b52c63d02413cd3afaef2d3a44a132574cf5ccedce650754469",
+    "supplier-budget-acceptance": "bea81ecd611541b557eb486b7a20f9da9f539c41879caf4f33994a17aa48642f",
+    "supplier-debit-acceptance": "49a12ce28b9c1a5eae65cd1f274164a67dd66975bc64c2138702551611a12703"
   }
 }

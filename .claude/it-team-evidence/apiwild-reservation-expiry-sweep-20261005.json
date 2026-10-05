@@ -1,0 +1,46 @@
+{
+  "task_id": "apiwild-reservation-expiry-sweep-20261005",
+  "status": "passed",
+  "summary": "Added opt-in finite cleanup for expired never-dispatched reservations. The existing locked expiry CAS now refuses supplier-pending, observed/settled cost, result, usage, settlement and pricing-overrun evidence even if it appeared after scanning.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/reservation-expiry-sweep.test.mjs infra/railway/tests/reservation-expiry-operator.test.mjs",
+      "exitCode": 0,
+      "tests": 17,
+      "passed": 17
+    },
+    {
+      "command": "node infra/railway/tests/reservation-expiry-sweep-postgres.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "exitCode": 0,
+      "groups": 4,
+      "passed": 4
+    },
+    {
+      "command": "node infra/railway/tests/reservation-expiry-postgres.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "exitCode": 0,
+      "groups": 4,
+      "passed": 4
+    },
+    {
+      "command": "node --check infra/railway/runtime/reservation-expiry-sweep.mjs",
+      "exitCode": 0
+    }
+  ],
+  "review": {
+    "reviewer": "/root/release_review",
+    "result": "passed",
+    "note": "Release owner confirmed independent expiry review and matching frozen migration hash before external application. Coordinator server integration was separately inspected: local mode stays off, start occurs after listen, shutdown aborts, and container/CI allowlists include the module."
+  },
+  "limitations": [
+    "No production database, credentials, provider calls, deployment or commits were performed by this worker.",
+    "PGlite verifies SQL state and CAS race semantics, not independent-session PostgreSQL concurrency. Runtime simultaneous ticks/manual passes share one in-flight promise.",
+    "Executing, uncertain, supplier-pending or otherwise evidenced liabilities remain held. Cleanup is scoped to the configured billing mode and at most two approved key references, five rows per pass.",
+    "Release owner controls migration application, activation and deployed worker verification."
+  ],
+  "fileHashes": [
+    {"path": "supabase/migrations/20261005121036_reservation_expiry_sweep.sql", "sha256": "c1728e356aa99627f16b6c63a64d33db65e59291dd341b17166e5a5e3831cbdb"},
+    {"path": "infra/railway/runtime/reservation-expiry-sweep.mjs", "sha256": "108391c95a01210898b8802dc5ac5e6b2d9fcb44ca047d79faaa7ec81afe8b23"},
+    {"path": "infra/railway/tests/reservation-expiry-sweep.test.mjs", "sha256": "de994ef7f34fe5d90a781787762e17b78deba738da383cb5ed11e1a8fe1a6fd8"},
+    {"path": "infra/railway/tests/reservation-expiry-sweep-postgres.mjs", "sha256": "ee8cb394c12ecb8a8abba5df97d7c5b9e1e087aafa5c9967cad98c5d5c9e023a"}
+  ]
+}

@@ -2,6 +2,7 @@ import {createOwnedBillingFromEnv} from './runtime/owned-billing.mjs';
 import {createWorkspacePolicyHttpFromEnv} from './runtime/workspace-policy-http.mjs';
 import {createOwnedGatewayFromEnv} from './runtime/owned-gateway-assembly.mjs';
 import {createSupplierDebitSweepFromEnv} from './runtime/supplier-debit-sweep.mjs';
+import {createReservationExpirySweepFromEnv} from './runtime/reservation-expiry-sweep.mjs';
 import {loadReleaseAcceptance} from './runtime/release-acceptance.mjs';
 import {isGatewayHttp,isGatewayPath} from './runtime/gateway-http.mjs';
 import {createLaunchStatusHttp,isLaunchStatusHttp} from './runtime/launch-status.mjs';
@@ -222,6 +223,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   // both explicit debit/sweep flags; an import alone cannot start the worker.
   const supplierSweep=createSupplierDebitSweepFromEnv({env:listener.local?{}:process.env,
     write:result=>console.log(JSON.stringify({supplierReconciliation:result}))});
+  const reservationExpirySweep=createReservationExpirySweepFromEnv({env:listener.local?{}:process.env,
+    write:result=>console.log(JSON.stringify({reservationExpiry:result}))});
   const discoveryHttp=createOwnedDiscoveryHttp({snapshot:gatewayHttp?.discovery??createOwnedDiscoverySnapshot({catalog,deploymentCommit:process.env.RAILWAY_GIT_COMMIT_SHA})});
   const ownedBilling=await createOwnedBillingFromEnv(process.env);
   const workspacePolicyHttp=createWorkspacePolicyHttpFromEnv(process.env);
@@ -241,11 +244,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     inferenceConfigured:Boolean(gatewayHttp)&&process.env.APIWILD_INFERENCE_ENABLED==='true',
     checkoutEnabled:process.env.APIWILD_CHECKOUT_ENABLED==='true'});
   const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, launchStatusHttp, discoveryHttp});
-  frontend.once('error', () => {void supplierSweep.stop();backend.server.close();});
-  const shutdown=()=>{void supplierSweep.stop();frontend.close();backend.server.close();};
+  frontend.once('error', () => {void supplierSweep.stop();void reservationExpirySweep.stop();backend.server.close();});
+  const shutdown=()=>{void supplierSweep.stop();void reservationExpirySweep.stop();frontend.close();backend.server.close();};
   process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
   frontend.listen(listener.port, listener.host, () => {
     supplierSweep.start();
+    reservationExpirySweep.start();
     console.log(`Guarded ${listener.local ? 'local' : 'Railway'} UI preparation listening; readiness requires valid release evidence.`);
   });
 }
