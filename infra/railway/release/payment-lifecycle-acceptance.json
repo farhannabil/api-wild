@@ -3,7 +3,7 @@
   "gate": "payment-lifecycle-acceptance",
   "status": "passed",
   "ownerApproved": true,
-  "observedAt": "2026-10-05T12:40:37.046Z",
+  "observedAt": "2026-10-05T21:38:04.198Z",
   "scope": "sandbox-lifecycle-and-live-configuration",
   "checks": {
     "sandboxPayment": true,
@@ -18,6 +18,8 @@
     "4d8c1902afdffc9855e9852ae65f5ac0406760dfddba4bd146bdc8b91109a274",
     "e5748f03d8b38af017745262b165d6a56af766fa40226555f7b7ff1668fc7f3f",
     "852869d77a64c59e6870e519fd18aaf6c52535fde80c076acf1525bbb908f33d",
-    "6cc680f28bcc91bc17893d885a0a8078fb301f4d388087db66035cdbe26dd1d3"
+    "6cc680f28bcc91bc17893d885a0a8078fb301f4d388087db66035cdbe26dd1d3",
+    "6846ab41039421047b27bc1fe3707f2ff4e11e7dab2022af84ffeb949bcfdd2a",
+    "a4da56e1efa66b47989c6f77488871fe8c8d0aa7d20f98e21594e441fdac72a4"
   ]
 }

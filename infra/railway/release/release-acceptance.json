@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "accepted",
   "version": "apiwild-launch-20261005",
-  "issuedAt": "2026-10-05T13:29:09.457Z",
+  "issuedAt": "2026-10-05T21:38:04.198Z",
   "validUntil": "2026-11-04T10:25:19.000Z",
   "acceptedModels": [
     "MiniMax-M2.7-highspeed",
@@ -22,19 +22,14 @@
     "gemini-2.5-flash-lite",
     "gemini-3.1-flash-lite",
     "gemini-3.1-pro-preview",
-    "glm-5.1",
-    "glm-5.3",
-    "glm-5.3-flashx",
-    "gpt-6-astra",
-    "gpt-6-sol",
     "grok-4.5",
     "grok-4.7"
   ],
   "conversionSha256": "1ab01f38aa6f6948ff53ef3fdcfbf5063f30acc09fbfcd982f816dc7843a4f3f",
   "checkpoints": {
     "customer-session-acceptance": "605383fd00e85e59ec4ccf1a8d8871aa05ca838fc0649600f0e2e8762551de58",
-    "payment-lifecycle-acceptance": "fcd649ea479f3b52c63d02413cd3afaef2d3a44a132574cf5ccedce650754469",
-    "supplier-budget-acceptance": "9bb7b7fe5489f72391b94cf3118d4f74b7413fd2532dbb9418401140573d5f7b",
-    "supplier-debit-acceptance": "49a12ce28b9c1a5eae65cd1f274164a67dd66975bc64c2138702551611a12703"
+    "payment-lifecycle-acceptance": "9bd22646c787365e5b688b25e5ded3814cbdd78f68e0116b92379f49395b9f41",
+    "supplier-budget-acceptance": "71f543662bf5bd6428476b7f93dbba84a69bb043aa2f0c9a8b44e72446fa11e4",
+    "supplier-debit-acceptance": "5dcc64e44862b6c77b541e7701607f3e55af7ce5c88dd743d3d5a4dfaf032187"
   }
 }

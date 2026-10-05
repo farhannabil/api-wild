@@ -3,7 +3,7 @@
   "gate": "supplier-budget-acceptance",
   "status": "passed",
   "ownerApproved": true,
-  "observedAt": "2026-10-05T13:29:09.457Z",
+  "observedAt": "2026-10-05T21:38:04.198Z",
   "scope": "production-configuration",
   "checks": {
     "restrictedProductKey": true,
@@ -20,6 +20,11 @@
     "c4ed05a4280383b4a432839a498474fcb10553fe085e126374f3f97186789e6b",
     "8b849817846d349cad351acb415d8dd3b892487a9c46a59f83f609b6423a6fbc",
     "8a5636c4823378a2f1185103bd4748ce81225b9e013bfe31c2a2aafb0cc6e510",
-    "d19f284b2d16105c14d86b3abcb53c5bef5d8702b79071a9f4ab97cfeed96af2"
+    "d19f284b2d16105c14d86b3abcb53c5bef5d8702b79071a9f4ab97cfeed96af2",
+    "6846ab41039421047b27bc1fe3707f2ff4e11e7dab2022af84ffeb949bcfdd2a",
+    "a4da56e1efa66b47989c6f77488871fe8c8d0aa7d20f98e21594e441fdac72a4",
+    "379afad5d3cbffe32f88f960fee4f052d0eff9b9ae6b4b3a2c191cdcda986176",
+    "d4b88131c66030e939a76b9f47a2d0fb723959e3330942504d239669f12eef92",
+    "6de6d011d1b03049048b389098e545a4b91edfaa797637781487e503cbac369a"
   ]
 }

@@ -1,0 +1,29 @@
+{
+  "task_id": "apiwild-working-model-release-20261005",
+  "status": "passed",
+  "summary": "Narrow release acceptance to the 19 independently verified customer-key models and 57 preserved routes; reference genuine sandbox finance and actual supplier accounting evidence without changing runtime guards.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/release-acceptance.test.mjs infra/railway/tests/launch-status.test.mjs infra/railway/tests/owned-discovery-http.test.mjs",
+      "exitCode": 0,
+      "result": "17 focused release, readiness, discovery and authentication checks passed after artifact edits"
+    },
+    {
+      "command": "work/run-apiwild-private-operator-20261005.ps1 -Script verify-apiwild-release-input-20261005.mjs",
+      "exitCode": 0,
+      "result": "Unchanged release validator accepted actual prepared19-model/57-route configuration and bounded conversion"
+    }
+  ],
+  "review": {"reviewer": "/root/sandbox_matrix_qa", "result": "passed"},
+  "referenceDigests": [
+    "6846ab41039421047b27bc1fe3707f2ff4e11e7dab2022af84ffeb949bcfdd2a",
+    "a4da56e1efa66b47989c6f77488871fe8c8d0aa7d20f98e21594e441fdac72a4"
+  ],
+  "limitations": [
+    "All24 received one supplier dispatch;19 answers/accounting passed and five deliveries failed. Eighteen replay checks passed; Grok4.5 original replay was skipped.",
+    "GLM5.3 remains excluded and uncertain; its USD3149-micro and CNY7022-micro reservations are preserved. Twenty-three actual receipts are reconciled.",
+    "Genuine sandbox checkout, signed credit/refund and customer-key tests used an isolated assembly of production backend source. These tests do not prove a live paid customer or public production inference transport.",
+    "This record approves the reviewed source checkpoint. Root must separately verify exact CI/deployment, public19-model discovery and live readiness before calling it deployed.",
+    "Supplier lifetime ceiling/expiry/no-top-up and existing hosting funding limits are unchanged; hosted audio remains deferred."
+  ]
+}
