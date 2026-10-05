@@ -67,6 +67,7 @@
 !infra/railway/runtime/supplier-debit-operator.mjs
 !infra/railway/runtime/supplier-debit-reconciliation.mjs
 !infra/railway/runtime/supplier-debit-sweep.mjs
+!infra/railway/runtime/supplier-startup-probe.mjs
 !infra/railway/runtime/supplier-pending-list.mjs
 !infra/railway/runtime/supplier-allowance-worker.mjs
 !infra/railway/runtime/subrouter-saas-activation.mjs
