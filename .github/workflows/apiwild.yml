@@ -2,6 +2,8 @@ name: API WILD checks
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
   pull_request:
   workflow_dispatch:
   schedule:
@@ -11,7 +13,7 @@ permissions:
   contents: read
 concurrency:
   group: apiwild-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -29,6 +31,8 @@ jobs:
         run: npm run install:ci
       - name: Build and test
         run: npm test
+      - name: Verify owned gateway authentication and assembly
+        run: node --test infra/railway/tests/gateway-ingress.test.mjs infra/railway/tests/owned-gateway-assembly.test.mjs infra/railway/tests/supabase-gateway-rpc.test.mjs
   production-health:
     needs: build-and-test
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')

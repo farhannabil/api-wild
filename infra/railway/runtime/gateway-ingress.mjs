@@ -50,6 +50,12 @@ export function createGatewayIngress(config) {
       if (request.signal.aborted || url.origin !== origin || url.search || url.hash || (request.headers.has('origin') && request.headers.get('origin') !== origin)) bad(403);
       if ([...request.headers.keys()].some(k => k.startsWith('oai-authenticated-'))) bad(403);
       const authorization = request.headers.get('authorization') || '';
+      const keyAuth = /^Bearer aw_(?:live|test)_[a-f0-9]{64}$/.test(authorization);
+      const sessionAuth = authorization.length <= 8192 && /^Bearer [A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(authorization);
+      // Reject missing/malformed credentials before parsing customer bodies.
+      // This is syntax validation only; the verifiers below still establish identity.
+      if (url.pathname === '/v1/chat/completions' ? !keyAuth
+          : !(sessionAuth || (url.pathname === '/api/gateway' && request.method === 'POST' && keyAuth))) bad(401);
       if(url.pathname==='/api/gateway'&&request.method==='GET'){await rpc.verifyOwner({authorization});return reply(200,{inferenceConfigured:playgroundModels.length>0,streaming:false,externalTools:false,models:playgroundModels});}
       if(url.pathname==='/api/usage'){if(request.method!=='GET')bad(405);const context=await rpc.verifyOwner({authorization});await rpc.initializeAccount(context);return reply(200,await rpc.usage(context));}
       if (['/api/keys','/api/gateway/keys'].includes(url.pathname)) {
@@ -67,7 +73,6 @@ export function createGatewayIngress(config) {
       const input = chat(await withDeadline(signal => body(request, signal), 5000), native);
       const requestKey = request.headers.get('idempotency-key') || '';
       if (!/^[A-Za-z0-9_-]{16,100}$/.test(requestKey)) bad();
-      const keyAuth = /^Bearer aw_(?:live|test)_[a-f0-9]{64}$/.test(authorization);
       if (!native && !keyAuth) bad(401);
       const context = keyAuth ? await rpc.verifyKeyOwner({ authorization, capability: input.capability }) : await rpc.verifyOwner({ authorization });
       if(!keyAuth&&typeof rpc.initializeAccount==='function')await rpc.initializeAccount(context);
