@@ -1,0 +1,103 @@
+{
+  "task_id": "apiwild-chat-compatibility",
+  "status": "passed",
+  "summary": "Bounded OpenAI Chat Completions function-call data and buffered SSE after committed settlement. Native console stays text-only; no tool execution or live inference activation.",
+  "files": [
+    "infra/railway/runtime/chat-compatibility.mjs",
+    "infra/railway/runtime/gateway-ingress.mjs",
+    "infra/railway/runtime/gateway-http.mjs",
+    "infra/railway/runtime/subrouter-dispatch.mjs",
+    "infra/railway/runtime/owned-gateway-assembly.mjs",
+    "infra/railway/tests/chat-compatibility.test.mjs",
+    "infra/railway/tests/gateway-ingress.test.mjs",
+    "infra/railway/tests/subrouter-dispatch.test.mjs",
+    "infra/railway/tests/gateway-discovery.test.mjs",
+    "scripts/daily-health.mjs",
+    "tests/daily-health.test.mjs",
+    "app/content.ts"
+  ],
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/chat-compatibility.test.mjs infra/railway/tests/gateway-ingress.test.mjs infra/railway/tests/subrouter-dispatch.test.mjs infra/railway/tests/gateway-discovery.test.mjs infra/railway/tests/gateway-service.test.mjs infra/railway/tests/owned-gateway-assembly.test.mjs tests/daily-health.test.mjs",
+      "tests": 70,
+      "passed": 70,
+      "exitCode": 0
+    },
+    {
+      "command": "node --check infra/railway/runtime/chat-compatibility.mjs; TypeScript transpile and catalogue example check",
+      "exitCode": 0
+    },
+    {
+      "command": "Final applicable unit suite, node --test --test-concurrency=4 (693 tests; explicit PG18 harness excluded)",
+      "exitCode": 0,
+      "tests": 693,
+      "passed": 693
+    }
+  ],
+  "review": {
+    "reviewer": "/root",
+    "result": "passed",
+    "note": "Coordinator independently reviewed compatibility; no findings. Final shared source unit run: 693/693 passed."
+  },
+  "limitations": [
+    "Offline synthetic and loopback tests only. No production inference, payment or real supplier tool capability proof.",
+    "SSE is buffered until settlement, not native upstream streaming. Client disconnect after dispatch does not imply supplier cancellation.",
+    "Responses, Assistants, Anthropic adapters, media content parts, legacy functions/function_call, unlisted fields and external tool execution remain unsupported."
+  ],
+  "sources": [
+    "https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create",
+    "https://developers.openai.com/api/reference/resources/chat/subresources/completions/streaming-events",
+    "https://developers.openai.com/api/docs/guides/function-calling"
+  ],
+  "reviewedAt": "2026-10-05T09:02:07.212Z",
+  "fileHashes": [
+    {
+      "path": "infra/railway/runtime/chat-compatibility.mjs",
+      "sha256": "35cc5ea90c738cc8a886bc1eb4da9f32778bce912feba423906e59e1bb93f99c"
+    },
+    {
+      "path": "infra/railway/runtime/gateway-ingress.mjs",
+      "sha256": "60f2d0e92f8d38f0b7338ce3a5c159c508ba2ddcd9d59260f5561507dd13ee71"
+    },
+    {
+      "path": "infra/railway/runtime/gateway-http.mjs",
+      "sha256": "e895c828b28053db28e5a50fc83a9cd0c6cab8ff16a264cec815fb930ecc0802"
+    },
+    {
+      "path": "infra/railway/runtime/subrouter-dispatch.mjs",
+      "sha256": "ead7e837e6247999f3cf76dedf79c9b51f021a536a8ee1c091ee8614bb591a6e"
+    },
+    {
+      "path": "infra/railway/runtime/owned-gateway-assembly.mjs",
+      "sha256": "d5ab059fc19531fe896ea7441fd6418e445d91e653023aeef078d674a56a981b"
+    },
+    {
+      "path": "infra/railway/tests/chat-compatibility.test.mjs",
+      "sha256": "c4a80743c92d33931cd4121bf1bcbe086a7b174c42db2fc555f66b77642bd3bd"
+    },
+    {
+      "path": "infra/railway/tests/gateway-ingress.test.mjs",
+      "sha256": "4ff158cc1a242b21b7d25d25c3297fb04a139c08465b7392614fe4de92ff75ba"
+    },
+    {
+      "path": "infra/railway/tests/subrouter-dispatch.test.mjs",
+      "sha256": "dbe09d138766f2ed11dd9b0529be4c119e3bc13b1da90b427fca741595442a33"
+    },
+    {
+      "path": "infra/railway/tests/gateway-discovery.test.mjs",
+      "sha256": "b150ca9135e46afe7955520624ad50790e1dd3ff34fb86c813f6a54262d32869"
+    },
+    {
+      "path": "scripts/daily-health.mjs",
+      "sha256": "f7e4f13745ee8cab2e514146db3bfbe9a0c9eecbd44a4bfd4b924a750d26416e"
+    },
+    {
+      "path": "tests/daily-health.test.mjs",
+      "sha256": "14f8f1cde9a912568bb918a6d3e6ae4a5918a6d316c5f73c9857e34212c74822"
+    },
+    {
+      "path": "app/content.ts",
+      "sha256": "117dee37ebf6d3477043418d1f691dfc10013b28e6f8159606063c75b8267104"
+    }
+  ]
+}

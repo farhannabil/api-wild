@@ -37,8 +37,9 @@ test('public discovery exposes all retail models and truthful inactive capabilit
     assert.equal(models.status,200);assert.equal(models.body.count,39);assert.equal(models.body.models.length,39);
     assert.equal(models.body.authority,'apiwild-owned-runtime');assert.ok(models.body.models.every(model=>model.callable===false&&model.pricing.currency==='USD'&&model.capabilities.length===0));
     assert.equal(config.status,200);assert.equal(config.body.deploymentCommit,env.RAILWAY_GIT_COMMIT_SHA);assert.equal(config.body.inferenceConfigured,false);assert.equal(config.body.enabled,false);
-    assert.ok(Object.values(config.body.ready).every(value=>value===false));assert.equal(config.body.streaming,false);assert.equal(config.body.externalTools,false);
+    assert.ok(Object.values(config.body.ready).every(value=>value===false));assert.equal(config.body.streaming,true);assert.equal(config.body.streamingMode,'buffered-after-settlement');assert.equal(config.body.nativeStreaming,false);assert.equal(config.body.functionCalling,true);assert.equal(config.body.externalTools,false);
     for(const forbidden of ['supplier','primary','backup','offer_id','fx','CNY','apiKey','sb_secret_','sb_publishable_'])assert.ok(!models.raw.includes(forbidden)&&!config.raw.includes(forbidden),forbidden);
+    const conditional=models.body.models.find(model=>model.id==='deepseek-v4-flash');assert.equal(conditional.pricing.conditionalPricing,true);assert.ok(conditional.pricing.peak.input>conditional.pricing.input);assert.equal(typeof conditional.pricing.tierSchedule,'string');assert.equal(conditional.callable,false);
     assert.equal((await call('/health/ready')).status,503);assert.equal(f.calls.length,0);
   });
 });

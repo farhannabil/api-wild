@@ -2,6 +2,7 @@ import {createOwnedBillingFromEnv} from './runtime/owned-billing.mjs';
 import {createWorkspacePolicyHttpFromEnv} from './runtime/workspace-policy-http.mjs';
 import {createOwnedGatewayFromEnv} from './runtime/owned-gateway-assembly.mjs';
 import {isGatewayHttp,isGatewayPath} from './runtime/gateway-http.mjs';
+import {createLaunchStatusHttp,isLaunchStatusHttp} from './runtime/launch-status.mjs';
 import {createOwnedDiscoveryHttp,createOwnedDiscoverySnapshot,isOwnedDiscoveryHttp,isOwnedDiscoveryPath} from './runtime/owned-discovery-http.mjs';
 import {createServer, request as upstreamRequest} from 'node:http';
 import {fileURLToPath, pathToFileURL} from 'node:url';
@@ -128,15 +129,17 @@ export function proxyHeaders(incoming, origin = 'https://apiwild.com') {
   return result;
 }
 
-export function createPreparationServer({backendPort, origin = 'https://apiwild.com', publicAssets, stripeWebhookIngress, aaroUsageIngress, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, discoveryHttp} = {}) {
+export function createPreparationServer({backendPort, origin = 'https://apiwild.com', publicAssets, stripeWebhookIngress, aaroUsageIngress, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, launchStatusHttp, discoveryHttp} = {}) {
   if (stripeWebhookIngress !== undefined && !isStripeWebhookIngress(stripeWebhookIngress)) {
     throw new Error('Invalid Stripe webhook injection.');
   }
   if (aaroUsageIngress !== undefined && !isAaroUsageIngress(aaroUsageIngress)) throw new Error('Invalid AARO usage injection.');
   if (nativeAuthHttp !== undefined && !isNativeAuthHttp(nativeAuthHttp)) throw new Error('Invalid native auth injection.');
   if(gatewayHttp!==undefined&&!isGatewayHttp(gatewayHttp))throw new Error('Invalid gateway injection.');
+  if(launchStatusHttp!==undefined&&!isLaunchStatusHttp(launchStatusHttp))throw new Error('Invalid launch status injection.');
   if(discoveryHttp!==undefined&&!isOwnedDiscoveryHttp(discoveryHttp))throw new Error('Invalid discovery injection.');
   return createServer({requestTimeout: 10000, headersTimeout: 5000, maxHeaderSize: 16384}, (request, response) => {
+    if(launchStatusHttp?.matches(request.url)){launchStatusHttp.handle(request,response);return;}
     // Explicit owner-lane server configuration only; no env flag/default CLI
     // enables this route. All other application/release gates remain closed.
     if(ownedBilling?.matches(request.url)){void ownedBilling.handle(request,response);return;}
@@ -216,7 +219,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   const discoveryHttp=createOwnedDiscoveryHttp({snapshot:gatewayHttp?.discovery??createOwnedDiscoverySnapshot({catalog,deploymentCommit:process.env.RAILWAY_GIT_COMMIT_SHA})});
   const ownedBilling=await createOwnedBillingFromEnv(process.env);
   const workspacePolicyHttp=createWorkspacePolicyHttpFromEnv(process.env);
-  const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, discoveryHttp});
+  const launchStatusHttp=createLaunchStatusHttp({sourceCommit:process.env.RAILWAY_GIT_COMMIT_SHA,
+    accountConfigured:Boolean(gatewayHttp),
+    billingConfigured:process.env.OWN_BILLING_ENABLED==='true'&&Boolean(process.env.STRIPE_SECRET_KEY&&process.env.STRIPE_WEBHOOK_SECRET&&process.env.STRIPE_CREDIT_PRICE_ID&&process.env.SUPABASE_SECRET_KEY),
+    inferenceConfigured:Boolean(gatewayHttp)&&process.env.APIWILD_INFERENCE_ENABLED==='true',
+    checkoutEnabled:process.env.APIWILD_CHECKOUT_ENABLED==='true'});
+  const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, launchStatusHttp, discoveryHttp});
   frontend.once('error', () => backend.server.close());
   frontend.listen(listener.port, listener.host, () => {
     console.log(`Guarded ${listener.local ? 'local' : 'Railway'} UI preparation listening; readiness remains closed.`);

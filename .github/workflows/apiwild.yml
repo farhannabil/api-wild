@@ -31,13 +31,37 @@ jobs:
         run: npm run install:ci
       - name: Build and test
         run: npm test
-      - name: Verify owned gateway authentication and assembly
-        run: node --test infra/railway/tests/gateway-ingress.test.mjs infra/railway/tests/owned-gateway-assembly.test.mjs infra/railway/tests/supabase-gateway-rpc.test.mjs infra/railway/tests/owned-discovery-http.test.mjs
+      - name: Verify gateway, supplier accounting and welcome boundaries
+        run: >-
+          node --test
+          infra/railway/tests/gateway-ingress.test.mjs
+          infra/railway/tests/owned-gateway-assembly.test.mjs
+          infra/railway/tests/supabase-gateway-rpc.test.mjs
+          infra/railway/tests/gateway-discovery.test.mjs
+          infra/railway/tests/owned-discovery-http.test.mjs
+          infra/railway/tests/gateway-service.test.mjs
+          infra/railway/tests/chat-compatibility.test.mjs
+          infra/railway/tests/subrouter-dispatch.test.mjs
+          infra/railway/tests/launch-status.test.mjs
+          infra/railway/tests/supplier-allowance.test.mjs
+          infra/railway/tests/supplier-allowance-operator.test.mjs
+          infra/railway/tests/deepseek-tier-policy.test.mjs
+          infra/railway/tests/deepseek-assembly.test.mjs
+          infra/railway/tests/gateway-quote-lookup.test.mjs
+          infra/railway/tests/retail-token-pricing.test.mjs
+          infra/railway/tests/model-accounting.test.mjs
+          infra/railway/tests/welcome-brand.test.mjs
+          infra/railway/tests/welcome-rpc.test.mjs
+          infra/railway/tests/container-context.test.mjs
+          infra/railway/preparation.test.mjs
   production-health:
     needs: build-and-test
     if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      operational-healthy: ${{ steps.health.outputs.operational-healthy }}
+      launch-ready: ${{ steps.health.outputs.launch-ready }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -46,6 +70,24 @@ jobs:
         with:
           node-version: '22'
       - name: Check production routes, access boundaries and email DNS
+        id: health
         env:
           APIWILD_EXPECTED_COMMIT: ${{ github.sha }}
         run: node scripts/daily-health.mjs
+  launch-readiness:
+    needs: [build-and-test, production-health]
+    if: always() && needs.build-and-test.result == 'success' && needs.production-health.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require observed operational health and accepted launch readiness
+        env:
+          OPERATIONAL_HEALTHY: ${{ needs.production-health.outputs.operational-healthy }}
+          LAUNCH_READY: ${{ needs.production-health.outputs.launch-ready }}
+        run: |
+          echo "operationalHealthy: ${OPERATIONAL_HEALTHY:-unverified}"
+          echo "launchReady: ${LAUNCH_READY:-unverified}"
+          if [ "$OPERATIONAL_HEALTHY" != "true" ] || [ "$LAUNCH_READY" != "true" ]; then
+            echo "Launch remains blocked. Operational health alone does not authorize customer launch."
+            exit 1
+          fi

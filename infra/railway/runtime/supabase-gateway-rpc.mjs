@@ -230,9 +230,10 @@ export function createGatewayRpc(config) {
         if (signal.aborted) { cancel(response); throw new GatewayError('gateway_deadline_exceeded', 503, true); }
         if (response?.redirected || (response?.url && response.url !== url)) { cancel(response); throw new GatewayError('gateway_invalid_response', 503, true); }
         if (!response?.ok) {
-          if(['reserve','claim'].includes(rpcOperation)&&/^application\/json(?:\s*;|$)/i.test(response?.headers?.get('content-type')||'')){
+          if(['reserve','claim','lookupQuote'].includes(rpcOperation)&&/^application\/json(?:\s*;|$)/i.test(response?.headers?.get('content-type')||'')){
             const failure=await jsonResponse(response,8192,signal);
             if(['gateway_customer_limit','gateway_key_limit'].includes(failure?.message))throw new GatewayError(failure.message,402,false);
+            if(failure?.message==='gateway_idempotency_conflict')throw new GatewayError('gateway_idempotency_conflict',409,false);
           }
           cancel(response); // Never parse/echo database messages, HTML or upstream credential errors.
           const invalidOwner = auth && [401, 403].includes(response?.status);
@@ -303,6 +304,26 @@ export function createGatewayRpc(config) {
       const context = Object.freeze({ project: 'apiwild', billingMode, customerId: user.id });
       owners.set(context, { owner: billingMode + ':supabase:' + user.id, expires: performance.now() + ownerTtlMs });
       return context;
+    },
+    async lookupQuote(context, raw) {
+      const meta=owner(context);
+      strictObject(raw,['keyId','requestKey','payloadHash','capability','model']);
+      if(raw.keyId!==null)id(raw.keyId);
+      text(raw.requestKey,100,/^[A-Za-z0-9_-]{16,100}$/);text(raw.payloadHash,64,HASH);text(raw.model,160);
+      if(!CAPABILITIES.includes(raw.capability))throw new GatewayError('gateway_invalid_input',400);
+      if(meta.keyId&&(raw.keyId!==meta.keyId||raw.capability!==meta.capability))throw new GatewayError('gateway_key_scope_mismatch',403);
+      rejectPrivate(raw);
+      const headers={apikey:secret.value,'content-type':'application/json',accept:'application/json','content-profile':'public'};
+      if(secret.legacy)headers.authorization='Bearer '+secret.value;
+      const value=await request(SUPABASE_ORIGIN+'/rest/v1/rpc/apiwild_gateway_quote_lookup',headers,
+        JSON.stringify({p_owner:meta.owner,p_key_id:raw.keyId,p_request_key:raw.requestKey,p_payload_hash:raw.payloadHash,p_capability:raw.capability,p_model:raw.model}),rpcTimeoutMs,8192,false,'lookupQuote');
+      try{
+        strictObject(value,['found','quote']);if(typeof value.found!=='boolean')throw Error();
+        if(!value.found){if(Object.hasOwn(value,'quote'))throw Error();return null;}
+        const q=value.quote;strictObject(q,['providerBudgetId','model','rateVersion','reservedUsdMicros','reservedCnyMicros']);
+        if(q.model!==raw.model)throw Error();
+        reserveInput({...q,...raw});rejectPrivate(q);return deepFreeze({...q});
+      }catch{throw new GatewayError('gateway_invalid_response',503,true);}
     },
     reserve(context, raw) {
       const meta = owner(context); const input = reserveInput(raw);

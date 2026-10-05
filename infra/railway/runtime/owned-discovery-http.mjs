@@ -22,43 +22,62 @@ export const isOwnedDiscoverySnapshot = value => snapshots.has(value);
 export const isOwnedDiscoveryHttp = value => adapters.has(value);
 export const isOwnedDiscoveryPath = value => typeof value === 'string' && paths.includes(value.split('?')[0]);
 
-export function createOwnedDiscoverySnapshot({catalog, routes = [], rateVersion = 'inactive', deploymentCommit = null}) {
+export function createOwnedDiscoverySnapshot({catalog, routes = [], rateVersion = 'inactive', deploymentCommit = null, tierPolicy}) {
   if (!Array.isArray(catalog?.models) || catalog.models.length > 2000 || !Array.isArray(routes) || routes.length > 1000) throw Error('Invalid discovery catalogue.');
   text(rateVersion);
-  const pricing = createRetailTokenPricing({models: catalog.models, rateVersion});
+  const pricing = createRetailTokenPricing({models: catalog.models, rateVersion, tierPolicy});
   const seen = new Set();
   const models = catalog.models.filter(row => row.apiwild_selling_price?.approved === true).map(row => {
     const id = text(row.model_name), p = row.apiwild_selling_price;
     if (seen.has(id) || p.currency !== 'USD' || p.unit !== 'per_million_tokens') throw Error('Invalid discovery catalogue.');
     seen.add(id);
+    const tier = raw => raw == null ? null : Object.fromEntries(['threshold_input_tokens','input','output','cache_read','cache_write']
+      .filter(key => Object.hasOwn(raw, key)).map(key => [key, key === 'threshold_input_tokens' ? exactInteger(raw[key],1,10000000) : rate(raw[key])]));
     return {id, name: id, creator: text(row.creator), pricing: {
       currency: 'USD', unit: 'per_million_tokens', input: rate(p.input), output: rate(p.output),
       processing: text(p.processing), inputCache: text(p.input_cache),
       // Conditional rates are advertised only as references, never selected by
       // this read-only API or represented as an active tariff.
       conditionalPricing: Boolean(p.peak || p.long_context || p.tier_schedule),
-    }, callable: false, capabilities: []};
+      peak: tier(p.peak), longContext: tier(p.long_context), tierSchedule: p.tier_schedule == null ? null : text(p.tier_schedule),
+    }, callable: false, capabilities: [], supportsTools: false, toolCapabilities: []};
   });
   const byId = new Map(models.map(row => [row.id, row]));
-  const active = new Set();
+  const active = new Set(), configured = [];
   for (const route of routes) {
     const model = byId.get(route.model);
     if (!model || !pricing.models.includes(route.model) || !capabilities.includes(route.capability)) throw Error('Unverified discovery route.');
     exactInteger(route.maxOutputTokens, 1, 32768);
+    if (route.supportsTools !== undefined && typeof route.supportsTools !== 'boolean') throw Error('Unverified discovery route.');
     const key = route.model + ':' + route.capability;
     if (active.has(key)) throw Error('Duplicate discovery route.');
-    active.add(key); model.callable = true; model.capabilities.push(route.capability);
+    active.add(key);
+    configured.push(Object.freeze({model:route.model,capability:route.capability,supportsTools:route.supportsTools === true,
+      conditional:model.pricing.processing === 'off_peak'}));
   }
-  const ready = Object.fromEntries([...capabilities, 'voice', 'transcribe', 'speak'].map(mode => [mode, routes.some(route => route.capability === mode)]));
+  freeze(models); Object.freeze(configured);
   const shared = {schemaVersion: 1, authority: 'apiwild-owned-runtime'};
-  const snapshot = freeze({
-    catalog: {...shared, source: 'apiwild-approved-retail', count: models.length, models},
-    config: {...shared, deploymentCommit: typeof deploymentCommit === 'string' && /^[a-f0-9]{40}$/.test(deploymentCommit) ? deploymentCommit : null,
-      enabled: routes.length > 0, inferenceConfigured: routes.length > 0,
-      ready, currency: 'usd', rateVersion, streaming: false, externalTools: false, models},
-    v1Models: {object: 'list', data: models.map(model => ({id: model.id, object: 'model', owned_by: model.creator,
-      available: model.callable, pricing: model.pricing})), rate_version: rateVersion, inference_available: routes.length > 0},
-  });
+  const commit = typeof deploymentCommit === 'string' && /^[a-f0-9]{40}$/.test(deploymentCommit) ? deploymentCommit : null;
+  // A running process can outlive its accepted conditional-price window. Read
+  // availability afresh without choosing a tariff or changing stored requests.
+  const read = () => {
+    const eligible = configured.filter(route => !route.conditional || tierPolicy?.canAdmit(route.model));
+    const current = models.map(model => {
+      const routes = eligible.filter(route => route.model === model.id);
+      const toolCapabilities = routes.filter(route => route.supportsTools).map(route => route.capability);
+      return {...model,callable:routes.length > 0,capabilities:routes.map(route=>route.capability),supportsTools:toolCapabilities.length > 0,toolCapabilities};
+    });
+    const ready = Object.fromEntries([...capabilities, 'voice', 'transcribe', 'speak'].map(mode => [mode, eligible.some(route => route.capability === mode)]));
+    return freeze({
+      catalog: {...shared, source: 'apiwild-approved-retail', count: current.length, models:current},
+      config: {...shared, deploymentCommit:commit, enabled:eligible.length > 0, inferenceConfigured:eligible.length > 0,
+        ready,currency:'usd',rateVersion,streaming:true,streamingMode:'buffered-after-settlement',functionCalling:true,
+        nativeStreaming:false,externalTools:false,models:current},
+      v1Models: {object:'list',data:current.map(model=>({id:model.id,object:'model',owned_by:model.creator,
+        available:model.callable,supportsTools:model.supportsTools,pricing:model.pricing})),rate_version:rateVersion,inference_available:eligible.length > 0},
+    });
+  };
+  const snapshot = Object.freeze({read,get catalog(){return read().catalog;},get config(){return read().config;},get v1Models(){return read().v1Models;}});
   snapshots.add(snapshot);
   return snapshot;
 }
@@ -75,7 +94,8 @@ export function createOwnedDiscoveryHttp({snapshot}) {
     if (!paths.includes(req.url)) return send(400, {error: 'Invalid discovery path.'});
     if (!['GET', 'HEAD'].includes(req.method)) return send(405, {error: 'Read-only discovery route.'});
     if (req.headers['transfer-encoding'] || (req.headers['content-length'] !== undefined && req.headers['content-length'] !== '0')) return send(400, {error: 'Discovery requests must not have a body.'});
-    return send(200, req.url === '/api/models' ? snapshot.catalog : snapshot.config);
+    const current = snapshot.read();
+    return send(200, req.url === '/api/models' ? current.catalog : current.config);
   }});
   adapters.add(adapter); return adapter;
 }

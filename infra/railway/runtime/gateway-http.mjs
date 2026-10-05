@@ -1,4 +1,5 @@
 import {Readable} from 'node:stream';
+import {pipeline} from 'node:stream/promises';
 import {isGatewayIngress} from './gateway-ingress.mjs';
 import {isOwnedDiscoverySnapshot} from './owned-discovery-http.mjs';
 const instances=new WeakSet();
@@ -13,7 +14,8 @@ export function createGatewayHttp({ingress,discovery}={}){
   const controller=new AbortController();req.once('aborted',()=>controller.abort());res.once('close',()=>{if(!res.writableEnded)controller.abort();});req.once('error',()=>controller.abort());
   try{const headers=new Headers();for(const [name,value]of Object.entries(req.headers))if(value!==undefined)headers.set(name,Array.isArray(value)?value.join(','):value);
    const result=await ingress.handle(new Request('https://apiwild.com'+req.url,{method:req.method,headers,signal:controller.signal,...(!['GET','HEAD'].includes(req.method)?{body:Readable.toWeb(req),duplex:'half'}:{})}));
-   if(!res.destroyed){res.writeHead(result.status,Object.fromEntries(result.headers));res.end(await result.text());}
+   if(!res.destroyed){res.writeHead(result.status,Object.fromEntries(result.headers));if(result.body)await pipeline(Readable.fromWeb(result.body),res,{signal:controller.signal});else res.end();}
+   else await result.body?.cancel().catch(()=>{});
   }catch{if(!res.headersSent&&!res.destroyed)send(503,{error:'Gateway unavailable.',automaticRetry:false});}finally{req.resume();}
  }});instances.add(adapter);return adapter;
 }

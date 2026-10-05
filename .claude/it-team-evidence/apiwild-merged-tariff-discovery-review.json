@@ -1,0 +1,42 @@
+{
+  "task_id": "apiwild-merged-tariff-discovery-review",
+  "status": "passed",
+  "reviewer": "/root/source_launch_audit",
+  "scope": "Independent read-only review of public_status merge resolution against concurrent main b513787: discovery, assembly integration, ingress/HTTP, preparation routing, launch status, operational health and strict launch workflow.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/deepseek-tier-policy.test.mjs infra/railway/tests/deepseek-assembly.test.mjs infra/railway/tests/gateway-quote-lookup.test.mjs infra/railway/tests/owned-discovery-http.test.mjs infra/railway/tests/launch-status.test.mjs tests/owned-health-contract.test.mjs tests/daily-health.test.mjs",
+      "exitCode": 0,
+      "passed": 42
+    }
+  ],
+  "findings": [],
+  "resolved_finding": "Static conditional availability could outlive the accepted tariff window. Worker replaced it with fresh branded discovery projections using the root-reviewed canAdmit gate. Expired/future/near-window DeepSeek models are unavailable without suppressing standard routes or changing settled replay.",
+  "verified": [
+    "Internal DeepSeek tier routes remain distinct; public model/capability entries are deduplicated before discovery.",
+    "Full immutable request tariff version reaches reservation, dispatch and retail settlement.",
+    "Existing DeepSeek replay recovers the trusted quote before clock selection and never redispatches existing work.",
+    "Public discovery and protected model reads use coherent per-response projections and retain owner/key capability boundaries.",
+    "Only approved retail fields cross discovery; supplier routes, credentials and economics remain private.",
+    "Buffered streaming/function-call protocol support does not override configured route availability or strict launch acceptance gates.",
+    "Workflow preserves exact deployment-commit health checks and a separate failing launch-readiness job until recorded acceptance exists."
+  ],
+  "independence": "Reviewer authored the original tariff code and narrow canAdmit helper, so those helper changes were separately reviewed and approved by root. This review covers the other worker's merge/dynamic-discovery integration, with behavior regression tests.",
+  "limitations": [
+    "Local synthetic test review only; no production writes, paid inference or live supplier acceptance performed by this reviewer.",
+    "No assertion that 39 models are callable or that operational health constitutes product launch readiness."
+  ],
+  "file_sha256": {
+    "infra/railway/runtime/owned-discovery-http.mjs": "5411a4aaefc54493e7df25935e91d2ddfa8e1c6048bc5b65c725964b9decb343",
+    "infra/railway/runtime/owned-gateway-assembly.mjs": "4188f70626f7711340c068fef78d61a7e492fb29f3c608df6843d85fb6dc8776",
+    "infra/railway/runtime/gateway-ingress.mjs": "2786a7b05ac59e825ee8aeadf20b07aef2d70a336d2fa2ff8f5b81d227de01d6",
+    "infra/railway/runtime/gateway-http.mjs": "b618474ba270130bd11d3aef59bbb61a85f9c701b2d04ded14a7a9974d5b4740",
+    "infra/railway/preparation-server.mjs": "ca840be1f46404afe5a2a9fe51a4488d7157b5b47735b27f6439a99ce5fa5bc7",
+    "infra/railway/runtime/launch-status.mjs": "287c41298c59ccf00c9795c90cc3e5adba0c04c7f04ad50540d186de6eb91f4d",
+    "scripts/daily-health.mjs": "899b9d50576ae3a7b91b4746aa17fa4c394e798eef3deb03eea971b01c88c2f6",
+    "scripts/owned-health-contract.mjs": "c9237d979c06855ac8c23a2e4fdb81f07f19670689fa4abd80a99f8a86267f45",
+    ".github/workflows/apiwild.yml": "fa182d151352e5581132cb2bb4a4c24fd37eb18a4ca0a47d8ce68d86fb7ccd95",
+    "infra/railway/tests/deepseek-assembly.test.mjs": "6bb42c3b29e64383b16d1cb799e1d71e6f4f97ba68e993b5b52f6cd08a8ee76a",
+    "infra/railway/tests/owned-discovery-http.test.mjs": "cda84c69aa37aca20e976549acde8cd5e379b961fa4967530f59ba123739f48a"
+  }
+}

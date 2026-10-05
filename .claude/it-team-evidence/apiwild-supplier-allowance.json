@@ -1,0 +1,20 @@
+{
+  "task_id": "apiwild-supplier-allowance",
+  "status": "passed",
+  "summary": "Durable supplier allowance outbox, bounded one-order operator and actual-CNY receipt validation implemented and independently reviewed locally.",
+  "checks": [
+    {"command": "node --test infra/railway/tests/supplier-allowance.test.mjs infra/railway/tests/supplier-allowance-operator.test.mjs", "exitCode": 0, "passed": 18},
+    {"command": "node infra/railway/tests/supplier-allowance-postgres.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js", "exitCode": 0, "passed": 13},
+    {"command": "bundled git diff --check", "exitCode": 0}
+  ],
+  "review": {"reviewer": "/root/public_status", "result": "passed", "evidence": ".claude/it-team-evidence/apiwild-supplier-independent-review.json"},
+  "limitations": [
+    "Generated migration is not applied to production. Supabase CLI project list returned authentication unavailable; no login or reset attempted.",
+    "No live activation, customer email, charge, refund or inference performed.",
+    "Accepted exact native customer/package/quota/code mapping and fresh server secrets are required.",
+    "Inference credential must be proven to spend the mapped native customer allowance.",
+    "Supplier debit reader remains unconfigured until an authoritative native-CNY receipt contract is supplied.",
+    "PGlite checks use one in-memory connection; independent-connection production concurrency is not certified.",
+    "Refunds after possible grant suspend API WILD and require native reconciliation; no unsupported supplier revocation API is invented."
+  ]
+}

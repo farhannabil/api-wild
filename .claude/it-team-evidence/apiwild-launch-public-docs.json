@@ -1,0 +1,55 @@
+{
+  "task_id": "apiwild-launch-public-docs",
+  "status": "passed",
+  "summary": "Aligned public copy with one USD wallet, $30 minimum, per-model retail pricing and inactive customer sales/inference; removed obsolete provider, voice, search, fixed retention and three-alias promises.",
+  "files": [
+    "app/content.ts",
+    "app/route-cards.tsx",
+    "app/landing.tsx"
+  ],
+  "checks": [
+    {
+      "command": "node --test tests/auth-callback.test.mjs tests/supabase-client.test.mjs tests/customer-profile.test.mjs tests/owned-key-limits.test.mjs tests/owned-client-config.test.mjs infra/railway/tests/customer-key-rpc.test.mjs infra/railway/tests/workspace-policy.test.mjs",
+      "exitCode": 0,
+      "tests": 37,
+      "passed": 37
+    },
+    {
+      "command": "node --input-type=module - (TypeScript transpile diagnostics for the 3 changed files; React server render of RouteCards; parsed page records and API example against selected model catalogue)",
+      "exitCode": 0,
+      "result": "No syntax diagnostics; exactly one $30 wallet card; inactive labels; API sample parses and model exists."
+    },
+    {
+      "command": "Final applicable unit suite, node --test --test-concurrency=4 (693 tests; explicit PG18 harness excluded)",
+      "exitCode": 0,
+      "tests": 693,
+      "passed": 693
+    }
+  ],
+  "review": {
+    "reviewer": "/root/source_launch_audit",
+    "result": "passed",
+    "note": "Backend worker reviewed public docs; approval confirmed by coordinator. Updated protocol descriptions verified against final runtime."
+  },
+  "limitations": [
+    "Local source and rendering checks only; root controls release and live verification.",
+    "Password reset email delivery, real account switching and browser session restoration were not exercised. No emails, credentials, signups, payments or inference were performed.",
+    "No auth runtime edits. Existing identity/recovery source and tests passed; live owner acceptance still needed.",
+    "A fixed data deletion schedule is not established; obsolete seven-day guarantee removed."
+  ],
+  "reviewedAt": "2026-10-05T09:02:07.241Z",
+  "fileHashes": [
+    {
+      "path": "app/content.ts",
+      "sha256": "117dee37ebf6d3477043418d1f691dfc10013b28e6f8159606063c75b8267104"
+    },
+    {
+      "path": "app/route-cards.tsx",
+      "sha256": "428d88276ac59614405b5be1421b056e0affe66638327732483b5e525f973d4b"
+    },
+    {
+      "path": "app/landing.tsx",
+      "sha256": "af6f1dd5f9ee4867726ec437ff0fdc4a3fa5b00ea9cabbf626518287d573a382"
+    }
+  ]
+}

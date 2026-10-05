@@ -5,16 +5,16 @@ import {readFile} from 'node:fs/promises';
 import {createOwnedDiscoverySnapshot} from '../infra/railway/runtime/owned-discovery-http.mjs';
 
 const commit='a'.repeat(40);
-const model={id:'test-model',name:'Test model',creator:'Test',pricing:{currency:'USD',unit:'per_million_tokens',input:5,output:25},callable:false,capabilities:[]};
+const model={id:'test-model',name:'Test model',creator:'Test',pricing:{currency:'USD',unit:'per_million_tokens',input:5,output:25},callable:false,capabilities:[],supportsTools:false,toolCapabilities:[]};
 const catalog=()=>({schemaVersion:1,authority:'apiwild-owned-runtime',source:'apiwild-approved-retail',count:1,models:[structuredClone(model)]});
 const config=()=>({schemaVersion:1,authority:'apiwild-owned-runtime',deploymentCommit:commit,enabled:false,inferenceConfigured:false,
-  currency:'usd',rateVersion:'inactive',streaming:false,externalTools:false,models:[structuredClone(model)],
+  currency:'usd',rateVersion:'inactive',streaming:true,streamingMode:'buffered-after-settlement',functionCalling:true,nativeStreaming:false,externalTools:false,models:[structuredClone(model)],
   ready:{chat:false,code:false,research:false,voice:false,transcribe:false,speak:false}});
 const fails=(fn,code)=>assert.throws(fn,error=>error.code===code);
 
 test('healthy guarded runtime is distinct from paid launch readiness',()=>{
-  assertLiveness({alive:true,ready:false,phase:'railway-preparation'});
-  for(const value of [{alive:false,ready:false,phase:'railway-preparation'},{alive:true,ready:true,phase:'railway-preparation'},{alive:true,ready:false,phase:'legacy'}]) {
+  assertLiveness({alive:true,ready:false,phase:'launch-preparation'});
+  for(const value of [{alive:false,ready:false,phase:'launch-preparation'},{alive:true,ready:true,phase:'launch-preparation'},{alive:true,ready:false,phase:'legacy'}]) {
     fails(()=>assertLiveness(value),'INVALID_RUNTIME_LIVENESS');
   }
   assertRuntimeConfig(config(),assertModelCatalog(catalog()));

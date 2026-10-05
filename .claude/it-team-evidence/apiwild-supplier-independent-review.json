@@ -1,0 +1,88 @@
+{
+  "task_id": "apiwild-supplier-independent-review",
+  "status": "passed",
+  "summary": "Independent review passed for bounded local supplier allowance, actual-debit reconciliation contract, one-order operator and un-applied generated migration after tightening owner-reference validation.",
+  "review": {
+    "reviewer": "/root/public_status",
+    "result": "passed"
+  },
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/supplier-allowance.test.mjs infra/railway/tests/supplier-allowance-operator.test.mjs",
+      "exitCode": 0,
+      "tests": 18,
+      "passed": 18
+    },
+    {
+      "command": "node infra/railway/tests/supplier-allowance-postgres.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "exitCode": 0,
+      "checks": 13,
+      "passed": 13
+    },
+    {
+      "command": "node --input-type=module - (compare generated migration SQL body against reviewed schema)",
+      "exitCode": 0
+    }
+  ],
+  "resolvedFindings": [
+    {
+      "file": "infra/railway/runtime/supplier-debit-reconciliation.mjs",
+      "finding": "Prefix-only owner validation accepted an extra colon suffix.",
+      "resolution": "Fully anchored owner validation and pre-callback rejection regression verified."
+    }
+  ],
+  "reviewedFiles": [
+    {
+      "file": "infra/railway/runtime/supplier-allowance-worker.mjs",
+      "sha256": "1511e1777ec8d30eaff5c0d2c9ea7340c92a03adf678fc8e89a932273c1d6f11"
+    },
+    {
+      "file": "infra/railway/runtime/supplier-debit-reconciliation.mjs",
+      "sha256": "e64f960a2c9164286214f1bef63fd3d23ebda089476ff84ab156fb3d3037b019"
+    },
+    {
+      "file": "infra/railway/runtime/subrouter-saas-activation.mjs",
+      "sha256": "356d44ddadf2b7cbeb9a6cbe0ca567229983408f155f1d67812dd61ab4f9647e"
+    },
+    {
+      "file": "infra/railway/runtime/supplier-allowance.schema.sql",
+      "sha256": "faac94b060ffe18c879abda2132d6819eb61c4af97f5b5bde24192be8f112c9b"
+    },
+    {
+      "file": "infra/railway/runtime/supplier-allowance-operator.mjs",
+      "sha256": "8fda8ebac24317251fd60ea96dd821bc02bdf3acc5a3978a390b4690f0ffe14a"
+    },
+    {
+      "file": "infra/railway/allowance-worker.mjs",
+      "sha256": "782004b9044733735f5f93b4415df1f268f61a2ae7e5edfaeb0734fdaeaf4da6"
+    },
+    {
+      "file": "infra/railway/tests/supplier-allowance.test.mjs",
+      "sha256": "1ae4cc0e49c15e4544a2682b151128afe9909a147497822c27a0c10520eade6b"
+    },
+    {
+      "file": "infra/railway/tests/supplier-allowance-operator.test.mjs",
+      "sha256": "2f59d0c26511f2d730f5926ceff8735356f8f7356a4a7a60d5ba6b7a27a42434"
+    },
+    {
+      "file": "infra/railway/tests/supplier-allowance-postgres.mjs",
+      "sha256": "df2e7bb7ef18c80ab6d1f09dd2a5a7139a03f78716cd6e4272dfbb1a06766243"
+    },
+    {
+      "file": "supabase/migrations/20261005083727_supplier_allowance_outbox.sql",
+      "sha256": "0b1ce2ce162dd667950002ec3edac5320b9169bdf1b49884f67aa45caaa23fef"
+    },
+    {
+      "file": "infra/railway/SUPPLIER_ALLOWANCE_RUNBOOK.md",
+      "sha256": "8e45290f778ea46bf4e1db338013a1c405f75669295bf3e9410f1acd96e3a3de"
+    }
+  ],
+  "limitations": [
+    "This accepts local implementation only; no migration applied, native allowance granted, provider/account credential inspected or actual CNY receipt reconciled.",
+    "PGlite shared-connection repeated claims do not prove independent-transaction concurrency; the runbook explicitly retains that acceptance gate.",
+    "Actual supplier accounting transport remains an injected interface with no fabricated upstream endpoint.",
+    "Per-order native identity/package/quota/code mapping and proof that inference spends that same native account remain operator acceptance inputs.",
+    "Refund/dispute after possible upstream grant moves to manual review and suspends API WILD access; upstream quota reversal is not implemented or claimed.",
+    "Generated migration and schema agree and have no automatic historical-order backfill; verified positive credit plus accepted mapping is required before claiming."
+  ]
+}

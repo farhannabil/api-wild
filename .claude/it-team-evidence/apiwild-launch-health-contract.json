@@ -1,0 +1,57 @@
+{
+  "task_id": "apiwild-launch-health-contract",
+  "status": "passed",
+  "summary": "Read-only operational health and explicit launch readiness now use the owned runtime metadata. Daily health no longer calls a maintenance mutation or requires an operations secret. CI keeps a separately failing launch gate until both observed operational health and readiness pass.",
+  "files": [
+    "scripts/daily-health.mjs",
+    "tests/daily-health.test.mjs",
+    ".github/workflows/apiwild.yml"
+  ],
+  "checks": [
+    {
+      "command": "node --test tests/daily-health.test.mjs tests/health-request.test.mjs tests/spf-health.test.mjs",
+      "exitCode": 0,
+      "tests": 15,
+      "passed": 15
+    },
+    {
+      "command": "node --input-type=module - (parse .github/workflows/apiwild.yml with js-yaml; assert strict launch gate and no operations-secret dependency)",
+      "exitCode": 0
+    },
+    {
+      "command": "node --check scripts/daily-health.mjs",
+      "exitCode": 0
+    },
+    {
+      "command": "Final applicable unit suite, node --test --test-concurrency=4 (693 tests; explicit PG18 harness excluded)",
+      "exitCode": 0,
+      "tests": 693,
+      "passed": 693
+    }
+  ],
+  "review": {
+    "reviewer": "/root",
+    "result": "passed",
+    "note": "Coordinator approved health/readiness contract. Workflow extended to 19 focused release test files; strict launch gate preserved and YAML validated."
+  },
+  "limitations": [
+    "No production probe or GitHub workflow execution was performed by this worker.",
+    "Default CLI operational health can exit zero for an intentionally blocked launch, but always prints launchReady:false and LAUNCH BLOCKED; --require-launch-ready and the separate CI job fail in that state.",
+    "Monitoring checks do not prove real inbox delivery, customer flows, payment acceptance or provider debit reconciliation."
+  ],
+  "reviewedAt": "2026-10-05T09:02:07.247Z",
+  "fileHashes": [
+    {
+      "path": "scripts/daily-health.mjs",
+      "sha256": "f7e4f13745ee8cab2e514146db3bfbe9a0c9eecbd44a4bfd4b924a750d26416e"
+    },
+    {
+      "path": "tests/daily-health.test.mjs",
+      "sha256": "14f8f1cde9a912568bb918a6d3e6ae4a5918a6d316c5f73c9857e34212c74822"
+    },
+    {
+      "path": ".github/workflows/apiwild.yml",
+      "sha256": "cc92e1cd4fed8b19781c623d0c5e0aa122fb9995566f4cd63b5692460693bca6"
+    }
+  ]
+}

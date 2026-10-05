@@ -37,8 +37,9 @@ function fixture(extra={}){
     supabaseOrigin:SUPABASE_ORIGIN,supabaseSecretKey:'sb_secret_OFFLINEFIXTURENOTAREALKEY',nowSeconds:()=>now,timeoutMs:1000,rpcTimeoutMs:500,bodyTimeoutMs:500,fetchImpl,...extra};
   return {ingress:createStripeWebhookIngress(config),config,calls,objects,facts};
 }
-async function server(t,ingress){
+async function server(t,ingress,onResponse){
   const s=createPreparationServer(ingress===undefined?{}:{stripeWebhookIngress:ingress});
+  if(onResponse)s.on('request',(_request,response)=>response.once('finish',()=>onResponse(response.statusCode)));
   await new Promise((resolve,reject)=>{s.once('error',reject);s.listen(0,'127.0.0.1',resolve);});
   t.after(()=>new Promise(resolve=>{s.closeAllConnections();s.close(resolve);}));return s.address().port;
 }
@@ -95,11 +96,28 @@ await test('method, exact path/query/encoding, content-type/encoding, duplicate 
   }assert.equal(f.calls.length,0);
 });
 await test('empty/oversized declared and actual/chunked body rejects before Stripe read',async t=>{
-  const f=fixture(),port=await server(t,f.ingress),raw=envelope();
-  for(const [value,extra] of [[{...raw,raw:Buffer.alloc(0)},{}], [{...raw,raw:Buffer.alloc(1000001)},{}],
-    [raw,{headers:{'content-type':'application/json','stripe-signature':raw.signature,'content-length':'1000001'}}],
-    [{...raw,raw:Buffer.alloc(1000001)},{headers:{'content-type':'application/json','stripe-signature':raw.signature,'transfer-encoding':'chunked'}}]])assert.notEqual((await call(port,value,extra)).status,200);
-  assert.equal(f.calls.length,0);
+  let completed;
+  const f=fixture(),port=await server(t,f.ingress,status=>completed?.(status)),raw=envelope();
+  const cases=[['empty',{...raw,raw:Buffer.alloc(0)},{},400],
+    ['oversized actual',{...raw,raw:Buffer.alloc(1000001)},{},413],
+    ['oversized declared',raw,{headers:{'content-type':'application/json','stripe-signature':raw.signature,'content-length':'1000001'}},413],
+    ['oversized chunked',{...raw,raw:Buffer.alloc(1000001)},{headers:{'content-type':'application/json','stripe-signature':raw.signature,'transfer-encoding':'chunked'}},413]];
+  for(const [name,value,extra,expected] of cases){
+    let timer;
+    const rejected=new Promise((resolve,reject)=>{completed=resolve;timer=setTimeout(()=>reject(new Error(name+': rejection deadline')),3000);});
+    try{
+      // An early Connection: close with unread upload bytes can reach Windows
+      // as ECONNRESET. Accept it only after independently observing the exact
+      // server rejection; a crash/reset alone must never satisfy this check.
+      const client=call(port,value,extra).catch(error=>{if(error.code!=='ECONNRESET')throw error;return {reset:true};});
+      const [response,status]=await Promise.all([client,rejected]);
+      assert.equal(status,expected,name);
+      if(!response.reset)assert.equal(response.status,expected,name);
+      assert.equal(f.calls.length,0,name+': no Stripe or ledger access');
+    }finally{clearTimeout(timer);completed=undefined;}
+  }
+  // All early rejects release admission and leave the signed path operational.
+  assert.equal((await call(port)).status,200);assert.equal(f.calls.length,4);
 });
 await test('unregistered order/RPC failure or forged receipt cannot acknowledge and cannot leak upstream secrets',async t=>{
   for(const response of [new Response(JSON.stringify({message:'stripe_order_unregistered '+secret}),{status:400,headers:{'content-type':'application/json'}}),

@@ -19,7 +19,7 @@ function assertPublic(value) {
 }
 
 export function assertLiveness(value) {
-  requireValue(value?.alive === true && value.ready === false && value.phase === 'railway-preparation', 'INVALID_RUNTIME_LIVENESS');
+  requireValue(value?.alive === true && value.ready === false && value.phase === 'launch-preparation', 'INVALID_RUNTIME_LIVENESS');
 }
 
 export function assertModelCatalog(value) {
@@ -33,7 +33,12 @@ export function assertModelCatalog(value) {
     ids.add(model.id);
     requireValue(typeof model.callable === 'boolean' && Array.isArray(model.capabilities)
       && model.capabilities.every(item => capabilities.includes(item))
+      && new Set(model.capabilities).size === model.capabilities.length
       && model.callable === (model.capabilities.length > 0), 'INVALID_MODEL_AVAILABILITY');
+    requireValue(typeof model.supportsTools === 'boolean' && Array.isArray(model.toolCapabilities)
+      && model.toolCapabilities.every(item => model.capabilities.includes(item))
+      && new Set(model.toolCapabilities).size === model.toolCapabilities.length
+      && model.supportsTools === (model.toolCapabilities.length > 0), 'INVALID_TOOL_AVAILABILITY');
     requireValue(model.pricing?.currency === 'USD' && model.pricing.unit === 'per_million_tokens'
       && [model.pricing.input, model.pricing.output].every(rate => typeof rate === 'number' && Number.isFinite(rate) && rate >= 0), 'INVALID_RETAIL_PRICE');
   }
@@ -45,7 +50,8 @@ export function assertRuntimeConfig(value, catalog, expectedCommit) {
     && sha.test(value.deploymentCommit || '') && typeof value.enabled === 'boolean'
     && value.inferenceConfigured === value.enabled && value.currency === 'usd'
     && typeof value.rateVersion === 'string' && value.rateVersion.length > 0
-    && value.streaming === false && value.externalTools === false, 'INVALID_OWNED_RUNTIME');
+    && value.streaming === true && value.streamingMode === 'buffered-after-settlement'
+    && value.functionCalling === true && value.nativeStreaming === false && value.externalTools === false, 'INVALID_OWNED_RUNTIME');
   if (expectedCommit !== undefined) {
     requireValue(sha.test(expectedCommit || ''), 'INVALID_EXPECTED_COMMIT');
     requireValue(value.deploymentCommit === expectedCommit, 'EXPECTED_DEPLOYMENT_NOT_ACTIVE');

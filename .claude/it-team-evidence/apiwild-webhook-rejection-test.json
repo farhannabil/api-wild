@@ -1,0 +1,44 @@
+{
+  "task_id": "apiwild-webhook-rejection-test",
+  "status": "passed",
+  "summary": "Windows ECONNRESET during early oversized-upload rejection reproduced on isolated attempt 6. Test now accepts this transport outcome only after exact independently observed server rejection, preserving no-upstream-call and recovered signed-path assertions. Runtime unchanged.",
+  "files": [
+    "infra/railway/tests/stripe-webhook-ingress.test.mjs"
+  ],
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/stripe-webhook-ingress.test.mjs",
+      "exitCode": 0,
+      "tests": 14,
+      "passed": 14
+    },
+    {
+      "command": "20 bounded repetitions of node --test --test-name-pattern empty/oversized infra/railway/tests/stripe-webhook-ingress.test.mjs",
+      "exitCode": 0,
+      "repetitions": 20,
+      "failures": 0
+    },
+    {
+      "command": "Final applicable unit suite, node --test --test-concurrency=4 (693 tests; explicit PG18 harness excluded)",
+      "exitCode": 0,
+      "tests": 693,
+      "passed": 693
+    }
+  ],
+  "review": {
+    "reviewer": "/root",
+    "result": "passed",
+    "note": "Coordinator independently reviewed exact server rejection guard, zero downstream calls and successful subsequent signed request. No findings."
+  },
+  "limitations": [
+    "Offline loopback only. Production delivery and payment correctness are not inferred.",
+    "No runtime changes; other authentication, signature and HTTP response assertions remain strict."
+  ],
+  "reviewedAt": "2026-10-05T09:02:07.251Z",
+  "fileHashes": [
+    {
+      "path": "infra/railway/tests/stripe-webhook-ingress.test.mjs",
+      "sha256": "081a79e49e5580e291f3393f84eb90af4ec7ea1b8506f4183788145e134b6b59"
+    }
+  ]
+}
