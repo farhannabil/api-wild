@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createCustomerKeyRpc, CUSTOMER_KEY_RPC_NAMES } from '../runtime/customer-key-rpc.mjs';
-import { SUPABASE_ORIGIN } from '../runtime/supabase-gateway-rpc.mjs';
+import { SUPABASE_ORIGIN, GatewayError } from '../runtime/supabase-gateway-rpc.mjs';
 const CUSTOMER = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const OTHER = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -78,4 +78,21 @@ test('null key limits and never expiry roundtrip without sentinel values',async(
 test('revoked never-expiring key cannot authenticate on a fresh request',async()=>{
  const f=fixture({handler:()=>Response.json(metadata({expires_at:null,daily_limit_usd_micros:null,total_limit_usd_micros:null,revoked_at:new Date().toISOString()}))});
  await assert.rejects(f.client.authenticate({authorization:'Bearer '+TOKEN,capability:'chat'}));
+});
+const keyDenial = () => ({code:'P0001',message:'gateway_key_unavailable',details:null,hint:null});
+const authenticate = f => f.client.authenticate({authorization:'Bearer '+TOKEN,capability:'chat'});
+const unconfirmed = error => error instanceof GatewayError && error.code==='customer_key_rpc_unconfirmed' && error.status===503 && error.ambiguous===true && !error.message.includes(SECRET) && !error.message.includes(TOKEN);
+test('canonical PostgREST authentication denial is definite401 with no raw echo or retry',async()=>{
+  const f=fixture({handler:()=>Response.json(keyDenial(),{status:400})});
+  await assert.rejects(authenticate(f),error=>error instanceof GatewayError&&error.code==='gateway_key_unavailable'&&error.status===401&&error.ambiguous===false&&!error.message.includes(TOKEN));assert.equal(f.calls.length,1);assert.equal(f.ownerCalls,0);
+});
+test('the same SQL denial on issue/list/revoke remains an ambiguous503',async()=>{
+  const f=fixture({handler:()=>Response.json(keyDenial(),{status:400})});for(const operation of [()=>issue(f),()=>f.client.list({authorization:SESSION}),()=>f.client.revoke({authorization:SESSION,keyId:ID})])await assert.rejects(operation(),unconfirmed);assert.equal(f.calls.length,3);
+});
+test('transientHTTP, wrongcodes, malformed and secret-bearing denials never become401',async()=>{
+  const cases=[()=>Response.json(keyDenial(),{status:500}),()=>Response.json(keyDenial(),{status:429}),()=>Response.json({...keyDenial(),code:'42501'},{status:400}),()=>Response.json({...keyDenial(),message:'gateway_key_unavailable extra'},{status:400}),()=>Response.json({...keyDenial(),hint:SECRET},{status:400}),()=>Response.json({...keyDenial(),details:TOKEN},{status:400}),()=>Response.json({...keyDenial(),unexpected:true},{status:400}),()=>Response.json([keyDenial()],{status:400}),()=>new Response('{',{status:400,headers:{'content-type':'application/json'}}),()=>new Response(JSON.stringify(keyDenial()),{status:400,headers:{'content-type':'text/plain'}}),()=>new Response(new Uint8Array([255]),{status:400,headers:{'content-type':'application/json'}}),()=>{throw new GatewayError('gateway_key_unavailable',401,false);}];
+  for(const handler of cases){const f=fixture({handler});await assert.rejects(authenticate(f),unconfirmed);assert.equal(f.calls.length,1);}
+});
+test('authentication denial body is bounded even when chunked and rejects oversized declaredlength',async()=>{
+  for(const [body,headers] of [[JSON.stringify({...keyDenial(),padding:'x'.repeat(4097)}),{'content-type':'application/json'}],[JSON.stringify(keyDenial()),{'content-type':'application/json','content-length':'4097'}]]){const f=fixture({handler:()=>new Response(body,{status:400,headers})});await assert.rejects(authenticate(f),unconfirmed);assert.equal(f.calls.length,1);}
 });

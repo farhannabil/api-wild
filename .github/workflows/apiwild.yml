@@ -35,6 +35,7 @@ jobs:
         run: >-
           node --test
           infra/railway/tests/gateway-ingress.test.mjs
+          infra/railway/tests/customer-key-rpc.test.mjs
           infra/railway/tests/research-tools-ingress.test.mjs
           infra/railway/tests/owned-gateway-assembly.test.mjs
           infra/railway/tests/supabase-gateway-rpc.test.mjs

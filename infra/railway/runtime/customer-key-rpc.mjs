@@ -27,22 +27,37 @@ export function createCustomerKeyRpc(config) {
   const timeout = exactInteger(config.timeoutMs ?? 5000, 1, 10000);
   const contexts = new WeakMap();
   async function rpc(operation, parameters) {
+    let verifiedKeyDenial = false;
     try {
       return await withDeadline(async signal => {
         const response = await fetchImpl(SUPABASE_ORIGIN + '/rest/v1/rpc/' + CUSTOMER_KEY_RPC_NAMES[operation], { method: 'POST', headers: { apikey: secret, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(parameters), redirect: 'error', cache: 'no-store', signal });
-        if (!response.ok || response.redirected || !/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') || '')) reject('customer_key_rpc_unconfirmed', 503, true);
+        // Only the canonical authentication denial can become a definite 401.
+        const denialCandidate = operation === 'authenticate' && response.status === 400;
+        if ((!response.ok && !denialCandidate) || response.redirected || !/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') || '')) reject('customer_key_rpc_unconfirmed', 503, true);
+        const maxBytes = denialCandidate ? 4096 : 131072;
+        const length = response.headers.get('content-length');
+        if (denialCandidate && length !== null && (!/^\d+$/.test(length) || Number(length) > maxBytes)) reject('customer_key_rpc_unconfirmed', 503, true);
         const reader = response.body?.getReader(); if (!reader) reject('customer_key_rpc_unconfirmed', 503, true);
         const chunks = []; let bytes = 0;
         const abort = () => { void reader.cancel().catch(() => {}); };
         signal.addEventListener('abort', abort, { once: true });
         try {
-          for (;;) { signal.throwIfAborted(); const next = await reader.read(); if (next.done) break; bytes += next.value.byteLength; if (bytes > 131072) reject('customer_key_rpc_unconfirmed', 503, true); chunks.push(next.value); }
-          signal.throwIfAborted(); const raw = Buffer.concat(chunks).toString('utf8');
+          for (;;) { signal.throwIfAborted(); const next = await reader.read(); if (next.done) break; bytes += next.value.byteLength; if (bytes > maxBytes) reject('customer_key_rpc_unconfirmed', 503, true); chunks.push(next.value); }
+          signal.throwIfAborted(); const buffer = Buffer.concat(chunks), raw = denialCandidate ? new TextDecoder('utf-8', {fatal:true}).decode(buffer) : buffer.toString('utf8');
           if (raw.includes(secret) || /aw_(?:live|test)_[a-f0-9]{64}/.test(raw)) reject('customer_key_private_response_rejected', 503, true);
-          return JSON.parse(raw);
+          const value = JSON.parse(raw);
+          if (denialCandidate) {
+            strictObject(value, ['code', 'message', 'details', 'hint']);
+            if (value.code !== 'P0001' || value.message !== 'gateway_key_unavailable' || (value.details !== undefined && value.details !== null) || (value.hint !== undefined && value.hint !== null)) reject('customer_key_rpc_unconfirmed', 503, true);
+            verifiedKeyDenial = true; reject('gateway_key_unavailable', 401, false);
+          }
+          return value;
         } finally { signal.removeEventListener('abort', abort); void reader.cancel().catch(() => {}); }
       }, timeout);
-    } catch { reject('customer_key_rpc_unconfirmed', 503, true); }
+    } catch (error) {
+      if (verifiedKeyDenial && operation === 'authenticate' && error instanceof GatewayError && error.code === 'gateway_key_unavailable' && error.status === 401 && error.ambiguous === false) throw error;
+      reject('customer_key_rpc_unconfirmed', 503, true);
+    }
   }
   async function owner(authorization) {
     const context = await verifyOwner({ authorization });
