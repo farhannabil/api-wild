@@ -1,0 +1,39 @@
+{
+  "task_id": "apiwild-expiry-packaging-20261005",
+  "status": "passed",
+  "summary": "Package the independently reviewed one-request reservation expiry CLI inside the existing closed Railway artifact without starting it.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/preparation.test.mjs infra/railway/tests/container-context.test.mjs",
+      "exitCode": 0,
+      "passed": 51
+    },
+    {
+      "command": "Independent reviewer: node --test infra/railway/tests/container-context.test.mjs",
+      "exitCode": 0,
+      "passed": 4
+    },
+    {
+      "command": "Parse CI YAML and verify 21 focused runtime test paths exist, including the expiry operator; strict launch jobs preserved",
+      "exitCode": 0
+    }
+  ],
+  "review": {
+    "reviewer": "/root/source_launch_audit",
+    "result": "passed",
+    "findings": [],
+    "receipt": "Peer inspected exact three-file diff: bounded allowlist and COPY, complete three-entrypoint graph, preserved exclusions and preparation CMD/nonroot user; no schedule/enable flag/launch change.",
+    "workflowReceipt": "Peer /root/source_launch_audit independently confirmed exactly one test path addition; no gates/settings changed; approved."
+  },
+  "sourceHashes": {
+    "Dockerfile.railway": "8e747fe3b11b52f58fba9dd398c7e70e84089d295e467c42d4447b16bf4efe35",
+    "Dockerfile.railway.dockerignore": "9a44856c8ca9dacf0d04e7d4baf1d447771945a26d230e8dfa9490af7f688a18",
+    "infra/railway/tests/container-context.test.mjs": "9f5a2fba6c55ebeb51d3663dadb244f2d71584735480c81487cc381d0f69c8c0",
+    ".github/workflows/apiwild.yml": "1ea044fb1e0862ee6bdb1835ef80c3b6ac1162c44e9e3ef274db09f22b00e642"
+  },
+  "limitations": [
+    "Actual Railway Docker build/deployment is owned by the release coordinator.",
+    "Operator remains disabled by default and does not run at startup.",
+    "No production request, supplier call, financial operation, or email occurred."
+  ]
+}

@@ -24,10 +24,10 @@ test('closed Docker context includes the catalogue imported by the application',
   assert.ok(ignore.includes('!data/subrouter-catalogue.json'));
 });
 
-test('closed Docker context and runtime contain the complete preparation import graph', async () => {
+test('closed Docker context and runtime contain preparation and operator import graphs', async () => {
   const ignore = (await readFile(new URL('Dockerfile.railway.dockerignore', root), 'utf8')).split(/\r?\n/);
   const docker = await readFile(new URL('Dockerfile.railway', root), 'utf8');
-  const queue = ['infra/railway/preparation-server.mjs']; const visited = new Set();
+  const queue = ['infra/railway/preparation-server.mjs', 'infra/railway/allowance-worker.mjs', 'infra/railway/reservation-expiry.mjs']; const visited = new Set();
   while (queue.length) {
     const file = queue.shift(); if (visited.has(file)) continue; visited.add(file);
     assert.ok(ignore.includes('!' + file), 'Missing build-context source: ' + file);

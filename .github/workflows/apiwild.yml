@@ -45,6 +45,7 @@ jobs:
           infra/railway/tests/launch-status.test.mjs
           infra/railway/tests/supplier-allowance.test.mjs
           infra/railway/tests/supplier-allowance-operator.test.mjs
+          infra/railway/tests/reservation-expiry-operator.test.mjs
           infra/railway/tests/deepseek-tier-policy.test.mjs
           infra/railway/tests/deepseek-assembly.test.mjs
           infra/railway/tests/gateway-quote-lookup.test.mjs

@@ -6,7 +6,7 @@ const paths = new Set(['/health/live', '/health/ready']);
 const headers = {'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'};
 const remainingAcceptance = Object.freeze([
   'customer-session-acceptance', 'payment-lifecycle-acceptance',
-  'supplier-allowance-acceptance', 'supplier-debit-acceptance',
+  'supplier-budget-acceptance', 'supplier-debit-acceptance',
 ]);
 export function createLaunchStatusHttp({sourceCommit, accountConfigured = false, billingConfigured = false, inferenceConfigured = false, checkoutEnabled = false} = {}) {
   const source = /^[a-f0-9]{40}$/.test(sourceCommit ?? '') ? sourceCommit : null;
