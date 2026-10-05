@@ -1,0 +1,13 @@
+{
+  "task_id": "apiwild-research-source-diagnostics-20261005",
+  "status": "passed",
+  "summary": "Fixed-category research-source failure observation without customer query, URL, content, credentials or raw error logging.",
+  "checks": [
+    {"command": "node --test tests/research-tools.test.mjs tests/owned-research-tools.test.mjs infra/railway/tests/research-tools-ingress.test.mjs", "exitCode": 0, "assertions": 37},
+    {"command": "node --check infra/railway/runtime/research-tools.mjs", "exitCode": 0},
+    {"command": "node --check tests/research-tools.test.mjs", "exitCode": 0},
+    {"command": "node --test infra/railway/tests/owned-gateway-assembly.test.mjs", "exitCode": 0, "assertions": 6}
+  ],
+  "review": {"reviewer": "/root/sandbox_matrix_qa", "result": "passed"},
+  "limitations": ["This receipt certifies reviewed diagnostics only; production search failure diagnosis and successful search acceptance are separate.", "No provider calls or paid inference occurred in these tests."]
+}

@@ -266,3 +266,73 @@ test('deadline also bounds a stalled response body', async () => {
   await rejectCode(() => utility.execute({tool: 'search', source: 'wikipedia', query: 'test'}), 'research_tools_source_unavailable', 503);
   assert.equal(cancelled, true);
 });
+
+test('failure diagnostics distinguish transport, response, parser and bounds without source data', async () => {
+  const secret = 'private-query-secret-token';
+  const cases = [
+    {phase: 'dns', reason: 'dns_failure', lookupImpl: async () => {throw Error(secret);}},
+    {phase: 'dns', reason: 'dns_answers', lookupImpl: async () => []},
+    {phase: 'dns', reason: 'dns_answers', lookupImpl: async () => Array(21).fill({address: '208.80.154.224', family: 4})},
+    {phase: 'dns', reason: 'dns_address_denied', lookupImpl: async () => [{address: '127.0.0.1', family: 4}]},
+    {phase: 'transport', reason: 'transport_failure', fetchImpl: async () => {throw Error(secret);}},
+    {phase: 'response', reason: 'response_status', override: {status: 202, ok: false}, status: 202},
+    {phase: 'response', reason: 'response_shape', fetchImpl: async () => null},
+    {phase: 'response', reason: 'response_identity', override: {url: `https://${secret}.com/`}, status: 200},
+    {phase: 'response', reason: 'content_type', override: {headers: new Headers({'content-type': secret})}, status: 200},
+    {phase: 'response', reason: 'body_limit', override: {headers: new Headers({'content-type': 'text/html', 'content-length': '262145'})}, status: 200, code: 'research_tools_too_large', httpStatus: 413},
+    {phase: 'body', reason: 'body_missing', override: {body: null}, status: 200},
+    {phase: 'body', reason: 'body_failure', override: {body: new ReadableStream({start(controller) {controller.error(Error(secret));}})}, status: 200},
+    {phase: 'body', reason: 'body_limit', html: 'x'.repeat(262145), status: 200, code: 'research_tools_too_large', httpStatus: 413},
+    {phase: 'parse', reason: 'challenge', html: `<form id="challenge-form">${secret}</form>`, status: 200},
+    {phase: 'parse', reason: 'unknown_markup', html: `<html>${secret}</html>`, status: 200},
+  ];
+  for (const item of cases) {
+    const events = [];
+    const utility = createResearchTools({observeFailure: event => events.push(event), lookupImpl: item.lookupImpl || publicLookup,
+      fetchImpl: item.fetchImpl || (async url => response(url, null, {headers: new Headers({'content-type': 'text/html'}), body: new Response(item.html || webCard()).body, ...item.override}))});
+    await rejectCode(() => utility.execute({tool: 'search', query: secret}), item.code || 'research_tools_source_unavailable', item.httpStatus || 503);
+    assert.deepEqual(events, [{researchToolFailure: true, source: 'web', phase: item.phase, reason: item.reason, status: item.status ?? null, encoding: 'absent'}]);
+    assert.ok(Object.isFrozen(events[0]));
+    assert.ok(!JSON.stringify(events).includes(secret));
+  }
+});
+
+test('diagnostics sanitize content encoding and malformed source payloads', async () => {
+  for (const [encoding, safe] of [[' GZip ', 'gzip'], ['br', 'br'], ['deflate', 'deflate'], ['identity', 'identity'], ['secret-header-value', 'other']]) {
+    const events = [];
+    const utility = createResearchTools({observeFailure: event => events.push(event), lookupImpl: publicLookup,
+      fetchImpl: async url => response(url, null, {headers: new Headers({'content-type': 'application/json', 'content-encoding': encoding}), body: new Response('{invalid private body').body})});
+    await rejectCode(() => utility.execute({tool: 'search', source: 'wikipedia', query: 'private query'}), 'research_tools_source_unavailable', 503);
+    assert.deepEqual(events, [{researchToolFailure: true, source: 'wikipedia', phase: 'parse', reason: 'invalid_payload', status: 200, encoding: safe}]);
+  }
+});
+
+test('deadline and customer cancellation retain their failure phase with fixed reasons', async () => {
+  for (const phase of ['dns', 'transport', 'body']) {
+    const events = [];
+    const utility = createResearchTools({timeoutMs: 100, observeFailure: event => events.push(event),
+      lookupImpl: phase === 'dns' ? () => new Promise(() => {}) : publicLookup,
+      fetchImpl: phase === 'transport' ? () => new Promise(() => {}) : async url => response(url, null, {body: new ReadableStream({pull() {return new Promise(() => {});}})})});
+    await rejectCode(() => utility.execute({tool: 'search', source: 'wikipedia', query: 'private query'}), 'research_tools_source_unavailable', 503);
+    assert.equal(events.length, 1); assert.equal(events[0].phase, phase); assert.equal(events[0].reason, 'deadline');
+  }
+  const events = [], controller = new AbortController();
+  const utility = createResearchTools({observeFailure: event => events.push(event), lookupImpl: async () => {controller.abort(); return publicLookup();}});
+  await rejectCode(() => utility.execute({tool: 'search', query: 'private query'}, {signal: controller.signal}), 'research_tools_source_unavailable', 503);
+  assert.equal(events.length, 1); assert.equal(events[0].reason, 'cancelled');
+});
+
+test('observers are silent on valid results and cannot change failures by throwing or rejecting', async () => {
+  const events = [];
+  const utility = createResearchTools({observeFailure: event => events.push(event), lookupImpl: publicLookup,
+    fetchImpl: async url => response(url, null, {headers: new Headers({'content-type': 'text/html'}), body: new Response('<div class="no-results">No results found</div>').body})});
+  assert.deepEqual((await utility.execute({tool: 'search', query: 'test'})).results, []);
+  assert.equal((await utility.execute({tool: 'calculate', expression: '1+1'})).result, 2);
+  assert.deepEqual(events, []);
+  for (const observeFailure of [() => {throw Error('observer-secret');}, () => Promise.reject(Error('observer-secret'))]) {
+    const failing = createResearchTools({observeFailure, lookupImpl: publicLookup, fetchImpl: async () => {throw Error('upstream-secret');}});
+    await rejectCode(() => failing.execute({tool: 'search', query: 'private query'}), 'research_tools_source_unavailable', 503);
+  }
+  await new Promise(resolve => setImmediate(resolve));
+  assert.throws(() => createResearchTools({observeFailure: null}), /Invalid research utility configuration/);
+});
