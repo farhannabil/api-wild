@@ -10,7 +10,7 @@ This section supersedes earlier statements about the latest GitHub head and “b
 - Earlier key release `be1efe231fb7bc5bacbfe961b4a700d15534a932` was personally verified ACTIVE/successful on Railway. The nullable Supabase migration, server-only key issuance and workspace controls were verified. The live Account spending setting saved successfully. Deployment of later billing or this wrap-up release must be verified separately.
 - Final source audit found most dirty checkout files already published. An isolated eight-file email/container patch on current main passed 73 focused tests. It adds missing runtime files to the closed website context, packages the existing welcome RPC adapter, bounds Resend receipts and deadlines, and updates worker deployment references. It does not install or enable a worker, send email, change production config, or alter the five newer billing files. Docker is unavailable here; Railway's actual container build remains required.
 - The separate customer-launch chat reported a successful sandbox $30 purchase and local credit projection, and found a refund-validation issue. Those are sandbox/local results, not proof of production payment fulfillment. Read that chat's latest evidence and main before taking over billing.
-- The last personal Railway credential inspection still lacked production Stripe server/signing credentials and a private Subrouter business key. Do not present that old inspection as a fresh current state; reread names/readiness without exposing values. Paid production purchase-to-response acceptance remains unfinished.
+- Railway now visibly lists Stripe server key, webhook secret, credit Price ID and Supabase secret variable names. Their values were not inspected or exposed. The selected Subrouter business key remains absent from the visible service variable list. Paid production purchase-to-response acceptance remains unfinished.
 
 ### Personal Codex connection and Windows transfer
 
@@ -23,6 +23,13 @@ Read [CODEX_SUBROUTER_WINDOWS_HANDOVER.md](CODEX_SUBROUTER_WINDOWS_HANDOVER.md).
 The user asked about his two existing Hostinger VPSs. Their identities, resources, operating systems and access are not yet verified. Current local sub-agents do not automatically migrate or continue after the desktop closes. No persistent remote runner has been installed and no remote jobs are active. The Hostinger VPS connector is not loaded; this Mac config lacks its required MCP registrations. Complete the Hostinger plugin setup and its documented restart/authentication, then inspect both servers before selecting a runner. Do not claim remote continuity, invent server details, copy secrets into repository files, or replace existing VPS workloads.
 
 A future remote runner needs its own authenticated model connection, checked repository access, explicit tasks and durable job/log state. Preserve this repo/Linear evidence first so Windows or a future VPS task can resume without depending on a running Mac session.
+
+## Later publication and connectivity checkpoint — October 5
+
+- Published wrap-up/email release `4928bc969161a2ec640a5cdf11a1c3c61965a00e` is ACTIVE / Deployment successful in Railway. The eight-file packaging change passed 73 local tests; actual live email delivery remains unverified and worker activation was not performed.
+- GitHub main then advanced to `74303cb6b15f2d15d42243499101ce27d7550751` (“Handle canonical Stripe refunds without a livemode field”), changing two refund source/test files. Railway showed that newer deployment BUILDING at inspection. Verify its final health and actual payment ledger before claiming it active.
+- Railway currently shows 14 service variable names including Stripe server key, webhook secret, credit price and Supabase secret. Values were masked and not read. No private Subrouter business-key name appeared in the visible list. Do not repeat the earlier statement that all Stripe credentials are missing.
+- The Mac's global `model_provider=subrouter` was removed after a new-chat send complaint, leaving the optional Subrouter profile/provider available for manual use. Unrelated model/plugin settings were preserved. A default-provider Codex CLI prompt completed with `chat-ok`. The browser bridge reported an unavailable Codex auth token, but that alone did not establish the native UI cause. The new-chat GUI send was not retested here. GEN-31 records the diagnostic and remains open.
 
 ## Historical key-release sync checkpoint
 

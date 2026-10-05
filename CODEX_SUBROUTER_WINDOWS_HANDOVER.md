@@ -23,6 +23,8 @@ The Mac's private checkpoint records are `~/.subrouter/codex-test-checkpoint.jso
 
 For the native Windows app, user settings belong in `%USERPROFILE%\.codex\config.toml`. WSL uses its own Linux config unless `CODEX_HOME` overrides it. Merge settings without duplicate keys or tables, then restart the app. [Official Windows gateway configuration](https://learn.chatgpt.com/docs/enterprise/connect-to-a-gateway#configure-the-windows-app).
 
+The Mac global provider was later returned to OpenAI for current subscription work. Its isolated Subrouter profile and private helper remain available. A default-provider CLI prompt succeeded after that change; a fresh GUI send has not been verified. This does not change the Windows setup and manual-switch test requirements.
+
 ## Portable provider settings
 
 This example uses the environment method. It contains the variable name, never its value:
