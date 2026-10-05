@@ -69,3 +69,13 @@ test('HTTP/oversized/credential-echo responses remain fail closed',async()=>{
     const f=fixture({handler});await assert.rejects(f.client.list({authorization:SESSION}),e=>e.ambiguous&&!e.message.includes(SECRET));assert.equal(f.calls.length,1);
   }
 });
+test('null key limits and never expiry roundtrip without sentinel values',async()=>{
+ const f=fixture();const x=await f.client.issue({authorization:SESSION,scopes:['chat'],dailyLimitUsdMicros:null,totalLimitUsdMicros:null,expiresAt:null});
+ assert.equal(x.metadata.expires_at,null);assert.equal(x.metadata.daily_limit_usd_micros,null);assert.equal(x.metadata.total_limit_usd_micros,null);
+ const g=fixture({handler:()=>Response.json(metadata({expires_at:null,daily_limit_usd_micros:null,total_limit_usd_micros:null}))});
+ const c=await g.client.authenticate({authorization:'Bearer '+TOKEN,capability:'chat'});assert.equal(g.client.assertContext(c,'chat'),c);
+});
+test('revoked never-expiring key cannot authenticate on a fresh request',async()=>{
+ const f=fixture({handler:()=>Response.json(metadata({expires_at:null,daily_limit_usd_micros:null,total_limit_usd_micros:null,revoked_at:new Date().toISOString()}))});
+ await assert.rejects(f.client.authenticate({authorization:'Bearer '+TOKEN,capability:'chat'}));
+});

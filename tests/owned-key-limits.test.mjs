@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {keyLimitMicros,keyExpiry} from '../lib/owned-key-limits.mjs';
+test('no-limit options send null, not zero or an invented large cap',()=>{assert.equal(keyLimitMicros('5',true),null);assert.equal(keyLimitMicros('',true),null);assert.equal(keyLimitMicros('5',false),5000000);assert.equal(keyLimitMicros('25',false),25000000)});
+test('finite key caps reject invalid or fractional-micro amounts',()=>{for(const amount of ['',0,-1,'NaN','Infinity','0.0000001'])assert.throws(()=>keyLimitMicros(amount,false));assert.equal(keyLimitMicros('0.01',false),10000)});
+test('never expires sends null while default expiry remains bounded',()=>{assert.equal(keyExpiry('never',0),null);assert.equal(keyExpiry('30',0),'1970-01-31T00:00:00.000Z');assert.throws(()=>keyExpiry('0',0));});

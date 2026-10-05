@@ -8,13 +8,14 @@ const instances = new WeakSet();
 export function isCustomerKeyRpc(value) { return instances.has(value); }
 export const CUSTOMER_KEY_RPC_NAMES = Object.freeze({ issue: 'apiwild_gateway_key_issue', list: 'apiwild_gateway_key_list', revoke: 'apiwild_gateway_key_revoke', authenticate: 'apiwild_gateway_key_authenticate' });
 const reject = (code = 'customer_key_unavailable', status = 403, ambiguous = false) => { throw new GatewayError(code, status, ambiguous); };
+const limit = value => value === null ? null : exactInteger(value, 0, MAX);
 const hash = value => createHash('sha256').update(value).digest('hex');
 function metadata(value, mode, customerId) {
   strictObject(value, ['id', 'customer_id', 'billing_mode', 'scopes', 'daily_limit_usd_micros', 'total_limit_usd_micros', 'expires_at', 'revoked_at']);
   if (!UUID.test(value.id) || !UUID.test(value.customer_id) || value.billing_mode !== mode || (customerId && customerId !== value.customer_id)) reject('customer_key_invalid_response', 503, true);
   if (!Array.isArray(value.scopes) || value.scopes.length < 1 || value.scopes.length > 6 || new Set(value.scopes).size !== value.scopes.length || value.scopes.some(s => !SCOPES.includes(s))) reject('customer_key_invalid_response', 503, true);
-  exactInteger(value.daily_limit_usd_micros, 0, MAX); exactInteger(value.total_limit_usd_micros, 0, MAX);
-  if (value.daily_limit_usd_micros > value.total_limit_usd_micros || typeof value.expires_at !== 'string' || !Number.isFinite(Date.parse(value.expires_at)) || (value.revoked_at !== null && (typeof value.revoked_at !== 'string' || !Number.isFinite(Date.parse(value.revoked_at))))) reject('customer_key_invalid_response', 503, true);
+  limit(value.daily_limit_usd_micros); limit(value.total_limit_usd_micros);
+  if ((value.daily_limit_usd_micros !== null && value.total_limit_usd_micros !== null && value.daily_limit_usd_micros > value.total_limit_usd_micros) || (value.expires_at !== null && (typeof value.expires_at !== 'string' || !Number.isFinite(Date.parse(value.expires_at)))) || (value.revoked_at !== null && (typeof value.revoked_at !== 'string' || !Number.isFinite(Date.parse(value.revoked_at))))) reject('customer_key_invalid_response', 503, true);
   return Object.freeze({ ...value, scopes: Object.freeze([...value.scopes]) });
 }
 export function createCustomerKeyRpc(config) {
@@ -52,12 +53,12 @@ export function createCustomerKeyRpc(config) {
     async issue(raw) {
       strictObject(raw, ['authorization', 'scopes', 'dailyLimitUsdMicros', 'totalLimitUsdMicros', 'expiresAt']);
       if (!Array.isArray(raw.scopes) || raw.scopes.length < 1 || raw.scopes.length > 6 || new Set(raw.scopes).size !== raw.scopes.length || raw.scopes.some(s => !SCOPES.includes(s))) reject('customer_key_invalid_scopes', 400);
-      const scopes = [...raw.scopes]; const daily = exactInteger(raw.dailyLimitUsdMicros, 0, MAX); const total = exactInteger(raw.totalLimitUsdMicros, 0, MAX);
-      if (daily > total || typeof raw.expiresAt !== 'string' || !Number.isFinite(Date.parse(raw.expiresAt)) || Date.parse(raw.expiresAt) <= Date.now() || Date.parse(raw.expiresAt) > Date.now() + 365 * 86400000) reject('customer_key_invalid_limits', 400);
-      const expires = new Date(raw.expiresAt).toISOString(); const customerId = await owner(raw.authorization);
+      const scopes = [...raw.scopes]; const daily = limit(raw.dailyLimitUsdMicros); const total = limit(raw.totalLimitUsdMicros);
+      if ((daily !== null && total !== null && daily > total) || (raw.expiresAt !== null && (typeof raw.expiresAt !== 'string' || !Number.isFinite(Date.parse(raw.expiresAt)) || Date.parse(raw.expiresAt) <= Date.now() || Date.parse(raw.expiresAt) > Date.now() + 365 * 86400000))) reject('customer_key_invalid_limits', 400);
+      const expires = raw.expiresAt === null ? null : new Date(raw.expiresAt).toISOString(); const customerId = await owner(raw.authorization);
       const token = 'aw_' + mode + '_' + randomBytes(32).toString('hex'); const id = randomUUID();
       const row = metadata(await rpc('issue', { p_owner: mode + ':supabase:' + customerId, p_id: id, p_hash: hash(token), p_scopes: scopes, p_daily_limit: daily, p_total_limit: total, p_expires_at: expires }), mode, customerId);
-      if (row.id !== id || JSON.stringify(row.scopes) !== JSON.stringify(scopes) || row.daily_limit_usd_micros !== daily || row.total_limit_usd_micros !== total || Date.parse(row.expires_at) !== Date.parse(expires) || row.revoked_at !== null) reject('customer_key_invalid_response', 503, true);
+      if (row.id !== id || JSON.stringify(row.scopes) !== JSON.stringify(scopes) || row.daily_limit_usd_micros !== daily || row.total_limit_usd_micros !== total || (expires === null ? row.expires_at !== null : Date.parse(row.expires_at) !== Date.parse(expires)) || row.revoked_at !== null) reject('customer_key_invalid_response', 503, true);
       return Object.freeze({ key: token, metadata: row }); // Revealed once; never sent to storage.
     },
     async list(raw) {
@@ -79,9 +80,9 @@ export function createCustomerKeyRpc(config) {
       const match = typeof raw.authorization === 'string' && raw.authorization.match(/^Bearer (aw_(live|test)_[a-f0-9]{64})$/);
       if (!match || match[2] !== mode || !SCOPES.includes(raw.capability)) reject();
       const row = metadata(await rpc('authenticate', { p_hash: hash(match[1]), p_mode: mode, p_capability: raw.capability }), mode);
-      if (row.revoked_at !== null || Date.parse(row.expires_at) <= Date.now() || !row.scopes.includes(raw.capability)) reject();
+      if (row.revoked_at !== null || (row.expires_at !== null && Date.parse(row.expires_at) <= Date.now()) || !row.scopes.includes(raw.capability)) reject();
       const context = Object.freeze({ customerId: row.customer_id, billingMode: mode, keyId: row.id, scopes: row.scopes });
-      contexts.set(context, { expires: Math.min(performance.now() + 60000, performance.now() + Date.parse(row.expires_at) - Date.now()) });
+      contexts.set(context, { expires: Math.min(performance.now() + 60000, performance.now() + (row.expires_at === null ? 60000 : Date.parse(row.expires_at) - Date.now())) });
       return context;
     },
     assertContext(context, capability) {
