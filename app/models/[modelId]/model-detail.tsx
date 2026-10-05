@@ -1,11 +1,10 @@
 'use client';
 import {useState} from 'react';
 import {ArrowLeft,Copy,Check,Box} from 'lucide-react';
-import catalog from '../public-models.json';
+import type {Model} from '../selected-suppliers';
 import metadata from '../public-model-metadata.json';
 import './model-detail.css';
 
-type Model=typeof catalog.models[number];
 const money=(n:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:8}).format(n);
 const label=(id:string)=>id.replace(/(claude-[a-z]+)-(\d+)-(\d+)(?=-|$)/,'$1-$2.$3').split('-').map(part=>({gpt:'GPT',glm:'GLM',claude:'Claude',gemini:'Gemini',grok:'Grok',deepseek:'DeepSeek'}[part]??part.charAt(0).toUpperCase()+part.slice(1))).join(' ');
 export default function ModelDetail({model}:{model:Model}){

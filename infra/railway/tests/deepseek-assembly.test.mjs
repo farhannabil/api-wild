@@ -43,8 +43,8 @@ test('admission tariff stays frozen across dispatch boundary and expired-window 
   for(const privateId of [supplierRequestId,'synthetic_response'])assert.equal(JSON.stringify(initial.body).includes(privateId),false);
   const previousClocks=clocks;now=Date.parse('2026-10-15T02:00:00Z');const replay=await call();assert.equal(replay.status,200);assert.equal(replay.body.replayed,true);assert.equal(upstreamCalls,1);assert.equal(lookupCount,2);assert.equal(clocks,previousClocks);
   const expired=port.discovery.read();assert.equal(expired.config.inferenceConfigured,false);assert.equal(expired.config.ready.chat,false);
-  assert.equal(expired.catalog.models.find(row=>row.id===model).callable,false);
-  assert.equal(expired.v1Models.data.find(row=>row.id===model).available,false);assert.equal(upstreamCalls,1);
+  assert.deepEqual(expired.catalog.models,[]);
+  assert.deepEqual(expired.v1Models.data,[]);assert.equal(upstreamCalls,1);
  }finally{await new Promise(r=>server.close(r));}
 });
 
@@ -61,6 +61,6 @@ test('both conditional models have unique discovery entries and expire without h
  for(const timestamp of ['2026-10-04T23:59:00Z','2026-10-11T23:59:00Z','2026-10-15T00:00:00Z']){
   now=Date.parse(timestamp);const current=port.discovery.read();assert.equal(current.config.ready.chat,true);
   assert.deepEqual(current.catalog.models.filter(row=>row.callable).map(row=>row.id),['claude-fable-5']);
-  for(const id of conditionalModels){const row=current.catalog.models.find(row=>row.id===id);assert.equal(row.supportsTools,false);assert.deepEqual(row.capabilities,[]);assert.equal(current.v1Models.data.find(row=>row.id===id).available,false);}
+  for(const id of conditionalModels){assert.equal(current.catalog.models.some(row=>row.id===id),false);assert.equal(current.config.models.some(row=>row.id===id),false);assert.equal(current.v1Models.data.some(row=>row.id===id),false);}
  }
 });

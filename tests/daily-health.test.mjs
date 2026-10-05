@@ -75,6 +75,21 @@ test('unavailable customer reads and broken DNS still fail operational health', 
   }
 });
 
+test('incoming MX accepts verified Mailu or retained Resend and rejects unknown additional exchanges', async () => {
+  for (const records of [[{priority:10,exchange:'MAIL.APIWILD.COM.'}], [{priority:10,exchange:'inbound-smtp.us-east-1.amazonaws.com'}]]) {
+    const f=fixture({active:true}); const originalMx=f.dependencies.mx;
+    const result=await runDailyHealth({...f.dependencies,mx:async host=>host==='apiwild.com'?records:originalMx(host),requireLaunchReady:true});
+    assert.equal(result.launchReady,true);assert.equal(result.exitCode,0);
+  }
+  for (const records of [[], [{priority:20,exchange:'mail.apiwild.com'}], [{priority:10,exchange:'unapproved.example'}],
+    [{priority:10,exchange:'mail.apiwild.com'},{priority:10,exchange:'unapproved.example'}]]) {
+    const f=fixture({active:true}); const originalMx=f.dependencies.mx;
+    const result=await runDailyHealth({...f.dependencies,mx:async host=>host==='apiwild.com'?records:originalMx(host),requireLaunchReady:true});
+    assert.equal(result.operationalHealthy,false);assert.equal(result.launchReady,false);
+    assert.equal(result.checks.find(check=>check.name==='Support incoming MX').ok,false);
+  }
+});
+
 test('readiness status, blockers and availability must agree; no response body can mark launch ready alone', async () => {
   for (const ready of [
     () => Response.json({ready: true, blockers: []}),

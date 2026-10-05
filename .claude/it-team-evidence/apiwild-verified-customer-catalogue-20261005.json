@@ -1,0 +1,42 @@
+{
+  "task_id": "apiwild-verified-customer-catalogue-20261005",
+  "status": "passed",
+  "summary": "Removed the 15 unaccepted models from the current customer snapshot, leaving the exact 24 accepted identities with unchanged surviving pricing/reference fields. Added read-only owned-runtime callable filtering to the directory/pricing catalogue, and replaced legacy unavailable marketing model examples with accepted priced models. Preserved full39 internal supplier catalogue and reference metadata.",
+  "files": [
+    "app/models/public-models.json",
+    "app/models/callable-catalogue.mjs",
+    "app/models/selected-suppliers.tsx",
+    "app/models/[modelId]/model-detail.tsx",
+    "app/route-cards.tsx",
+    "tests/verified-customer-catalogue.test.mjs"
+  ],
+  "checks": [
+    {
+      "command": "node --test tests/verified-customer-catalogue.test.mjs tests/owned-client-config.test.mjs",
+      "exitCode": 0,
+      "result": "6 passed. Exact accepted24 vs internal39, unchanged every surviving public field, runtime false/absent/unknown exclusion, no upstream-price replacement, correct marketing examples and fail-closed ownership/schema/capability/duplicate responses. Existing configuration/Stripe URL boundaries retained."
+    },
+    {
+      "command": "node --input-type=module - (TypeScript compiler API application check)",
+      "exitCode": 0,
+      "result": "Application TypeScript passed with no diagnostics, noEmit:true/incremental:false; only pre-existing deployment-only vite.config.ts omitted because local .openai/hosting.json is absent."
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "result": "No whitespace errors; Windows line-ending notices only."
+    }
+  ],
+  "review": {
+    "reviewer": "/root/general_web_backend",
+    "result": "passed",
+    "scope": "Compared public JSON against exact baseline3c37d462 and accepted72-route/24-model fixture; all retained fields unchanged and exact15 exclusions. Independently ran new4 catalogue tests successfully. Reviewed UI loading/error/retry, runtime authority intersection, erased type imports and accepted marketing examples; no findings."
+  },
+  "limitations": [
+    "Worker did not deploy or perform browser/customer acceptance; root owns the resulting production release and HTTP404 verification.",
+    "Public reference metadata remains39 for history, but excluded model offerings cannot render through the filtered public catalogue and existing notFound page guard.",
+    "Static accepted detail pages still describe reference specifications; individual current execution availability is checked in the workspace.",
+    "Directory awaits current /api/models on mount; source errors, timeouts or malformed responses show no model cards and offer Retry. No availability fallback or paid request is executed.",
+    "Supplier keys, limits, ledger data, Stripe/auth/email/voice/hosting and the full39 internal supplier catalogue were not changed by this worker."
+  ]
+}

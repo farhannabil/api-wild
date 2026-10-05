@@ -36,10 +36,10 @@ test('public discovery snapshot does not require credentials or infer activated 
 test('API model discovery authenticates and marks availability only for the verified capability',async()=>{
   const models=[{model:'model-a',capability:'chat',maxOutputTokens:32},{model:'model-a',capability:'code',maxOutputTokens:32},{model:'model-b',capability:'research',maxOutputTokens:32}];
   const f=fixture({models});const response=await f.read('/v1/models');assert.equal(response.status,200);
-  const result=await response.json();assert.equal(result.object,'list');assert.equal(result.data.length,2);
+  const result=await response.json();assert.equal(result.object,'list');assert.equal(result.data.length,1);
   assert.deepEqual(result.data.filter(model=>model.available).map(model=>model.id),['model-a']);assert.equal(f.calls.length,1);
   assert.equal(f.calls[0].params.p_capability,'chat');
-  const inactive=await (await fixture().read('/v1/models')).json();assert.equal(inactive.inference_available,false);assert.ok(inactive.data.every(model=>!model.available));
+  const inactive=await (await fixture().read('/v1/models')).json();assert.equal(inactive.inference_available,false);assert.deepEqual(inactive.data,[]);
 });
 test('API usage reads the owner established by key verification with no account creation or dispatch',async()=>{
   const f=fixture();const response=await f.read('/v1/usage');assert.equal(response.status,200);assert.deepEqual(await response.json(),usage);

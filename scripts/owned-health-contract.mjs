@@ -26,7 +26,7 @@ export function assertLiveness(value) {
 export function assertModelCatalog(value) {
   requireValue(value?.schemaVersion === 1 && value.authority === 'apiwild-owned-runtime'
     && value.source === 'apiwild-approved-retail' && Array.isArray(value.models)
-    && value.models.length > 0 && value.count === value.models.length, 'INVALID_OWNED_CATALOG');
+    && value.count === value.models.length, 'INVALID_OWNED_CATALOG');
   assertPublic(value);
   const ids = new Set();
   for (const model of value.models) {

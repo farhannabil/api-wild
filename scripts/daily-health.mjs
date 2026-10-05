@@ -68,7 +68,12 @@ export async function runDailyHealth({request = healthRequest, mx = resolveMx, t
     const response = await request(support + '/health'); requireStatus(response, 200);
     requireValue((await response.json()).status === 'ok');
   });
-  await check('Support incoming MX', async () => requireValue((await mx('apiwild.com')).some(row => row.exchange.replace(/\.$/, '') === 'inbound-smtp.us-east-1.amazonaws.com' && row.priority === 10)));
+  await check('Support incoming MX', async () => {
+    const records = await mx('apiwild.com');
+    // Accept the verified Mailu cutover or the retained Resend rollback target.
+    requireValue(records.length > 0 && records.every(row =>
+      ['mail.apiwild.com', 'inbound-smtp.us-east-1.amazonaws.com'].includes(row.exchange.toLowerCase().replace(/\.$/, '')) && row.priority === 10));
+  });
   await check('Resend outgoing MX', async () => requireValue((await mx('send.apiwild.com')).some(row => row.exchange.replace(/\.$/, '') === 'feedback-smtp.us-east-1.amazonses.com')));
   await check('Resend SPF', async () => requireValue(await spfIncludesProvider('send.apiwild.com', 'amazonses.com', txt)));
   await check('Resend DKIM', async () => requireValue((await txt('resend._domainkey.apiwild.com')).some(row => /p=\S+/.test(row.join('')))));

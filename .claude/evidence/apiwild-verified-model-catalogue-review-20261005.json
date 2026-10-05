@@ -1,0 +1,64 @@
+{
+  "task_id": "apiwild-verified-model-catalogue-review-20261005",
+  "status": "passed",
+  "summary": "Independent source and contract review passed: only the accepted 24 currently callable models are customer offerings; surviving public rows are exactly unchanged from baseline, private pricing and financial/replay records retained.",
+  "review": {
+    "reviewer": "/root/general_web_backend",
+    "result": "passed",
+    "baseline": "3c37d462",
+    "survivingPublicRowsDeepEqualOriginal": true,
+    "publicSnapshotModelCount": 24,
+    "originalPublicSnapshotModelCount": 39,
+    "exactAcceptedRouteSet": true,
+    "removedModels": [
+      "deepseek-v4-flash",
+      "deepseek-v4-pro",
+      "gemini-3.5-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-3.8-flash",
+      "glm-5.2",
+      "glm-5.3-flash",
+      "gpt-5.5",
+      "gpt-5.6",
+      "gpt-5.6-luna",
+      "gpt-5.6-sol",
+      "gpt-5.6-terra",
+      "gpt-6-luna",
+      "gpt-6.1-sol",
+      "grok-4.6"
+    ],
+    "mxAssessment": "Read-only health contract accepts nonempty records only when every exchange is exactly mail.apiwild.com or inbound-smtp.us-east-1.amazonaws.com at priority10, case/trailing-dot normalized. No DNS mutation; outgoing Resend/SPF/DKIM/DMARC and support receiver checks unchanged."
+  },
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/owned-discovery-http.test.mjs infra/railway/tests/gateway-discovery.test.mjs infra/railway/tests/deepseek-assembly.test.mjs tests/owned-health-contract.test.mjs",
+      "exitCode": 0,
+      "passed": 22
+    },
+    {
+      "command": "node --test tests/daily-health.test.mjs",
+      "exitCode": 0,
+      "passed": 10
+    },
+    {
+      "command": "node --test tests/verified-customer-catalogue.test.mjs",
+      "exitCode": 0,
+      "passed": 4
+    },
+    {
+      "command": "Read-only JSON comparison: git show 3c37d462:app/models/public-models.json versus current public-models.json and accepted private route artifact",
+      "exitCode": 0,
+      "allRetainedRowsUnchanged": true,
+      "pricesAndReferencesUnchanged": true,
+      "snapshotDateUnchanged": true
+    }
+  ],
+  "limitations": [
+    "This receipt verifies local source and contracts; root owns exact-commit deployment and live customer acceptance.",
+    "Mailu transition evidence was supplied by root; these local tests do not independently prove real inbound email delivery."
+  ],
+  "sourceEdits": false,
+  "paidRequests": false,
+  "credentialChanges": false,
+  "dnsChanges": false
+}

@@ -23,13 +23,13 @@ test('healthy guarded runtime is distinct from paid launch readiness',()=>{
 test('real approved retail catalog and owned discovery agree with health contract',async()=>{
   const source=JSON.parse(await readFile(new URL('../data/selected-supplier-models.json',import.meta.url),'utf8'));
   const snapshot=createOwnedDiscoverySnapshot({catalog:source,deploymentCommit:commit});
-  const ids=assertModelCatalog(snapshot.catalog);assert.equal(ids.size,39);
+  const ids=assertModelCatalog(snapshot.catalog);assert.equal(ids.size,0);
   assertRuntimeConfig(snapshot.config,ids);
 });
 
-test('catalog rejects empty, duplicate, private and unpriced model data',()=>{
+test('catalog rejects inconsistent counts, duplicate, private and unpriced model data',()=>{
   const changes=[
-    [c=>{c.models=[];c.count=0;},'INVALID_OWNED_CATALOG'],
+    [c=>{c.models=[];c.count=1;},'INVALID_OWNED_CATALOG'],
     [c=>{c.models.push(structuredClone(model));c.count=2;},'INVALID_CATALOG_MODEL'],
     [c=>{c.models[0].primary={supplier_input:1};},'PRIVATE_RUNTIME_FIELD'],
     [c=>{c.models[0].name='sb_secret_do_not_publish';},'PRIVATE_RUNTIME_VALUE'],

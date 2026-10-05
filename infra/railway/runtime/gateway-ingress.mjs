@@ -94,7 +94,7 @@ export function createGatewayIngress(config) {
           const models = new Map(current.catalog.models.map(model => [model.id, model]));
           const data = current.v1Models.data.map(model => ({...model,
             available: models.get(model.id).capabilities.includes(capability),
-            supportsTools: models.get(model.id).toolCapabilities.includes(capability)}));
+            supportsTools: models.get(model.id).toolCapabilities.includes(capability)})).filter(model => model.available);
           return reply(200, {...current.v1Models, data, inference_available: data.some(model => model.available)});
         }
         return reply(200, await rpc.usage(context));
