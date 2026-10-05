@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { createGatewayRpc, SUPABASE_ORIGIN, RPC_NAMES, GatewayError } from '../runtime/supabase-gateway-rpc.mjs';
-import { createGatewayService } from '../runtime/gateway-service.mjs';
+import { createGatewayService, gatewayPayloadFingerprint } from '../runtime/gateway-service.mjs';
 
 // Real transport/orchestrator exercised against in-memory, synthetic HTTP fixtures.
 // These receipts are fixture labels, never acceptance of a real supplier debit.
@@ -14,13 +14,13 @@ const SECRET = 'sb_secret_syntheticOnlyDoNotUse000001';
 const PUBLIC = 'sb_publishable_syntheticOnlyDoNotUse000001';
 const AUTH = 'Bearer syntheticHeader.syntheticPayload.syntheticSignature';
 const STAMP = '2026-10-03T12:00:00.000Z';
-const reservation = () => ({ keyId: KEY, providerBudgetId: BUDGET, requestKey: 'synthetic_request_01', payloadHash: 'a'.repeat(64),
+const reservation = () => ({ keyId: KEY, providerBudgetId: BUDGET, requestKey: 'synthetic_request_01', payloadHash: gatewayPayloadFingerprint(payload()),
   capability: 'chat', model: 'fixture-model', rateVersion: 'fixture-rate', reservedUsdMicros: 100, reservedCnyMicros: 10 });
 const payload = () => ({ body: { messages: [{ role: 'user', content: 'synthetic test only' }] }, format: 'native' });
 const receipt = (patch = {}) => ({ state: 'succeeded', costUsdMicros: 40, costCnyMicros: 5,
   settlementReference: 'synthetic-receipt-not-supplier-proof', result: { answer: 'fixture' }, usage: { tokens: 3 }, ...patch });
 const row = (patch = {}) => ({ id: ID, user_id: 'live:supabase:' + USER, key_id: KEY, provider_budget_id: BUDGET,
-  request_key: 'synthetic_request_01', payload_hash: 'a'.repeat(64), capability: 'chat', model: 'fixture-model', rate_version: 'fixture-rate',
+  request_key: 'synthetic_request_01', payload_hash: gatewayPayloadFingerprint(payload()), capability: 'chat', model: 'fixture-model', rate_version: 'fixture-rate',
   state: 'reserved', version: 0, reserved_usd_micros: 100, cost_usd_micros: 0, reserved_cny_micros: 10, cost_cny_micros: 0,
   observed_cny_micros: 0, pricing_bound_exceeded: false, settlement_reference: null, result_json: null, usage_json: {},
   created_at: STAMP, updated_at: STAMP, expires_at: STAMP, ...patch });
@@ -191,6 +191,25 @@ test('payload is snapshotted before reservation; no getter or late mutation reac
   const getter = {}; Object.defineProperty(getter, 'command', { enumerable: true, get() { throw new Error('must not execute'); } });
   await assert.rejects(f.service.execute(owner, reservation(), getter), GatewayError);
   assert.equal(f.dispatchCount, 1);
+});
+
+test('stale or prompt-only fingerprint cannot reserve, replay or dispatch a changed envelope', async () => {
+  for (const fresh of [true, false]) {
+    const f = fixture({ fresh }); const owner = await f.owner();
+    const changed = payload(); changed.body.messages[0].content = 'different request';
+    await assert.rejects(f.service.execute(owner, reservation(), changed), /gateway_payload_fingerprint_mismatch/);
+    await assert.rejects(f.service.execute(owner, { ...reservation(), payloadHash: 'a'.repeat(64) }, payload()), /gateway_payload_fingerprint_mismatch/);
+    assert.equal(f.calls.length, 0); assert.equal(f.dispatchCount, 0);
+  }
+});
+
+test('fingerprint includes request format and snapshots quote before any asynchronous reservation', async () => {
+  const f = fixture(); const owner = await f.owner();
+  assert.notEqual(gatewayPayloadFingerprint(payload()), gatewayPayloadFingerprint({ ...payload(), format: 'openai' }));
+  const quote = reservation(); const pending = f.service.execute(owner, quote, payload());
+  quote.payloadHash = 'b'.repeat(64); quote.model = 'late-model';
+  assert.equal((await pending).ok, true);
+  assert.equal(f.calls[0].p.p_model, 'fixture-model');
 });
 
 test('unknown owner/record response is held before dispatch; service requires explicit trusted ports', async () => {

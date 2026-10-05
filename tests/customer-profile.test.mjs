@@ -8,12 +8,12 @@ const require=createRequire(import.meta.url);
 function load(file){
  const module={exports:{}};
  const source=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
- vm.runInNewContext(source,{module,exports:module.exports,Error,Date,Set,require:n=>n.startsWith('@/')?load(n.slice(2)+'.ts'):require(n)});
+ vm.runInNewContext(source,{module,exports:module.exports,Error,Date,Set,require:n=>n.startsWith('@/')?(n.endsWith('.mjs')?require('../'+n.slice(2)):load(n.slice(2)+'.ts')):require(n)});
  return module.exports;
 }
 const {customerProfileData,saveCustomerProfile,watchCustomerIdentity,CustomerAccountChangedError}=load('lib/customer-profile.ts');
 const {buildingOptions,complianceOptions}=load('lib/customer-options.ts');
-const valid={name:'Sample',company:'Project',budget:100,accountType:'personal',domain:'example.com',phone:'',country:'CA',building:[buildingOptions[0]],compliance:[],project:''};
+const valid={name:'Sample',company:'Project',budget:100,accountType:'personal',domain:'example.com',phone:'+12045550123',country:'CA',building:[buildingOptions[0]],compliance:[],project:''};
 test('stored malformed preferences recover independently without losing valid profile fields',()=>{
  const data=customerProfileData({full_name:' Sample ',company_name:' Project ',role:'personal',onboarding_data:{...valid,compliance:null,building:[null,'unknown',buildingOptions[0],buildingOptions[0]],budget:{toString:null},domain:{},country:'XX'}});
  assert.equal(data.name,'Sample');assert.equal(data.company,'Project');assert.equal(data.accountType,'personal');
@@ -65,3 +65,5 @@ test('identity watcher ignores token refresh and invalidates once for another ac
   stop();assert.equal(unsubscribed,1);emit('SIGNED_IN',{user:{id:'account-c'}});assert.deepEqual(changes,[next]);
  }
 });
+
+test('profile requires a country and international phone number',()=>{const {onboardingSchema}=load('lib/onboarding-schema.ts');assert.equal(onboardingSchema.safeParse({...valid,phone:''}).success,false);assert.equal(onboardingSchema.safeParse({...valid,country:''}).success,false);assert.equal(onboardingSchema.parse({...valid,phone:'+1 (204) 555-0123'}).phone,'+12045550123');});

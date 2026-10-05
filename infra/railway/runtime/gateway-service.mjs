@@ -1,10 +1,18 @@
 import { GatewayError, cloneJsonObject, exactInteger, strictObject, withDeadline } from './supabase-gateway-rpc.mjs';
+import { createHash } from 'node:crypto';
+
+// Match the existing gateway's SHA-256 of its exact JSON request envelope.
+// Selectors must hash this same body/format envelope, not a model name or prompt
+// alone. Different insertion order is a different byte fingerprint, as before.
+export function gatewayPayloadFingerprint(payload) {
+  return createHash('sha256').update(JSON.stringify(cloneJsonObject(payload, 65536))).digest('hex');
+}
 
 // Private orchestration only. Caller-supplied pricing/financial projections are not accepted
 // by an HTTP route here. A separately reviewed ingress must select trusted quotes and gates.
 // Integration contract: reservation (including the payload fingerprint, key/budget IDs,
 // model/rate and both currency quotes) comes from a trusted server selector. It must
-// fingerprint the exact inert payload snapshot; this module does not authenticate API
+// fingerprint the exact inert payload snapshot, enforced before any hold; this module does not authenticate API
 // keys or discover prices, supplier credentials, financial projections or HTTP callers.
 export function createGatewayService(config) {
   strictObject(config, ['rpc', 'dispatch', 'verifySettlement', 'dispatchTimeoutMs', 'settlementTimeoutMs']);
@@ -23,9 +31,13 @@ export function createGatewayService(config) {
     async execute(context, reservation, payload) {
       // Snapshot inert request data before reserving; no late getter/payload mutation.
       const input = cloneJsonObject(payload, 65536); rpc.assertPrivatePayload(input);
+      const quote = cloneJsonObject(reservation, 4096);
+      if (quote.payloadHash !== gatewayPayloadFingerprint(input)) {
+        throw new GatewayError('gateway_payload_fingerprint_mismatch', 409);
+      }
       let claimed;
       try {
-        const reserved = await rpc.reserve(context, reservation);
+        const reserved = await rpc.reserve(context, quote);
         rpc.assertReference(context, reserved.record);
         if (!reserved.fresh) {
           if (['succeeded', 'failed'].includes(reserved.record.state)) return terminal(reserved.record, true);

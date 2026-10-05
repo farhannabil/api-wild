@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {normalizeInternationalPhone} from '../lib/profile-contact.mjs';
+test('international phone formatting normalizes accepted punctuation',()=>{assert.equal(normalizeInternationalPhone('+1 (204) 555-0123'),'+12045550123');assert.equal(normalizeInternationalPhone('+44 20 7946 0018'),'+442079460018')});
+test('missing calling code, extensions, letters and out-of-range numbers are rejected',()=>{for(const value of ['',undefined,'2045550123','+0123456789','+123','+1234567890123456','+12045550123 ext4','+1CALLNOW'])assert.equal(normalizeInternationalPhone(value),null)});

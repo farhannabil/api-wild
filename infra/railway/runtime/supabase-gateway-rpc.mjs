@@ -1,5 +1,6 @@
 // SERVER ONLY. A typed transport for the existing five service-only SQL RPCs.
 // No table access, arbitrary SQL, credential discovery, financial projection or activation.
+import { isCustomerKeyRpc } from './customer-key-rpc.mjs';
 export const SUPABASE_ORIGIN = 'https://yautmilnpllojugpmfgy.supabase.co';
 export const RPC_NAMES = Object.freeze({ reserve: 'apiwild_gateway_reserve', claim: 'apiwild_gateway_claim',
   finish: 'apiwild_gateway_finish', uncertain: 'apiwild_gateway_uncertain', expire: 'apiwild_gateway_expire' });
@@ -158,7 +159,10 @@ const RECORD_FIELDS = ['id', 'user_id', 'key_id', 'provider_budget_id', 'request
 const IMMUTABLE = ['id', 'user_id', 'key_id', 'provider_budget_id', 'request_key', 'payload_hash', 'capability', 'model', 'rate_version', 'reserved_usd_micros', 'reserved_cny_micros'];
 
 export function createGatewayRpc(config) {
-  strictObject(config, ['supabaseOrigin', 'secretKey', 'publishableKey', 'billingMode', 'fetchImpl', 'rpcTimeoutMs', 'authTimeoutMs', 'ownerTtlMs']);
+  strictObject(config, ['supabaseOrigin', 'secretKey', 'publishableKey', 'billingMode', 'fetchImpl', 'rpcTimeoutMs', 'authTimeoutMs', 'ownerTtlMs', 'keyVerifier', 'retailSettlement']);
+  if (config.keyVerifier !== undefined && !isCustomerKeyRpc(config.keyVerifier)) throw new GatewayError('gateway_invalid_key_verifier');
+  if(config.retailSettlement!==undefined&&typeof config.retailSettlement!=='boolean')throw new GatewayError('gateway_invalid_configuration');
+  const keyVerifier = config.keyVerifier;
   // Exact text, not URL normalization: reject ports, credentials, slashes, encoding and inactive projects.
   if (config.supabaseOrigin !== SUPABASE_ORIGIN || !['live', 'test'].includes(config.billingMode)) throw new GatewayError('gateway_invalid_configuration');
   const secret = key(config.secretKey, true); const publishable = key(config.publishableKey, false);
@@ -177,15 +181,18 @@ export function createGatewayRpc(config) {
   const owner = context => {
     const meta = owners.get(context);
     if (!meta || performance.now() >= meta.expires || context.project !== 'apiwild' || context.billingMode !== billingMode) throw new GatewayError('gateway_owner_unverified', 401);
+    if (meta.keyContext) keyVerifier.assertContext(meta.keyContext, meta.capability);
     return meta;
   };
   const validRecord = (raw, meta, prior, expected) => {
     try {
-      strictObject(raw, RECORD_FIELDS);
+      strictObject(raw, [...RECORD_FIELDS,'supplier_pending']);
+      if(raw.supplier_pending!==undefined&&typeof raw.supplier_pending!=='boolean')throw new GatewayError('gateway_invalid_response');
       if (RECORD_FIELDS.some(f => !Object.hasOwn(raw, f))) throw new GatewayError('gateway_invalid_response');
       id(raw.id);
       if (raw.user_id !== meta.owner) throw new GatewayError('gateway_invalid_response');
       if (raw.key_id !== null) id(raw.key_id);
+      if (meta.keyId && raw.key_id !== meta.keyId) throw new GatewayError('gateway_invalid_response');
       id(raw.provider_budget_id); text(raw.request_key, 100, /^[A-Za-z0-9_-]{16,100}$/); text(raw.payload_hash, 64, HASH);
       if (!CAPABILITIES.includes(raw.capability) || !STATES.includes(raw.state)) throw new GatewayError('gateway_invalid_response');
       text(raw.model, 160); text(raw.rate_version, 160); exactInteger(raw.version);
@@ -215,7 +222,7 @@ export function createGatewayRpc(config) {
     if (!records.has(record) || records.get(record).owner !== meta.owner) throw new GatewayError('gateway_reference_unverified', 400);
     return meta;
   };
-  const request = async (url, headers, body, timeout, maxBytes, auth = false) => {
+  const request = async (url, headers, body, timeout, maxBytes, auth = false, rpcOperation) => {
     if (body !== undefined && Buffer.byteLength(body) > MAX_RPC_BYTES) throw new GatewayError('gateway_payload_too_large', 413);
     try {
       return await withDeadline(async signal => {
@@ -223,6 +230,10 @@ export function createGatewayRpc(config) {
         if (signal.aborted) { cancel(response); throw new GatewayError('gateway_deadline_exceeded', 503, true); }
         if (response?.redirected || (response?.url && response.url !== url)) { cancel(response); throw new GatewayError('gateway_invalid_response', 503, true); }
         if (!response?.ok) {
+          if(['reserve','claim'].includes(rpcOperation)&&/^application\/json(?:\s*;|$)/i.test(response?.headers?.get('content-type')||'')){
+            const failure=await jsonResponse(response,8192,signal);
+            if(['gateway_customer_limit','gateway_key_limit'].includes(failure?.message))throw new GatewayError(failure.message,402,false);
+          }
           cancel(response); // Never parse/echo database messages, HTML or upstream credential errors.
           const invalidOwner = auth && [401, 403].includes(response?.status);
           throw new GatewayError(invalidOwner ? 'gateway_owner_unverified' : 'gateway_rpc_unavailable', invalidOwner ? 401 : 503, !auth);
@@ -236,7 +247,7 @@ export function createGatewayRpc(config) {
     const body = JSON.stringify({ p_owner: meta.owner, ...parameters });
     const headers = { apikey: secret.value, 'content-type': 'application/json', accept: 'application/json', 'content-profile': 'public' };
     if (secret.legacy) headers.authorization = 'Bearer ' + secret.value;
-    const value = await request(SUPABASE_ORIGIN + '/rest/v1/rpc/' + RPC_NAMES[operation], headers, body, rpcTimeoutMs, MAX_RPC_BYTES);
+    const value = await request(SUPABASE_ORIGIN + '/rest/v1/rpc/' + (operation==='finish'&&config.retailSettlement?'apiwild_gateway_finish_retail':RPC_NAMES[operation]), headers, body, rpcTimeoutMs, MAX_RPC_BYTES,false,operation);
     rejectPrivate(value);
     const allowed = { reserve: ['fresh', 'record'], claim: ['claimed', 'record'], finish: ['settled', 'replayed', 'code', 'record'], uncertain: ['replayed', 'record'], expire: ['cancelled', 'record'] }[operation];
     try { strictObject(value, allowed); } catch { throw new GatewayError('gateway_invalid_response', 503, true); }
@@ -260,7 +271,23 @@ export function createGatewayRpc(config) {
         || !sameJson(record.usage_json, parameters.p_usage))) throw new GatewayError('gateway_invalid_response', 503, true);
     return Object.freeze({ [flag]: value[flag], ...(operation === 'finish' ? { replayed: value.replayed === true } : {}), record });
   };
+  const accountRead=async(context,name)=>{const meta=owner(context);const headers={apikey:secret.value,'content-type':'application/json',accept:'application/json'};if(secret.legacy)headers.authorization='Bearer '+secret.value;const value=await request(SUPABASE_ORIGIN+'/rest/v1/rpc/'+name,headers,JSON.stringify({p_owner:meta.owner}),rpcTimeoutMs,16384);rejectPrivate(value);return value;};
   const client = {
+    async initializeAccount(context){const v=await accountRead(context,'apiwild_gateway_account_initialize');if(v?.initialized!==true||v.customer_id!==context.customerId||v.billing_mode!==billingMode)throw new GatewayError('gateway_account_unverified');return {initialized:true};},
+    async usage(context){const v=await accountRead(context,'apiwild_gateway_usage');strictObject(v,['currency','fundedUsdMicros','spentUsdMicros','reservedUsdMicros','paymentHoldUsdMicros','availableUsdMicros','completedRequests']);if(v.currency!=='USD')throw new GatewayError('gateway_usage_unverified');for(const k of ['fundedUsdMicros','spentUsdMicros','reservedUsdMicros','paymentHoldUsdMicros','availableUsdMicros','completedRequests'])exactInteger(v[k],k==='fundedUsdMicros'?-USD_MAX:0,USD_MAX);return Object.freeze(v);},
+    async verifyKeyOwner(raw) {
+      strictObject(raw, ['authorization', 'capability']);
+      if (!keyVerifier || !CAPABILITIES.includes(raw.capability)) throw new GatewayError('gateway_key_unavailable', 401);
+      const keyContext = await keyVerifier.authenticate(raw);
+      keyVerifier.assertContext(keyContext, raw.capability);
+      id(keyContext.customerId); id(keyContext.keyId);
+      if (keyContext.billingMode !== billingMode) throw new GatewayError('gateway_key_unavailable', 401);
+      const context = Object.freeze({ project: 'apiwild', billingMode, customerId: keyContext.customerId, keyId: keyContext.keyId });
+      owners.set(context, { owner: billingMode + ':supabase:' + keyContext.customerId,
+        expires: performance.now() + Math.min(ownerTtlMs, keyVerifier.remainingContextMs(keyContext, raw.capability)),
+        keyContext, keyId: keyContext.keyId, capability: raw.capability });
+      return context;
+    },
     async verifyOwner(raw) {
       strictObject(raw, ['authorization', 'expectedCustomerId']);
       if (raw.expectedCustomerId !== undefined) id(raw.expectedCustomerId);
@@ -273,16 +300,13 @@ export function createGatewayRpc(config) {
         if (typeof user.email !== 'string' || !user.email.length || user.is_anonymous !== false
             || (raw.expectedCustomerId !== undefined && raw.expectedCustomerId !== user.id)) throw new GatewayError('gateway_owner_unverified');
       } catch { throw new GatewayError('gateway_owner_unverified', 403); }
-      const url = SUPABASE_ORIGIN + '/rest/v1/customer_profiles?select=user_id,onboarding_completed_at&user_id=eq.' + user.id;
-      const profiles = await request(url, headers, undefined, authTimeoutMs, 8192, true);
-      if (!Array.isArray(profiles) || profiles.length !== 1 || profiles[0]?.user_id !== user.id) throw new GatewayError('gateway_onboarding_required', 409);
-      try { stamp(profiles[0].onboarding_completed_at); } catch { throw new GatewayError('gateway_onboarding_required', 409); }
       const context = Object.freeze({ project: 'apiwild', billingMode, customerId: user.id });
       owners.set(context, { owner: billingMode + ':supabase:' + user.id, expires: performance.now() + ownerTtlMs });
       return context;
     },
     reserve(context, raw) {
-      owner(context); const input = reserveInput(raw);
+      const meta = owner(context); const input = reserveInput(raw);
+      if (meta.keyId && (input.keyId !== meta.keyId || input.capability !== meta.capability)) throw new GatewayError('gateway_key_scope_mismatch', 403);
       rejectPrivate(input);
       return rpc('reserve', context, { p_key_id: input.keyId, p_provider_budget_id: input.providerBudgetId, p_request_key: input.requestKey,
         p_payload_hash: input.payloadHash, p_capability: input.capability, p_model: input.model, p_rate_version: input.rateVersion,

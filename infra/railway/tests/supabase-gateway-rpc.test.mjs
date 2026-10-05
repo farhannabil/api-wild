@@ -59,19 +59,19 @@ test('canonical origin, explicit credentials, fixed mode and bounded configurati
   }
 });
 
-test('verified user and RLS profile yield a credential-free immutable opaque owner', async () => {
+test('verified confirmed user yields a credential-free immutable opaque owner', async () => {
   const f = fixture(); const owner = await f.owner();
   assert.deepEqual(owner, { project: 'apiwild', billingMode: 'live', customerId: USER });
   assert.ok(Object.isFrozen(owner)); assert.ok(!JSON.stringify(owner).includes('syntheticHeader'));
-  assert.equal(f.calls.length, 2);
+  assert.equal(f.calls.length, 1);
   for (const call of f.calls) { assert.equal(call.init.headers.apikey, PUBLIC); assert.equal(call.init.headers.authorization, AUTH); assert.equal(call.init.redirect, 'error'); assert.equal(call.init.cache, 'no-store'); }
-  assert.equal(f.calls[1].url, SUPABASE_ORIGIN + '/rest/v1/customer_profiles?select=user_id,onboarding_completed_at&user_id=eq.' + USER);
+  assert.equal(f.calls[0].url, SUPABASE_ORIGIN + '/auth/v1/user');
   f.config.billingMode = 'test';
   await f.rpc.reserve(owner, input());
   assert.equal(f.calls.at(-1).body.p_owner, 'live:supabase:' + USER);
 });
 
-test('unconfirmed, anonymous, wrong expected owner and incomplete onboarding fail closed', async () => {
+test('unconfirmed, anonymous, wrong expected owner fail closed; profile is not an authorization gate', async () => {
   for (const patch of [{ email_confirmed_at: null }, { is_anonymous: true }, { is_anonymous: undefined }, { id: OTHER }, { id: null }]) {
     const f = fixture({ handlers: { user: () => json({ id: USER, email: 'fixture@example.invalid', email_confirmed_at: STAMP, is_anonymous: false, ...patch }) } });
     await rejectsCode(f.rpc.verifyOwner({ authorization: AUTH, expectedCustomerId: USER }), 'gateway_owner_unverified');
@@ -79,7 +79,7 @@ test('unconfirmed, anonymous, wrong expected owner and incomplete onboarding fai
   }
   for (const profiles of [[], [{ user_id: OTHER, onboarding_completed_at: STAMP }], [{ user_id: USER, onboarding_completed_at: null }], [{ user_id: USER, onboarding_completed_at: STAMP }, { user_id: USER, onboarding_completed_at: STAMP }]]) {
     const f = fixture({ handlers: { profile: () => json(profiles) } });
-    await rejectsCode(f.owner(), 'gateway_onboarding_required');
+    assert.equal((await f.owner()).customerId,USER);assert.equal(f.calls.length,1);
   }
 });
 
@@ -88,11 +88,11 @@ test('forged owners, other clients, API-key bearer and expired contexts never ca
   assert.throws(() => f.rpc.reserve({ ...owner }, input()), /gateway_owner_unverified/);
   assert.throws(() => second.rpc.reserve(owner, input()), /gateway_owner_unverified/);
   await rejectsCode(f.rpc.verifyOwner({ authorization: 'Bearer aw_live_' + 'a'.repeat(64) }), 'gateway_invalid_input');
-  assert.equal(f.calls.length, 2); assert.equal(second.calls.length, 0);
+  assert.equal(f.calls.length, 1); assert.equal(second.calls.length, 0);
   const short = fixture({ config: { ownerTtlMs: 1 } }); const expired = await short.owner();
   await new Promise(resolve => setTimeout(resolve, 8));
   assert.throws(() => short.rpc.reserve(expired, input()), /gateway_owner_unverified/);
-  assert.equal(short.calls.length, 2);
+  assert.equal(short.calls.length, 1);
 });
 
 test('modern secret is apikey-only; all five operation parameters remain private and fixed', async () => {
@@ -101,13 +101,13 @@ test('modern secret is apikey-only; all five operation parameters remain private
   const finished = await f.rpc.finish(owner, executing, receipt());
   assert.equal(finished.settled, true); assert.equal(finished.record.state, 'succeeded');
   await f.rpc.uncertain(owner, executing); await f.rpc.expire(owner, record);
-  assert.deepEqual(f.calls.slice(2).map(c => c.url.split('/').at(-1)), Object.values(RPC_NAMES));
-  for (const call of f.calls.slice(2)) {
+  assert.deepEqual(f.calls.slice(1).map(c => c.url.split('/').at(-1)), Object.values(RPC_NAMES));
+  for (const call of f.calls.slice(1)) {
     assert.equal(call.init.method, 'POST'); assert.equal(call.init.headers.apikey, SECRET); assert.equal(call.init.headers.authorization, undefined);
     assert.equal(call.init.headers['content-profile'], 'public'); assert.equal(call.body.p_owner, 'live:supabase:' + USER);
     assert.ok(!call.init.body.includes(SECRET)); assert.equal(call.init.signal.aborted, true);
   }
-  assert.deepEqual(Object.keys(f.calls[3].body).sort(), ['p_expected_version', 'p_id', 'p_owner']);
+  assert.deepEqual(Object.keys(f.calls[2].body).sort(), ['p_expected_version', 'p_id', 'p_owner']);
   assert.ok(Object.isFrozen(finished.record.result_json));
   assert.throws(() => { finished.record.result_json.answer = 'changed'; }, TypeError);
 });
@@ -128,7 +128,7 @@ test('raw money and ownership/configuration fields are validated before RPC', as
     { providerBudgetId: '../table' }, { requestKey: 'short' }, { payloadHash: 'z'.repeat(64) }, { capability: 'sql' }, { customerId: OTHER }, { billingMode: 'test' }, { project: 'aaro' }]) {
     assert.throws(() => f.rpc.reserve(owner, input(patch)), GatewayError);
   }
-  assert.equal(f.calls.length, 2);
+  assert.equal(f.calls.length, 1);
   assert.throws(() => exactInteger(Number.MAX_SAFE_INTEGER + 1), GatewayError);
   assert.equal(exactInteger(Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
 });
@@ -139,7 +139,7 @@ test('all immutable record boundaries and numeric JSON responses are checked', a
     { reserved_cny_micros: 11 }, { version: Number.MAX_SAFE_INTEGER + 1 }, { cost_usd_micros: '0' }, { state: 'unknown' }, { extra: 'not SQL' }, { usage_json: null }]) {
     const f = fixture({ handlers: { reserve: () => json({ fresh: true, record: row(patch) }) } });
     await rejectsCode(f.rpc.reserve(await f.owner(), input()), 'gateway_invalid_response');
-    assert.equal(f.calls.length, 3);
+    assert.equal(f.calls.length, 2);
   }
 });
 
@@ -151,7 +151,7 @@ test('record handles cannot be copied or used by an unrelated verified user', as
   assert.throws(() => fixture().rpc.claim(owner, record), /gateway_owner_unverified/);
   currentUser = OTHER; const unrelated = await f.owner();
   assert.throws(() => f.rpc.claim(unrelated, record), /gateway_reference_unverified/);
-  assert.equal(f.calls.length, 5);
+  assert.equal(f.calls.length, 3);
 });
 
 test('finite minimum and maximum currency values stay exact through JSON transport', async () => {
@@ -170,7 +170,7 @@ test('dispatch authority admission is nonspending, finite and never extends the 
   for (const window of [0, 1.5, '30000', 40001, Number.MAX_SAFE_INTEGER + 1]) assert.throws(() => f.rpc.assertDispatchWindow(owner, window), GatewayError);
   const short = fixture({ config: { ownerTtlMs: 500 } }); const shortOwner = await short.owner();
   assert.throws(() => short.rpc.assertDispatchWindow(shortOwner, 100), /gateway_authority_window_insufficient/);
-  assert.equal(f.calls.length, 2); assert.equal(short.calls.length, 2);
+  assert.equal(f.calls.length, 1); assert.equal(short.calls.length, 1);
 });
 
 test('uncertain and expire enforce transition versions; unchanged false/replayed flags are safe', async () => {
@@ -219,9 +219,9 @@ test('finish checks exact monetary/result receipt; failed outcome cannot charge 
 test('deadline bounds headers and response-body stalls without depending on stub cancellation', async () => {
   const f = fixture({ config: { rpcTimeoutMs: 20 }, handlers: { reserve: () => new Promise(() => {}) } });
   const started = performance.now(); await rejectsCode(f.rpc.reserve(await f.owner(), input()), 'gateway_deadline_exceeded');
-  assert.ok(performance.now() - started < 500); assert.equal(f.calls.length, 3);
+  assert.ok(performance.now() - started < 500); assert.equal(f.calls.length, 2);
   const body = fixture({ config: { rpcTimeoutMs: 20 }, handlers: { reserve: () => new Response(new ReadableStream({ start() {} }), { headers: { 'content-type': 'application/json' } }) } });
-  await rejectsCode(body.rpc.reserve(await body.owner(), input()), 'gateway_deadline_exceeded'); assert.equal(body.calls.length, 3);
+  await rejectsCode(body.rpc.reserve(await body.owner(), input()), 'gateway_deadline_exceeded'); assert.equal(body.calls.length, 2);
   const auth = fixture({ config: { authTimeoutMs: 20 }, handlers: { user: () => new Promise(() => {}) } });
   await rejectsCode(auth.owner(), 'gateway_deadline_exceeded'); assert.equal(auth.calls.length, 1);
   let invocations = 0; await rejectsCode(withDeadline(() => { invocations++; return new Promise(() => {}); }, 5), 'gateway_deadline_exceeded'); assert.equal(invocations, 1);
@@ -242,7 +242,7 @@ test('oversized, malformed, redirected and wrong-route responses are redacted, n
   for (const response of responses) {
     const f = fixture({ handlers: { reserve: response } }); const owner = await f.owner();
     await assert.rejects(f.rpc.reserve(owner, input()), e => e instanceof GatewayError && e.ambiguous === true && !String(e).includes(SECRET) && !e.stack.includes('private-table'));
-    assert.equal(f.calls.length, 3);
+    assert.equal(f.calls.length, 2);
   }
 });
 
@@ -256,7 +256,7 @@ test('auth HTTP errors distinguish invalid credentials from upstream unavailabil
 
 test('credential echoes are rejected before persistence/returned record and never appear in errors', async () => {
   const f = fixture(); const owner = await f.owner();
-  assert.throws(() => f.rpc.reserve(owner, input({ model: SECRET })), e => e instanceof GatewayError && !String(e).includes(SECRET)); assert.equal(f.calls.length, 2);
+  assert.throws(() => f.rpc.reserve(owner, input({ model: SECRET })), e => e instanceof GatewayError && !String(e).includes(SECRET)); assert.equal(f.calls.length, 1);
   for (const secret of [SECRET, ('sk' + '_live_' + 'syntheticOnlyNotARealKey'), 'aw_live_' + 'a'.repeat(64), AUTH.slice(7)]) {
     const g = fixture({ handlers: { user: () => json({ id: USER, email: 'fixture@example.invalid', email_confirmed_at: STAMP, is_anonymous: false, unexpected: secret }) } });
     await assert.rejects(g.owner(), e => e instanceof GatewayError && !String(e).includes(secret));
@@ -274,3 +274,5 @@ test('inert JSON DTO snapshot rejects accessors, cycles, sparse arrays and overs
   assert.throws(() => cloneJsonObject({ value: 'x'.repeat(65537) }, 65536), /gateway_payload_too_large/);
   const raw = { nested: [{ text: 'before' }] }; const copy = cloneJsonObject(raw); raw.nested[0].text = 'after'; assert.equal(copy.nested[0].text, 'before');
 });
+
+test('known atomic budget rejections map to payment-required without exposing SQL detail',async()=>{for(const message of ['gateway_customer_limit','gateway_key_limit']){const f=fixture({handlers:{reserve:()=>json({message,detail:'private SQL detail'},{status:400})}});await assert.rejects(f.rpc.reserve(await f.owner(),input()),error=>error.code===message&&error.status===402&&!error.ambiguous&&!error.message.includes('private'));}});

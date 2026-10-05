@@ -1,0 +1,18 @@
+import {pathToFileURL,fileURLToPath} from 'node:url';
+const {PGlite}=await import(pathToFileURL(process.argv[2]).href);
+import fs from 'node:fs';import assert from 'node:assert/strict';
+const db=new PGlite();await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key,email_confirmed_at timestamptz,is_anonymous boolean default false);create table public.customer_profiles(user_id uuid primary key,onboarding_completed_at timestamptz);`);
+const root=fileURLToPath(new URL('../../',import.meta.url));await db.exec(fs.readFileSync(root+'supabase/migrations/20261003060000_apiwild_gateway_portability.sql','utf8'));await db.exec(fs.readFileSync(root+'supabase/migrations/20261005030000_retail_supplier_separation.sql','utf8'));
+const customer='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',owner='live:supabase:'+customer,budget='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';await db.exec(`insert into auth.users values('${customer}',now(),false);`);
+await db.query('select apiwild_gateway_account_initialize($1)',[owner]);await db.query('select apiwild_gateway_account_initialize($1)',[owner]);
+assert.equal((await db.query('select count(*)::int n from apiwild_finance.gateway_accounts')).rows[0].n,1);
+await db.exec(`update apiwild_finance.gateway_accounts set funded_usd_micros=100000;insert into apiwild_finance.provider_budgets values('${budget}','apiwild','live','CNY','cccccccc-cccc-4ccc-8ccc-cccccccccccc',true,1000,1000,'v1',array['model']);`);
+const reserve=async key=>(await db.query('select apiwild_gateway_reserve($1,null,$2,$3,$4,$5,$6,$7,$8,$9) r',[owner,budget,key,'a'.repeat(64),'chat','model','v1',1000,800])).rows[0].r;
+let r=(await reserve('test_request_00001')).record;r=(await db.query('select apiwild_gateway_claim($1,$2,$3) r',[owner,r.id,r.version])).rows[0].r.record;
+const settled=(await db.query('select apiwild_gateway_finish_retail($1,$2,$3,$4,$5,$6,$7,$8,$9) r',[owner,r.id,r.version,'succeeded',100,0,'usage:fixture',JSON.stringify({text:'answer'}),JSON.stringify({prompt_tokens:1})])).rows[0].r;assert.equal(settled.record.supplier_pending,true);
+const usage=(await db.query('select apiwild_gateway_usage($1) r',[owner])).rows[0].r;assert.equal(usage.spentUsdMicros,100);assert.equal(usage.reservedUsdMicros,0);assert.equal(usage.availableUsdMicros,99900);
+await assert.rejects(reserve('test_request_00002'));
+await db.query('select apiwild_gateway_reconcile_supplier($1,$2,$3,$4)',[owner,r.id,100,'supplier:fixture']);assert.equal((await reserve('test_request_00003')).fresh,true);
+const privileges=(await db.query("select has_function_privilege('anon','public.apiwild_gateway_account_initialize(text)','execute') a,has_function_privilege('authenticated','public.apiwild_gateway_finish_retail(text,uuid,bigint,text,bigint,bigint,text,jsonb,jsonb)','execute') b,has_function_privilege('service_role','public.apiwild_gateway_finish_retail(text,uuid,bigint,text,bigint,bigint,text,jsonb,jsonb)','execute') c")).rows[0];assert.deepEqual(privileges,{a:false,b:false,c:true});
+await db.exec(`insert into auth.users values('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',null,false);`);await assert.rejects(db.query('select apiwild_gateway_account_initialize($1)',['live:supabase:eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee']));
+console.log('PASS: migration, zero-credit idempotency, retail debit, supplier hold, reconciliation release');await db.close();
