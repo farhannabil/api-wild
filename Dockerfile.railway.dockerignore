@@ -36,6 +36,10 @@
 !infra/railway/runtime/stripe-projection-rpc.mjs
 !infra/railway/runtime/stripe-financial-projection.mjs
 !infra/railway/runtime/supabase-gateway-rpc.mjs
+!infra/railway/runtime/native-auth-http.mjs
+!infra/railway/runtime/native-session-store.mjs
+!infra/railway/runtime/subrouter-native-auth.mjs
+!infra/railway/runtime/subrouter-native-customer.mjs
 **/.env*
 **/*.pem
 **/*.key

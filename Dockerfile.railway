@@ -21,5 +21,9 @@ COPY --from=build /app/infra/railway/runtime/stripe-webhook-ingress.mjs ./infra/
 COPY --from=build /app/infra/railway/runtime/stripe-projection-rpc.mjs ./infra/railway/runtime/stripe-projection-rpc.mjs
 COPY --from=build /app/infra/railway/runtime/stripe-financial-projection.mjs ./infra/railway/runtime/stripe-financial-projection.mjs
 COPY --from=build /app/infra/railway/runtime/supabase-gateway-rpc.mjs ./infra/railway/runtime/supabase-gateway-rpc.mjs
+COPY --from=build /app/infra/railway/runtime/native-auth-http.mjs ./infra/railway/runtime/native-auth-http.mjs
+COPY --from=build /app/infra/railway/runtime/native-session-store.mjs ./infra/railway/runtime/native-session-store.mjs
+COPY --from=build /app/infra/railway/runtime/subrouter-native-auth.mjs ./infra/railway/runtime/subrouter-native-auth.mjs
+COPY --from=build /app/infra/railway/runtime/subrouter-native-customer.mjs ./infra/railway/runtime/subrouter-native-customer.mjs
 USER node
 CMD ["node", "infra/railway/preparation-server.mjs"]

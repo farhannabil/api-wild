@@ -5,6 +5,8 @@ import path from 'node:path';
 import {isStripeWebhookIngress, STRIPE_WEBHOOK_PATH} from './runtime/stripe-webhook-ingress.mjs';
 import {isAaroUsageIngress,AARO_USAGE_PATH} from './runtime/aaro-usage-ingress.mjs';
 
+import {createNativeAuthHttp,isNativeAuthHttp} from './runtime/native-auth-http.mjs';
+
 const headers = Object.freeze({
   'Content-Type': 'application/json; charset=utf-8',
   'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
@@ -121,11 +123,12 @@ export function proxyHeaders(incoming, origin = 'https://apiwild.com') {
   return result;
 }
 
-export function createPreparationServer({backendPort, origin = 'https://apiwild.com', publicAssets, stripeWebhookIngress, aaroUsageIngress} = {}) {
+export function createPreparationServer({backendPort, origin = 'https://apiwild.com', publicAssets, stripeWebhookIngress, aaroUsageIngress, nativeAuthHttp} = {}) {
   if (stripeWebhookIngress !== undefined && !isStripeWebhookIngress(stripeWebhookIngress)) {
     throw new Error('Invalid Stripe webhook injection.');
   }
   if (aaroUsageIngress !== undefined && !isAaroUsageIngress(aaroUsageIngress)) throw new Error('Invalid AARO usage injection.');
+  if (nativeAuthHttp !== undefined && !isNativeAuthHttp(nativeAuthHttp)) throw new Error('Invalid native auth injection.');
   return createServer({requestTimeout: 10000, headersTimeout: 5000, maxHeaderSize: 16384}, (request, response) => {
     // Explicit owner-lane server configuration only; no env flag/default CLI
     // enables this route. All other application/release gates remain closed.
@@ -134,6 +137,9 @@ export function createPreparationServer({backendPort, origin = 'https://apiwild.
     }
     if (aaroUsageIngress && request.url === AARO_USAGE_PATH) {
       void aaroUsageIngress.handle(request, response); return;
+    }
+    if (nativeAuthHttp && request.url?.startsWith('/api/native/auth/')) {
+      void nativeAuthHttp.handle(request, response); return;
     }
     const result = preparationResponse(request);
     const asset = result.action === 'proxy' ? publicAssets?.lookup(request.url) : undefined;
@@ -191,7 +197,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   const publicAssets = await loadPublicAssets(path.join(root, 'dist/client'));
   const {startProdServer} = await import('vinext/server/prod-server');
   const backend = await startProdServer({port: 0, host: '127.0.0.1', outDir: path.join(root, 'dist')});
-  const frontend = createPreparationServer({backendPort: backend.port, publicAssets});
+  if (process.env.NATIVE_AUTH_ENABLED !== undefined && !['true','false'].includes(process.env.NATIVE_AUTH_ENABLED)) throw new Error('Invalid native auth enablement.');
+  const nativeAuthHttp = createNativeAuthHttp({enabled: process.env.NATIVE_AUTH_ENABLED === 'true'});
+  const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp});
   frontend.once('error', () => backend.server.close());
   frontend.listen(listener.port, listener.host, () => {
     console.log(`Guarded ${listener.local ? 'local' : 'Railway'} UI preparation listening; readiness remains closed.`);
