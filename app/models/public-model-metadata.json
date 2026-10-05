@@ -13,7 +13,7 @@
   },
   "MiniMax-M3": {
     "reference_model": "MiniMax: MiniMax M3",
-    "description": "MiniMax-M3 is a multimodal foundation model from MiniMax. It supports text, image, and video inputs with text output, a 1M-token context window, and is suited for long-horizon agentic work, coding,...",
+    "description": "MiniMax M3 has a published 1,048,576-token context window. Its reference listing supports text, image, video input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 512000,
     "input_modalities": [
@@ -51,7 +51,7 @@
   },
   "claude-fable-5": {
     "reference_model": "Anthropic: Claude Fable 5",
-    "description": "Claude Fable 5 is a Mythos-class model from Anthropic, built for autonomous knowledge work and coding. It supports text, image, and file inputs with text output, with reasoning support and...",
+    "description": "Claude Fable 5 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -81,7 +81,7 @@
   },
   "claude-fable-5-1": {
     "reference_model": "Anthropic: Claude Fable 5.1",
-    "description": "Claude Fable 5.1 improves on Claude Fable 5 across the board, with the biggest gains in agentic coding, long-running agentic workflows, and knowledge work: long code refactors, front-end and visual...",
+    "description": "Claude Fable 5.1 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -111,7 +111,7 @@
   },
   "claude-haiku-4-5": {
     "reference_model": "Anthropic: Claude Haiku 4.5",
-    "description": "Claude Haiku 4.5 is Anthropic\u2019s fastest and most efficient model, delivering near-frontier intelligence at a fraction of the cost and latency of larger Claude models. Matching Claude Sonnet 4\u2019s performance...",
+    "description": "Claude Haiku 4.5 has a published 200,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 200000,
     "max_output_tokens": 64000,
     "input_modalities": [
@@ -142,7 +142,7 @@
   },
   "claude-haiku-4-5-20251001": {
     "reference_model": "Anthropic: Claude Haiku 4.5",
-    "description": "Claude Haiku 4.5 is Anthropic\u2019s fastest and most efficient model, delivering near-frontier intelligence at a fraction of the cost and latency of larger Claude models. Matching Claude Sonnet 4\u2019s performance...",
+    "description": "Claude Haiku 4.5 has a published 200,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 200000,
     "max_output_tokens": 64000,
     "input_modalities": [
@@ -173,7 +173,7 @@
   },
   "claude-opus-4-6": {
     "reference_model": "Anthropic: Claude Opus 4.6",
-    "description": "Opus 4.6 is Anthropic\u2019s strongest model for coding and long-running professional tasks. It is built for agents that operate across entire workflows rather than single prompts, making it especially effective...",
+    "description": "Claude Opus 4.6 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -206,7 +206,7 @@
   },
   "claude-opus-4-7": {
     "reference_model": "Anthropic: Claude Opus 4.7",
-    "description": "Opus 4.7 is the next generation of Anthropic's Opus family, built for long-running, asynchronous agents. Building on the coding and agentic strengths of Opus 4.6, it delivers stronger performance on...",
+    "description": "Claude Opus 4.7 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -236,7 +236,7 @@
   },
   "claude-opus-4-8": {
     "reference_model": "Anthropic: Claude Opus 4.8",
-    "description": "Claude Opus 4.8 is Anthropic's most capable generally available model in the Opus family. It supports text, image, and file inputs with text output, with reasoning support and a 1M-token...",
+    "description": "Claude Opus 4.8 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -267,7 +267,7 @@
   },
   "claude-opus-5": {
     "reference_model": "Anthropic: Claude Opus 5",
-    "description": "Claude Opus 5 is Anthropic\u2019s flagship model for demanding reasoning, coding, and long-horizon agentic work. It is particularly strong at end-to-end software tasks, code review and bug finding, visual analysis...",
+    "description": "Claude Opus 5 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -298,7 +298,7 @@
   },
   "claude-opus-5-5": {
     "reference_model": "Anthropic: Claude Opus 5.5",
-    "description": "Claude Opus 5.5 is Anthropic's flagship model for demanding reasoning, coding, and long-horizon agentic work, succeeding Claude Opus 5. It is particularly strong at multi-step changes in large codebases, code...",
+    "description": "Claude Opus 5.5 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -329,7 +329,7 @@
   },
   "claude-sonnet-4-6": {
     "reference_model": "Anthropic: Claude Sonnet 4.6",
-    "description": "Sonnet 4.6 is Anthropic's most capable Sonnet-class model yet, with frontier performance across coding, agents, and professional work. It excels at iterative development, complex codebase navigation, end-to-end project management with...",
+    "description": "Claude Sonnet 4.6 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -362,7 +362,7 @@
   },
   "claude-sonnet-5": {
     "reference_model": "Anthropic: Claude Sonnet 5",
-    "description": "Sonnet 5 is Anthropic's most capable Sonnet-class model, with frontier performance across coding, agents, and professional work. It supports adaptive thinking with selectable reasoning effort levels (low, medium, high, max,...",
+    "description": "Claude Sonnet 5 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -392,7 +392,7 @@
   },
   "claude-sonnet-5-5": {
     "reference_model": "Anthropic: Claude Sonnet 5.5",
-    "description": "Claude Sonnet 5.5 is Anthropic's Sonnet-class model for well-scoped everyday work, succeeding Claude Sonnet 5 as a direct upgrade. It is especially strong at building features, fixing bugs, and producing...",
+    "description": "Claude Sonnet 5.5 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -435,7 +435,7 @@
   },
   "deepseek-v4-pro": {
     "reference_model": "DeepSeek: DeepSeek V4 Pro 0423",
-    "description": "DeepSeek V4 Pro is a large-scale Mixture-of-Experts model from DeepSeek with 1.6T total parameters and 49B activated parameters, supporting a 1M-token context window. It is designed for advanced reasoning, coding,...",
+    "description": "DeepSeek V4 Pro 0423 has a published 1,048,576-token context window. Its reference listing supports text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 384000,
     "input_modalities": [
@@ -473,7 +473,7 @@
   },
   "gemini-2.5-flash-lite": {
     "reference_model": "Google: Gemini 2.5 Flash Lite",
-    "description": "Gemini 2.5 Flash-Lite is a lightweight reasoning model in the Gemini 2.5 family, optimized for ultra-low latency and cost efficiency. It offers improved throughput, faster token generation, and better performance...",
+    "description": "Gemini 2.5 Flash Lite has a published 1,048,576-token context window. Its reference listing supports text, image, file, audio, video input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 65535,
     "input_modalities": [
@@ -505,7 +505,7 @@
   },
   "gemini-3.1-flash-lite": {
     "reference_model": "Google: Gemini 3.1 Flash Lite",
-    "description": "Gemini 3.1 Flash Lite is Google\u2019s GA high-efficiency multimodal model optimized for low-latency, high-volume workloads. It supports text, image, video, audio, and PDF inputs, and is designed for lightweight agentic...",
+    "description": "Gemini 3.1 Flash Lite has a published 1,048,576-token context window. Its reference listing supports text, image, video, file, audio input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 65536,
     "input_modalities": [
@@ -538,7 +538,7 @@
   },
   "gemini-3.1-pro-preview": {
     "reference_model": "Google: Gemini 3.1 Pro Preview",
-    "description": "Gemini 3.1 Pro Preview is Google\u2019s frontier reasoning model, delivering enhanced software engineering performance, improved agentic reliability, and more efficient token usage across complex workflows. Building on the multimodal foundation...",
+    "description": "Gemini 3.1 Pro Preview has a published 1,048,576-token context window. Its reference listing supports audio, file, image, text, video input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 65536,
     "input_modalities": [
@@ -571,7 +571,7 @@
   },
   "gemini-3.5-flash": {
     "reference_model": "Google: Gemini 3.5 Flash",
-    "description": "Gemini 3.5 Flash is Google's high-efficiency multimodal model, bringing near-Pro level coding and reasoning at Flash-tier cost and speed. It is highly optimized for coding proficiency and parallel agentic execution...",
+    "description": "Gemini 3.5 Flash has a published 1,048,576-token context window. Its reference listing supports text, image, video, file, audio input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 65536,
     "input_modalities": [
@@ -604,7 +604,7 @@
   },
   "gemini-3.5-flash-lite": {
     "reference_model": "Google: Gemini 3.5 Flash Lite",
-    "description": "Gemini 3.5 Flash Lite is a high-efficiency model from Google with upgraded agentic capabilities. It is suited for subagents that execute focused tasks within complex, multi-agent workflows.",
+    "description": "Gemini 3.5 Flash Lite has a published 1,048,576-token context window. Its reference listing supports text, image, video, file, audio input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 65536,
     "input_modalities": [
@@ -637,7 +637,7 @@
   },
   "gemini-3.8-flash": {
     "reference_model": "Google: Gemini 3.8 Flash",
-    "description": "Gemini 3.8 Flash is Google's most intelligent Flash model with significant gains from 3.7 Flash across software engineering, agentic tasks, and multi-step reasoning.",
+    "description": "Gemini 3.8 Flash has a published 1,048,576-token context window. Its reference listing supports text, image, video, file, audio input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 65536,
     "input_modalities": [
@@ -670,7 +670,7 @@
   },
   "glm-5.1": {
     "reference_model": "Z.ai: GLM 5.1",
-    "description": "GLM-5.1 delivers a major leap in coding capability, with particularly significant gains in handling long-horizon tasks. Unlike previous models built around minute-level interactions, GLM-5.1 can work independently and continuously on...",
+    "description": "GLM 5.1 has a published 204,800-token context window. Its reference listing supports text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 204800,
     "max_output_tokens": 131072,
     "input_modalities": [
@@ -706,7 +706,7 @@
   },
   "glm-5.2": {
     "reference_model": "Z.ai: GLM 5.2",
-    "description": "GLM 5.2 is a large-scale reasoning model from Z.ai. It supports text input and output with a 1M-token context window, and is suited for long-horizon agent workflows, project-level software engineering,...",
+    "description": "GLM 5.2 has a published 1,048,576-token context window. Its reference listing supports text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 131072,
     "input_modalities": [
@@ -744,7 +744,7 @@
   },
   "glm-5.3": {
     "reference_model": "Z.ai: GLM 5.3",
-    "description": "GLM-5.3 is a large-scale reasoning model from Z.ai, built for complex software engineering and long-horizon agent tasks. It supports text input and output with a 1M-token context window, and improves...",
+    "description": "GLM 5.3 has a published 1,048,576-token context window. Its reference listing supports text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 131072,
     "input_modalities": [
@@ -782,7 +782,7 @@
   },
   "glm-5.3-flash": {
     "reference_model": "Z.ai: GLM 5.3 Flash",
-    "description": "GLM-5.3-Flash is a native multimodal model from Z.ai. It is suited for efficient coding and long-horizon agent tasks. Its hybrid sparse and linear attention architecture maintains accurate long-context behavior while...",
+    "description": "GLM 5.3 Flash has a published 1,048,576-token context window. Its reference listing supports text, image, video input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 943717,
     "input_modalities": [
@@ -822,7 +822,7 @@
   },
   "glm-5.3-flashx": {
     "reference_model": "Z.ai: GLM 5.3 FlashX",
-    "description": "GLM-5.3-FlashX is the high-speed variant of Z.ai's GLM-5.3-Flash, a native multimodal model delivering inference speeds of up to 200 tokens/s. Built on the same hybrid sparse and linear attention architecture...",
+    "description": "GLM 5.3 FlashX has a published 1,048,576-token context window. Its reference listing supports text, image, video input and text output. Published API options include tool calling, reasoning controls.",
     "context_tokens": 1048576,
     "max_output_tokens": 131072,
     "input_modalities": [
@@ -851,7 +851,7 @@
   },
   "gpt-5.5": {
     "reference_model": "OpenAI: GPT-5.5",
-    "description": "GPT-5.5 is OpenAI\u2019s frontier model designed for complex professional workloads, building on GPT-5.4 with stronger reasoning, higher reliability, and improved token efficiency on hard tasks. It features a 1M+ token...",
+    "description": "GPT-5.5 has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -881,7 +881,7 @@
   },
   "gpt-5.6": {
     "reference_model": "OpenAI: GPT-5.6 Sol",
-    "description": "GPT-5.6 Sol is the flagship model in OpenAI's GPT-5.6 series. It is suited for complex reasoning, coding, and agentic workflows, and is particularly strong at command-line and multi-step coding tasks...",
+    "description": "GPT-5.6 Sol has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -911,7 +911,7 @@
   },
   "gpt-5.6-luna": {
     "reference_model": "OpenAI: GPT-5.6 Luna",
-    "description": "GPT-5.6 Luna is a fast, cost-efficient model in OpenAI's GPT-5.6 series. It is suited for high-volume, latency-sensitive tasks such as chat, classification, and lightweight agentic workflows, providing capable reasoning for...",
+    "description": "GPT-5.6 Luna has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -941,7 +941,7 @@
   },
   "gpt-5.6-sol": {
     "reference_model": "OpenAI: GPT-5.6 Sol",
-    "description": "GPT-5.6 Sol is the flagship model in OpenAI's GPT-5.6 series. It is suited for complex reasoning, coding, and agentic workflows, and is particularly strong at command-line and multi-step coding tasks...",
+    "description": "GPT-5.6 Sol has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -971,7 +971,7 @@
   },
   "gpt-5.6-terra": {
     "reference_model": "OpenAI: GPT-5.6 Terra",
-    "description": "GPT-5.6 Terra is a balanced model in OpenAI's GPT-5.6 series, positioned between the flagship Sol tier and the cost-efficient Luna tier. It is suited for everyday coding, reasoning, and agentic...",
+    "description": "GPT-5.6 Terra has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -1001,7 +1001,7 @@
   },
   "gpt-6-astra": {
     "reference_model": "OpenAI: GPT-6 Astra",
-    "description": "GPT-6 Astra is OpenAI's flagship model for demanding end-to-end work. It is suited for advanced analysis, software engineering, deep research, scientific work, and document creation, with particular strengths in long-horizon...",
+    "description": "GPT-6 Astra has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -1031,7 +1031,7 @@
   },
   "gpt-6-luna": {
     "reference_model": "OpenAI: GPT-6 Luna",
-    "description": "GPT-6 Luna is the fast, cost-efficient model in OpenAI's GPT-6 series, positioned below GPT-6 Sol. It is suited for high-volume and latency-sensitive workloads such as chat, classification, and lightweight agentic...",
+    "description": "GPT-6 Luna has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -1061,7 +1061,7 @@
   },
   "gpt-6-sol": {
     "reference_model": "OpenAI: GPT-6 Sol",
-    "description": "GPT-6 Sol is the cost-efficient high-end model in OpenAI's GPT-6 series, positioned below the flagship GPT-6 Astra and above the fast GPT-6 Luna tier. It is suited for demanding professional...",
+    "description": "GPT-6 Sol has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -1091,7 +1091,7 @@
   },
   "gpt-6.1-sol": {
     "reference_model": "OpenAI: GPT-6.1 Sol",
-    "description": "GPT-6.1 Sol is an upgrade to GPT-6 Sol from OpenAI, positioned below the flagship GPT-6 Astra in the GPT-6 series. It is suited for agentic coding, computer use, document-heavy professional...",
+    "description": "GPT-6.1 Sol has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -1121,7 +1121,7 @@
   },
   "grok-4.5": {
     "reference_model": "SpaceXAI: Grok 4.5",
-    "description": "Grok 4.5 is a model from SpaceXAI with frontier performance on coding, knowledge work, and STEM.",
+    "description": "Grok 4.5 has a published 500,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 500000,
     "max_output_tokens": 450000,
     "input_modalities": [
@@ -1153,7 +1153,7 @@
   },
   "grok-4.6": {
     "reference_model": "SpaceXAI: Grok 4.6",
-    "description": "Grok 4.6 is a model from SpaceXAI with frontier performance on coding, knowledge work, and STEM. It is succeeded by [Grok 4.7](/x-ai/grok-4.7).",
+    "description": "Grok 4.6 has a published 500,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 500000,
     "max_output_tokens": 450000,
     "input_modalities": [
@@ -1187,7 +1187,7 @@
   },
   "grok-4.7": {
     "reference_model": "SpaceXAI: Grok 4.7",
-    "description": "Grok 4.7 is SpaceXAI's flagship model for coding, agentic tasks, and knowledge work, succeeding Grok 4.6. It is particularly strong at long-running software engineering tasks, verifying its own work, and...",
+    "description": "Grok 4.7 has a published 500,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
     "context_tokens": 500000,
     "max_output_tokens": 450000,
     "input_modalities": [

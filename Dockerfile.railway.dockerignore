@@ -40,6 +40,9 @@
 !infra/railway/runtime/native-session-store.mjs
 !infra/railway/runtime/subrouter-native-auth.mjs
 !infra/railway/runtime/subrouter-native-customer.mjs
+!infra/railway/runtime/native-customer-api.mjs
+!infra/railway/runtime/native-relay-api.mjs
+!infra/railway/runtime/subrouter-native-billing.mjs
 **/.env*
 **/*.pem
 **/*.key

@@ -138,7 +138,7 @@ export function createPreparationServer({backendPort, origin = 'https://apiwild.
     if (aaroUsageIngress && request.url === AARO_USAGE_PATH) {
       void aaroUsageIngress.handle(request, response); return;
     }
-    if (nativeAuthHttp && request.url?.startsWith('/api/native/auth/')) {
+    if (nativeAuthHttp && (request.url?.startsWith('/api/native/auth/')||request.url?.startsWith('/api/native/customer/')||request.url==='/v1/chat/completions')) {
       void nativeAuthHttp.handle(request, response); return;
     }
     const result = preparationResponse(request);
@@ -197,8 +197,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   const publicAssets = await loadPublicAssets(path.join(root, 'dist/client'));
   const {startProdServer} = await import('vinext/server/prod-server');
   const backend = await startProdServer({port: 0, host: '127.0.0.1', outDir: path.join(root, 'dist')});
-  if (process.env.NATIVE_AUTH_ENABLED !== undefined && !['true','false'].includes(process.env.NATIVE_AUTH_ENABLED)) throw new Error('Invalid native auth enablement.');
-  const nativeAuthHttp = createNativeAuthHttp({enabled: process.env.NATIVE_AUTH_ENABLED === 'true'});
+  for(const name of ['NATIVE_AUTH_ENABLED','NATIVE_CUSTOMER_ENABLED','NATIVE_KEY_WRITES_ENABLED','NATIVE_CHECKOUT_ENABLED','NATIVE_RELAY_ENABLED'])if(process.env[name]!==undefined&&!['true','false'].includes(process.env[name]))throw new Error('Invalid native enablement.');
+  const allowedModels=process.env.NATIVE_RELAY_ENABLED==='true'?JSON.parse(await fs.readFile(path.join(root,'data/selected-supplier-models.json'),'utf8')).models.map(model=>model.model_name):[];
+  const nativeAuthHttp = createNativeAuthHttp({enabled:process.env.NATIVE_AUTH_ENABLED==='true',customerOperationsEnabled:process.env.NATIVE_CUSTOMER_ENABLED==='true',keyWritesEnabled:process.env.NATIVE_KEY_WRITES_ENABLED==='true',nativeCheckoutEnabled:process.env.NATIVE_CHECKOUT_ENABLED==='true',relayEnabled:process.env.NATIVE_RELAY_ENABLED==='true',allowedModels});
   const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp});
   frontend.once('error', () => backend.server.close());
   frontend.listen(listener.port, listener.host, () => {

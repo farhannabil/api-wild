@@ -49,7 +49,12 @@ export function createNativeAuth(config={}){
  }
  async function storeCall(method,...args){let timer;try{return await Promise.race([Promise.resolve().then(()=>store[method](...args)),new Promise((_,reject)=>timer=setTimeout(()=>reject(new NativeCustomerError('native_session_store_unavailable')),10000))]);}finally{clearTimeout(timer);}}
  async function session(request){const token=handleCookie(request.headers.get('cookie'));if(!token)fail('native_session_required',401);const record=await storeCall('get',hash(token));if(!record||!Number.isSafeInteger(record.userId)||record.userId<1||typeof record.sessionCookie!=='string'||!record.sessionCookie.length||record.sessionCookie.length>8192||/[\x00-\x1f\x7f]/.test(record.sessionCookie)||!Number.isSafeInteger(record.expiresAt)||record.expiresAt<=now())fail('native_session_required',401);return {token,record};}
- return Object.freeze({async readCustomer(request,operation){
+ return Object.freeze({async withCustomer(request,callback){
+  if(!enabled)fail('native_auth_disabled');if(!(request instanceof Request)||new URL(request.url).origin!==CUSTOMER_ORIGIN||typeof callback!=='function')fail('native_invalid_origin',403);
+  const {record}=await session(request);const self=await transport('/api/dist/user/self',{session:record});if(self.data?.id!==record.userId)fail('native_owner_mismatch',403);
+  // A server-injected callback only. These credentials must never become an HTTP DTO.
+  return callback(Object.freeze({userId:record.userId,sessionCookie:record.sessionCookie}));
+ },async readCustomer(request,operation){
   if(!enabled)fail('native_auth_disabled');if(new URL(request.url).origin!==CUSTOMER_ORIGIN)fail('native_invalid_origin',403);
   const {record}=await session(request);
   return createNativeCustomerReader({enabled:true,stationOrigin:NATIVE_STATION_ORIGIN,userId:record.userId,sessionCookie:record.sessionCookie,fetchImpl}).read(operation);

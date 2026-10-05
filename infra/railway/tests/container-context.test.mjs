@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 
 const root = new URL('../../../', import.meta.url);
-const modules = ['runtime/native-auth-http.mjs', 'runtime/native-session-store.mjs', 'runtime/subrouter-native-auth.mjs', 'runtime/subrouter-native-customer.mjs', 'preparation-server.mjs', 'runtime/aaro-usage-ingress.mjs', 'runtime/aaro-usage-bridge.mjs', 'runtime/stripe-webhook-ingress.mjs', 'runtime/stripe-projection-rpc.mjs', 'runtime/stripe-financial-projection.mjs', 'runtime/supabase-gateway-rpc.mjs'];
+const modules = ['runtime/native-customer-api.mjs', 'runtime/native-relay-api.mjs', 'runtime/subrouter-native-billing.mjs', 'runtime/native-auth-http.mjs', 'runtime/native-session-store.mjs', 'runtime/subrouter-native-auth.mjs', 'runtime/subrouter-native-customer.mjs', 'preparation-server.mjs', 'runtime/aaro-usage-ingress.mjs', 'runtime/aaro-usage-bridge.mjs', 'runtime/stripe-webhook-ingress.mjs', 'runtime/stripe-projection-rpc.mjs', 'runtime/stripe-financial-projection.mjs', 'runtime/supabase-gateway-rpc.mjs'];
 
 test('closed Docker context includes the catalogue imported by the application', async () => {
   const source = await readFile(new URL('lib/subrouter-catalogue-server.ts', root), 'utf8');
