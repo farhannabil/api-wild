@@ -22,6 +22,49 @@ test('insufficient supplier reservation is rejected before reserve or paid dispa
   const response=await new Promise((resolve,reject)=>{const body=JSON.stringify({model:route.model,messages:[{role:'user',content:'Hello'}],max_tokens:100});const req=request({host:'127.0.0.1',port:server.address().port,path:'/api/gateway',method:'POST',headers:{host:'apiwild.com',authorization:'Bearer fixture.session.signature','content-type':'application/json','content-length':Buffer.byteLength(body),'idempotency-key':'fixture-request-0001'}},res=>{res.resume();res.on('end',()=>resolve(res.statusCode));});req.on('error',reject);req.end(body);});assert.equal(response,503);assert.equal(calls.length,2);assert.ok(calls.every(url=>url.startsWith('https://yautmilnpllojugpmfgy.supabase.co/')));
  }finally{await new Promise(r=>server.close(r));}
 });
+test('observed input at the route ceiling settles; a one-token overrun holds without retail finish or redispatch',async()=>{
+ for(const promptTokens of [1000,1001]){
+  const acceptedRoute={...route,maxOutputTokens:32,supplierReserveCnyMicros:100000};
+  let stored,finished,uncertainCalls=0,dispatches=0;const stamp=new Date().toISOString();
+  const rpcCalls=[];
+  const port=createOwnedGatewayFromEnv({env:{...activeEnv,APIWILD_GATEWAY_ROUTES_JSON:JSON.stringify([acceptedRoute])},catalog:fullCatalog,fetchImpl:async(url,init)=>{
+   if(url.endsWith('/auth/v1/user'))return Response.json({id:customer,email:'fixture@example.test',email_confirmed_at:stamp,is_anonymous:false});
+   if(url.endsWith('account_initialize'))return Response.json({initialized:true,customer_id:customer,billing_mode:'test'});
+   if(url==='https://subrouter.ai/api/status')return Response.json({success:true,data:{quota_per_unit:500000,quota_display_type:'CNY',display_in_currency:true,price:6.8,usd_exchange_rate:6.8}});
+   if(url==='https://subrouter.ai/v1/chat/completions'){
+    dispatches++;
+    return Response.json({id:'synthetic-bound-completion',model:route.model,usage:{prompt_tokens:promptTokens,completion_tokens:1},choices:[{index:0,message:{role:'assistant',content:'Private synthetic answer'},finish_reason:'stop'}]},{headers:{'x-request-id':'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'}});
+   }
+   const p=JSON.parse(init.body);rpcCalls.push(url);
+   if(url.endsWith('apiwild_gateway_reserve')){
+    if(stored)return Response.json({fresh:false,record:stored});
+    stored={id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',user_id:p.p_owner,key_id:p.p_key_id,provider_budget_id:p.p_provider_budget_id,request_key:p.p_request_key,payload_hash:p.p_payload_hash,capability:p.p_capability,model:p.p_model,rate_version:p.p_rate_version,state:'reserved',version:0,reserved_usd_micros:p.p_reserved_usd_micros,reserved_cny_micros:p.p_reserved_cny_micros,cost_usd_micros:0,cost_cny_micros:0,observed_cny_micros:0,pricing_bound_exceeded:false,settlement_reference:null,result_json:null,usage_json:{},created_at:stamp,updated_at:stamp,expires_at:new Date(Date.now()+3600000).toISOString()};
+    return Response.json({fresh:true,record:stored});
+   }
+   if(url.endsWith('apiwild_gateway_claim')){stored={...stored,state:'executing',version:1};return Response.json({claimed:true,record:stored});}
+   if(url.endsWith('apiwild_gateway_finish_retail')){finished=p;stored={...stored,state:p.p_state,version:2,cost_usd_micros:p.p_cost_usd_micros,cost_cny_micros:p.p_cost_cny_micros,observed_cny_micros:p.p_cost_cny_micros,settlement_reference:p.p_settlement_reference,result_json:p.p_result,usage_json:p.p_usage};return Response.json({settled:true,replayed:false,record:stored});}
+   if(url.endsWith('apiwild_gateway_uncertain')){uncertainCalls++;stored={...stored,state:'uncertain',version:2};return Response.json({replayed:false,record:stored});}
+   throw Error('Unexpected bound fixture transport');
+  }});
+  const server=createServer((req,res)=>port.handle(req,res));await new Promise(r=>server.listen(0,'127.0.0.1',r));
+  const send=()=>new Promise((resolve,reject)=>{
+   const body=JSON.stringify({model:route.model,messages:[{role:'user',content:'Synthetic'}],max_tokens:32});
+   const req=request({host:'127.0.0.1',port:server.address().port,path:'/api/gateway',method:'POST',headers:{host:'apiwild.com',origin:'https://apiwild.com',authorization:'Bearer fixture.session.signature','content-type':'application/json','content-length':Buffer.byteLength(body),'idempotency-key':'fixture-input-bound-0001'}},res=>{let raw='';res.on('data',c=>raw+=c);res.on('end',()=>resolve({status:res.statusCode,raw,body:JSON.parse(raw)}));});req.on('error',reject);req.end(body);
+  });
+  try{
+   const response=await send();assert.equal(dispatches,1);
+   if(promptTokens===1000){assert.equal(response.status,200);assert.equal(stored.state,'succeeded');assert.equal(finished.p_usage.prompt_tokens,1000);assert.equal(uncertainCalls,0);}
+   else{
+    assert.equal(response.status,503);assert.equal(response.body.status,'awaiting-reconciliation');assert.equal(response.body.automaticRetry,false);
+    assert.equal(stored.state,'uncertain');assert.equal(stored.cost_usd_micros,0);assert.equal(stored.cost_cny_micros,0);
+    assert.ok(stored.reserved_usd_micros>0);assert.equal(stored.reserved_cny_micros,100000);assert.equal(finished,undefined);assert.equal(uncertainCalls,1);
+    assert.ok(rpcCalls.every(url=>!url.endsWith('apiwild_gateway_finish_retail')&&!url.endsWith('apiwild_gateway_expire')));
+    for(const value of ['Private synthetic answer','synthetic-bound-completion','eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'])assert.equal(response.raw.includes(value),false);
+    assert.equal((await send()).status,503);assert.equal(dispatches,1);assert.equal(uncertainCalls,1);
+   }
+  }finally{await new Promise(r=>server.close(r));}
+ }
+});
 
 test('bangai assembly carries the selected private binding through settlement without exposing it',async()=>{
  // Captured correlation fields, reconstructed response/RPC shapes, synthetic credentials.

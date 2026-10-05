@@ -1,0 +1,47 @@
+{
+  "task_id": "apiwild-observed-input-bound-20261005",
+  "status": "passed",
+  "summary": "Strictly bounds observed supplier prompt tokens against the selected route's configured input ceiling before retail accounting and customer finish. An overrun follows the existing uncertain hold without releasing reservations, returning an answer or redispatching.",
+  "changed_files": [
+    "infra/railway/runtime/owned-gateway-assembly.mjs",
+    "infra/railway/tests/owned-gateway-assembly.test.mjs"
+  ],
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/owned-gateway-assembly.test.mjs infra/railway/tests/owned-text-modes.test.mjs infra/railway/tests/gateway-service.test.mjs",
+      "exitCode": 0,
+      "tests": 33,
+      "passed": 33,
+      "skipped": 0
+    },
+    {
+      "command": "node --check infra/railway/runtime/owned-gateway-assembly.mjs",
+      "exitCode": 0
+    }
+  ],
+  "review": {
+    "reviewer": "/root/release_review",
+    "result": "passed",
+    "note": "Independently inspected the exact two-file diff and reran all 33 focused tests with zero skips. Confirmed bound precedes retail accounting/finish, both reservations remain uncertain after overrun, and no replay or answer exposure occurs."
+  },
+  "boundary_evidence": {
+    "observedPromptTokensAt1000": "Succeeds at the configured ceiling and records actual usage in normal private settlement.",
+    "observedPromptTokensAt1001": "Returns awaiting-reconciliation with automaticRetry false; state uncertain; both reservations retained; customer and supplier settled costs remain zero; no retail finish or expiry call; no private answer/identity leak; identical replay dispatches no second supplier request."
+  },
+  "limitations": [
+    "Focused assembly tests use mocked Supabase and supplier transports plus a real loopback HTTP adapter. No external database, paid call, credentials, deployment or commit was performed by this worker.",
+    "The input bound is verified after the single supplier response. It does not establish a supplier hidden-input worst-case contract or prevent already-incurred supplier liability.",
+    "The existing uncertain error lane persists state/version, not provider usage/correlation metadata. Its reservations remain held, and manual reconciliation is still necessary; automatic receipt recovery is not implemented or claimed.",
+    "Existing receipt RPCs remain terminal-only. No SQL, provider binding, retail price, customer credit release or expiry behavior was changed."
+  ],
+  "fileHashes": [
+    {
+      "path": "infra/railway/runtime/owned-gateway-assembly.mjs",
+      "sha256": "3781e2ed8b8dae76ee08d4d0564d0b637892e711d4b78a0389c3f92a6d5ca315"
+    },
+    {
+      "path": "infra/railway/tests/owned-gateway-assembly.test.mjs",
+      "sha256": "584108a450e7999e273d105d69ae06e0c0ee2c10f472ac6d048684cec505f2da"
+    }
+  ]
+}
