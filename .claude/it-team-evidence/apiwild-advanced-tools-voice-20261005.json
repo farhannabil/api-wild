@@ -1,0 +1,39 @@
+{
+  "task_id": "apiwild-advanced-tools-voice-20261005",
+  "status": "passed",
+  "summary": "Implement owned authenticated Wikipedia search/article summaries and calculator plus browser dictation/read aloud and editable text-file context. Preserve 24-model/72-route financial pipeline and supplier settings.",
+  "checks": [
+    {
+      "command": "node --test tests/*.test.mjs (explicit PowerShell file list)",
+      "exitCode": 0,
+      "tests": 381
+    },
+    {
+      "command": "node --test focused gateway, research, voice, discovery and container contracts (nine files)",
+      "exitCode": 0,
+      "tests": 59
+    },
+    {
+      "command": "node node_modules/vite/bin/vite.js build --config vite.railway.config.ts",
+      "exitCode": 0
+    },
+    {
+      "command": "Actual createResearchTools default pinned transport: Canada search and summary",
+      "exitCode": 0,
+      "searchResults": 5,
+      "summaryCharacters": 698
+    }
+  ],
+  "review": {
+    "reviewer": "/root reviewed backend/frontend; /root/advanced_tools_backend reviewed gateway integration",
+    "result": "passed",
+    "repair": "Separate free utility pool(default2) protects unchanged core pool(default4); regression passed."
+  },
+  "limitations": [
+    "Search is English Wikipedia only; reader provides article summaries, not general web search or arbitrary page scraping.",
+    "Browser speech recognition/playback varies by device/provider; actual microphone/audio hardware has not been tested. Hosted audio API endpoints are not implemented.",
+    "Utility rate limits are per process on the current one-replica service.",
+    "No new paid inference, live card charge, email, credentials, supplier route or budget change.",
+    "CI/exact production deployment and authenticated live utility acceptance are still pending this source checkpoint; root will record separate observed evidence."
+  ]
+}

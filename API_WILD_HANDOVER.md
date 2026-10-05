@@ -1,5 +1,14 @@
 # API WILD — agent handover
 
+## Advanced workspace tools and browser voice — October 5 source checkpoint
+
+- Added authenticated `POST /api/research/tools`: English Wikipedia search (up to5 cited results), article summaries (up to6,000 characters) and deterministic arithmetic. Session ownership or research-scoped hashed keys are required; the endpoint does not reserve/debit model money. Bound8 requests per owner/minute on the current server, separate2-request utility pool,5-second external deadline,64KiB bodies, public DNS pinning, verified hostname TLS and no redirects/auth headers.
+- Customer Chat/Research/Code now include review-and-add source evidence, UTF-8 plain-text attachments (20KB), browser microphone dictation and read aloud. Dictation starts only on explicit customer action, has a60-second cutoff and never overlaps owned playback. English/Bangla options reflect browser/device availability. Browser-provider audio processing is explained. Hosted `/v1/audio` endpoints and general web search are not implemented; no autonomous function/code execution is claimed.
+- Existing24 models/72 routes, customer tariffs, immutable paid request/replay bodies, supplier key restrictions/caps, financial reserves and prior genuine sandbox acceptance artifacts are preserved. No new paid inference, card charge, email, secret, deposit, top-up or supplier route was used.
+- Local381 application tests passed; focused gateway/utility/container/voice checks and Railway build passed. Root reviewed backend/frontend; independent backend worker reviewed gateway integration and verified free searches cannot starve paid/account slots. Actual default Wikimedia transport returned5 cited Canada results and a698-character Canada summary. Source receipts are in `.claude/it-team-evidence/`.
+- This source checkpoint is not an observed production deployment. Root must verify both exact-main CI workflows, Railway deployment commit/readiness and signed-in live search/read/calculator before marking release verified. Actual microphone/audio hardware remains untested. GEN-10 stays In Progress for broader integrations, excluded models and sustained hosting.
+
+
 ## Reviewed text-production release — October 5
 
 - This release expands the reviewed configuration from19 to24 models across Chat, Code and Research (72 routes). Five additions passed exact response/native-wallet checks: claude-opus-4-8, claude-sonnet-5-5, glm-5.1, glm-5.3 and grok-4.7. Existing57 route fields, retail prices, primary offers and MiniMax-only function-data support are preserved. Three private backup catalog objects change; rejected candidates remain disabled.
