@@ -25,6 +25,36 @@ export function welcomeMessage(job) {
   };
 }
 
+function cancelReceipt(reader) { try { Promise.resolve(reader?.cancel()).catch(() => {}); } catch {} }
+
+// One absolute deadline covers transport and the receipt body. Provider success
+// is never inferred from an oversized, malformed, or incomplete receipt.
+async function resendReceipt(fetchImpl, options) {
+  const controller = new AbortController(); let reader, response, timer;
+  const deadline = new Promise((_, reject) => { timer = setTimeout(() => {
+    controller.abort(); cancelReceipt(reader ?? response?.body); reject(new Error('email_provider_receipt_ambiguous'));
+  }, 15000); });
+  const operation = (async () => {
+    response = await fetchImpl('https://api.resend.com/emails', {...options, signal: controller.signal});
+    if (controller.signal.aborted || !(response instanceof Response)) throw new Error('email_provider_receipt_ambiguous');
+    if (!response.ok) { cancelReceipt(response.body); return {status: response.status, ok: false}; }
+    const length = response.headers.get('content-length');
+    if ((length !== null && (!/^\d+$/.test(length) || Number(length) > 16384)) || !response.body) throw new Error('email_provider_receipt_ambiguous');
+    reader = response.body.getReader(); const chunks = []; let bytes = 0;
+    while (true) {
+      const {done, value} = await reader.read();
+      if (controller.signal.aborted) throw new Error('email_provider_receipt_ambiguous');
+      if (done) break;
+      if (!(value instanceof Uint8Array) || (bytes += value.byteLength) > 16384 || chunks.length >= 16384) throw new Error('email_provider_receipt_ambiguous');
+      chunks.push(value);
+    }
+    const data = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(Buffer.concat(chunks, bytes)));
+    return {status: response.status, ok: true, id: data?.id};
+  })();
+  try { return await Promise.race([operation, deadline]); }
+  finally { clearTimeout(timer); controller.abort(); cancelReceipt(reader ?? response?.body); try { reader?.releaseLock(); } catch {} }
+}
+
 export async function processWelcomeOutbox({env = process.env, fetchImpl = fetch, limit = 1} = {}) {
   if (env.EMAIL_AUTOMATION_ENABLED !== 'true') return {enabled: false, claimed: 0};
   if (env.SUPABASE_URL !== SUPABASE_ORIGIN || !env.SUPABASE_SERVICE_ROLE_KEY ||
@@ -64,15 +94,14 @@ export async function processWelcomeOutbox({env = process.env, fetchImpl = fetch
     }
     let outcome = 'ambiguous', providerId = null;
     try {
-      const response = await fetchImpl('https://api.resend.com/emails', {
-        method: 'POST', redirect: 'error', signal: AbortSignal.timeout(15000),
+      const response = await resendReceipt(fetchImpl, {
+        method: 'POST', redirect: 'error',
         headers: {Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json',
           'Idempotency-Key': `welcome-email/${job.id}`}, body: JSON.stringify(message),
       });
       // A malformed success is ambiguous, never a reason to send a second email.
       if (response.ok) {
-        const receipt = await response.json();
-        if (UUID.test(receipt?.id || '')) { outcome = 'sent'; providerId = receipt.id; }
+        if (UUID.test(response.id || '')) { outcome = 'sent'; providerId = response.id; }
       } else if (response.status === 429 || response.status >= 500) {
         outcome = 'retry';
       } else {

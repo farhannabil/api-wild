@@ -100,3 +100,29 @@ test('lost final database write after provider acceptance cannot trigger another
   // The SQL claim remains processing; the actual Postgres suite verifies that
   // processing/ambiguous rows are never automatically claimed again.
 });
+
+for (const [label, provider] of [
+ ['oversized header', () => new Response('{}', {headers:{'Content-Length':'16385'}})],
+ ['oversized streamed body', () => new Response('x'.repeat(16385))],
+ ['malformed UTF-8', () => new Response(new Uint8Array([0xff]))],
+ ['invalid JSON', () => new Response('{')],
+ ['endless empty frames', () => new Response(new ReadableStream({pull(controller){controller.enqueue(new Uint8Array(0));}}))],
+]) test(`bounded provider ${label} remains ambiguous with no inline resend`, async () => {
+ const h=harness(provider); const result=await processWelcomeOutbox({env,...h});
+ assert.equal(result.ambiguous,1);assert.equal(result.providerAccepted,0);
+ assert.equal(h.calls[2].body.p_outcome,'ambiguous');assert.equal(h.calls.length,3);
+});
+
+test('provider transport ignoring its signal still reaches a finite ambiguous outcome',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']});let entered;const reached=new Promise(resolve=>entered=resolve);
+ const h=harness(()=>{entered();return new Promise(()=>{});});
+ const pending=processWelcomeOutbox({env,...h});await reached;t.mock.timers.tick(15000);
+ const result=await pending;assert.equal(result.ambiguous,1);assert.equal(h.calls.length,3);assert.equal(h.calls[1].signal.aborted,true);
+});
+
+test('provider receipt body stall shares the transport deadline',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']});let started;const reached=new Promise(resolve=>started=resolve);
+ const h=harness(()=>new Response(new ReadableStream({pull(){started();return new Promise(()=>{});}})));
+ const pending=processWelcomeOutbox({env,...h});await reached;await Promise.resolve();t.mock.timers.tick(15000);
+ const result=await pending;assert.equal(result.ambiguous,1);assert.equal(h.calls.length,3);assert.equal(h.calls[2].body.p_outcome,'ambiguous');
+});

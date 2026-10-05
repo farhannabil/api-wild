@@ -43,6 +43,17 @@
 !infra/railway/runtime/native-customer-api.mjs
 !infra/railway/runtime/native-relay-api.mjs
 !infra/railway/runtime/subrouter-native-billing.mjs
+!infra/railway/runtime/customer-key-rpc.mjs
+!infra/railway/runtime/gateway-http.mjs
+!infra/railway/runtime/gateway-ingress.mjs
+!infra/railway/runtime/gateway-service.mjs
+!infra/railway/runtime/owned-billing.mjs
+!infra/railway/runtime/owned-gateway-assembly.mjs
+!infra/railway/runtime/retail-token-pricing.mjs
+!infra/railway/runtime/stripe-checkout.mjs
+!infra/railway/runtime/subrouter-dispatch.mjs
+!infra/railway/runtime/workspace-policy-http.mjs
+!infra/railway/runtime/workspace-policy.mjs
 **/.env*
 **/*.pem
 **/*.key

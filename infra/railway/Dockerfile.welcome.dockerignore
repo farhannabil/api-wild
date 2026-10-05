@@ -3,6 +3,8 @@
 !infra/railway/
 !infra/railway/resend-outbox.mjs
 !infra/railway/run-welcome-outbox.mjs
+!infra/railway/runtime/
+!infra/railway/runtime/welcome-rpc.mjs
 **/.env*
 **/node_modules/
 **/.git/
