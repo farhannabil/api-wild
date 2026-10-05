@@ -1,0 +1,50 @@
+{
+  "task_id": "apiwild-supplier-request-binding",
+  "status": "passed",
+  "summary": "Capture the validated same-response supplier wallet request ID, retain completion identity separately, and bind private settlement evidence to the wallet correlation ID without SQL or grant changes.",
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/subrouter-request-binding.test.mjs infra/railway/tests/subrouter-dispatch.test.mjs infra/railway/tests/deepseek-assembly.test.mjs infra/railway/tests/owned-gateway-assembly.test.mjs",
+      "exitCode": 0,
+      "passed": 18
+    },
+    {
+      "command": "node infra/railway/tests/supplier-allowance-postgres.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "exitCode": 0,
+      "passed": 13
+    },
+    {
+      "command": "bundled git diff --check -- infra/railway/runtime/subrouter-dispatch.mjs infra/railway/runtime/owned-gateway-assembly.mjs infra/railway/tests/deepseek-assembly.test.mjs",
+      "exitCode": 0
+    }
+  ],
+  "review": {
+    "reviewer": "/root/public_status",
+    "result": "passed",
+    "evidence": ".claude/it-team-evidence/apiwild-supplier-request-binding-review-20261005.json",
+    "scope": "Independent 18-runtime-test rerun, source review, and exact single CI-path addition. The 13 SQL checks were run by the implementation worker."
+  },
+  "behavior": [
+    "x-request-id is captured only from the exact successful provider response and must be a single valid UUID; malformed or multiple values remain ambiguous and are never retried.",
+    "Completion ID, model and usage validation remain mandatory and unchanged.",
+    "The immutable settlement reference prefers usage:<providerRequestId>; providerRequestId and providerCompletionId are retained only in private usage_json.",
+    "Missing headers preserve the legacy completion-ID reference; no correlation ID is fabricated.",
+    "Customer result content contains neither supplier identifier; replay remains exactly one original dispatch.",
+    "Existing receipt SQL continues to bind owner, provider-key reference, exact model and immutable usage reference, with exactly-once receipt and overrun controls."
+  ],
+  "limitations": [
+    "No SQL migration, grants, customer credit adjustment, provider call or deployment performed by this worker.",
+    "This links future gateway requests to wallet-log receipts; it does not create a customer ledger row for the earlier direct supplier acceptance call.",
+    "An authoritative actual-CNY reader or separately verified owner ingestion remains required; header identity alone does not prove the amount.",
+    "Header format is restricted to the observed UUID contract. Other supplier formats need explicit validation before activation.",
+    "Live read-only preflight found the confirmed owner account with zero funded/available credits, no completed requests, inference disabled and no route manifest; these are distinct from direct supplier response/debit acceptance.",
+    "PGlite tests use one in-memory database connection and do not certify independent concurrent production transactions."
+  ],
+  "file_sha256": {
+    "infra/railway/runtime/subrouter-dispatch.mjs": "f10d190b02a91cf54c58f7558c396121c4fdd8c5017d7d06fe3fed007687cb2e",
+    "infra/railway/runtime/owned-gateway-assembly.mjs": "0c0596895861c945601df5569bb6d55d41b30f796c44c186701254eecb39bdd4",
+    "infra/railway/tests/subrouter-request-binding.test.mjs": "f20962bddc0c93041fda6470b326f85c639bc73eda7f1c3055ae8f15518fb9fd",
+    "infra/railway/tests/deepseek-assembly.test.mjs": "7454c94e41834d56a1acbd82369f6b9733cefb0280f56e7ce62238f87ca96e1a",
+    ".github/workflows/apiwild.yml": "6734eb2c1c5d7e2f4f888ce4f5fbbd5f52d74e655681537f27df76c4b6732af0"
+  }
+}

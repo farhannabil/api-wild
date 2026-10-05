@@ -44,7 +44,10 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
   const economics=conditional(record.model)?accounting.quoteRecorded({...tokenQuote,requestRateVersion:record.rate_version}):accounting.quote(tokenQuote);
   if(economics.estimatedSupplierCnyMicros>record.reserved_cny_micros)throw new GatewayError('supplier_quote_bound_exceeded');
   const charge=pricing.charge({model:record.model,promptTokens:providerResult.usage.prompt_tokens,completionTokens:providerResult.usage.completion_tokens,requestRateVersion:record.rate_version});
-  return {state:'succeeded',costUsdMicros:charge.costUsdMicros,costCnyMicros:0,settlementReference:'usage:'+providerResult.providerResponseId,result:{text:providerResult.text,model:record.model,created:providerResult.created,finishReason:providerResult.finishReason,usage:providerResult.usage,...(providerResult.toolCalls?{toolCalls:providerResult.toolCalls}:{})},usage:{...providerResult.usage,supplierReconciliationPending:true,estimatedSupplierCnyMicros:economics.estimatedSupplierCnyMicros}};
+  // Prefer the response's wallet-log correlation ID. Existing SQL binds the
+  // receipt to this immutable reference; completion ID remains private evidence.
+  const supplierCorrelationId=providerResult.providerRequestId??providerResult.providerResponseId;
+  return {state:'succeeded',costUsdMicros:charge.costUsdMicros,costCnyMicros:0,settlementReference:'usage:'+supplierCorrelationId,result:{text:providerResult.text,model:record.model,created:providerResult.created,finishReason:providerResult.finishReason,usage:providerResult.usage,...(providerResult.toolCalls?{toolCalls:providerResult.toolCalls}:{})},usage:{...providerResult.usage,supplierReconciliationPending:true,estimatedSupplierCnyMicros:economics.estimatedSupplierCnyMicros,providerCompletionId:providerResult.providerResponseId,...(providerResult.providerRequestId?{providerRequestId:providerResult.providerRequestId}:{})}};
  }});
  const playgroundModels=[...new Map(routes.map(r=>[r.model+'|'+r.capability,{model:r.model,capability:r.capability,maxOutputTokens:r.maxOutputTokens,supportsTools:r.supportsTools===true}])).values()];
  const discovery=createOwnedDiscoverySnapshot({catalog,routes:playgroundModels,rateVersion,tierPolicy,deploymentCommit:env.RAILWAY_GIT_COMMIT_SHA});
