@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "task": "API WILD authoritative supplier receipt integration",
+  "type": "independent-review",
+  "status": "passed",
+  "reviewer": "/root/public_status",
+  "author": "/root/source_launch_audit",
+  "at": "2026-10-05T10:42:32.236Z",
+  "findings": [],
+  "validation": {
+    "runtimeTests": 35,
+    "isolatedPostgresGroups": 7,
+    "externalOperations": 0
+  },
+  "reviewedBoundaries": [
+    "Exact owner, token, model, provider and upstream UUID binding",
+    "GET-only fixed supplier origin, bounded pages/body/deadlines, no retry",
+    "Immutable conversion settings; exact conservative USD-quota to CNY normalization",
+    "Malformed, duplicate, drift and overrun remain held",
+    "Private definer with public invoker service-only wrapper; no customer content",
+    "Existing receipt idempotency and legacy exact-CNY compatibility preserved"
+  ],
+  "files": {
+    "infra/railway/runtime/subrouter-supplier-conversion.mjs": "ac6d2b4ab157b8438f1250d4ea2e3b62f25179e7397c98f71c541fb3e82df7d6",
+    "infra/railway/runtime/subrouter-receipt-reader.mjs": "4d5125baa62d9e9c3b680588369e9b423e4e73dbcafdb218263c0e7c5f746d5d",
+    "infra/railway/runtime/supplier-debit-operator.mjs": "60580435b3cadba1417eeb6f96d6fa4ac80134f6fd390c90ae676e926a941b15",
+    "infra/railway/supplier-debit.mjs": "95a1aab35e21ae30bb7398e181e8b35ad8154442c82ae027d7d39e047f93c93c",
+    "infra/railway/runtime/supplier-debit-reconciliation.mjs": "c349640cc0c1c71ae37a22e32f72b2b408590e401c4f969ca1d83534d8885981",
+    "infra/railway/runtime/owned-gateway-assembly.mjs": "e88ec9b4b433e7b5574d6b31985be4d984d83e906fd5e0b4a73ef6c4152acdd8",
+    "infra/railway/tests/subrouter-receipt-reader.test.mjs": "39c6b917702fb95914844703dc5825b7e4e90b0348708d7a9ef33f97f2a75ea5",
+    "infra/railway/tests/supplier-receipt-postgres.mjs": "e51209cc7810335e28774ebc8a5a453db5312fa44bbf3d46dfaa0d1e763d3989",
+    "supabase/migrations/20261005103212_supplier_receipt_reader.sql": "0d2f4a2cce15df63e79c26792e532433a50ce5d5003da6fda77d4ce3e1559af1"
+  }
+}

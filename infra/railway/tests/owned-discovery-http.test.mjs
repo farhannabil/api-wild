@@ -6,6 +6,7 @@ import {createHash} from 'node:crypto';
 import {createPreparationServer} from '../preparation-server.mjs';
 import {createOwnedGatewayFromEnv} from '../runtime/owned-gateway-assembly.mjs';
 import {createOwnedDiscoverySnapshot,createOwnedDiscoveryHttp} from '../runtime/owned-discovery-http.mjs';
+import {conversion} from './supplier-receipt-fixture.mjs';
 
 const catalog=JSON.parse(await readFile(new URL('../../../data/selected-supplier-models.json',import.meta.url),'utf8'));
 const USER='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',OTHER='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',KEY='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -14,7 +15,7 @@ const env={APIWILD_OWNED_GATEWAY_ENABLED:'true',SUPABASE_SECRET_KEY:'sb_secret_s
 const wallet={currency:'USD',fundedUsdMicros:30000000,spentUsdMicros:1200000,reservedUsdMicros:500000,paymentHoldUsdMicros:0,availableUsdMicros:28300000,completedRequests:2};
 function fixture(patch={}){
   const calls=[];
-  const gatewayHttp=createOwnedGatewayFromEnv({env:{...env,...patch.env},catalog,fetchImpl:async(url,init)=>{
+  const gatewayHttp=createOwnedGatewayFromEnv({env:{...env,APIWILD_SUPPLIER_CONVERSION_JSON:JSON.stringify(conversion),...patch.env},catalog,fetchImpl:async(url,init)=>{
     const p=init.body?JSON.parse(init.body):null;calls.push({url,p,headers:init.headers});
     if(url.endsWith('/auth/v1/user')) {
       if(patch.invalidSession)return Response.json({error:'private database detail'},{status:401});

@@ -1,0 +1,2 @@
+# Release checkpoint digests require identical bytes on Windows and Linux.
+infra/railway/release/*.json text eol=lf

@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
 import {createServer,request} from 'node:http';import {createOwnedGatewayFromEnv} from '../runtime/owned-gateway-assembly.mjs';
+import {conversion,status} from './supplier-receipt-fixture.mjs';
 const catalog=JSON.parse(await readFile(new URL('../../../data/selected-supplier-models.json',import.meta.url),'utf8'));
 const customer='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',budget='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',id='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const model='deepseek-v4-flash',entry=catalog.models.find(m=>m.model_name===model),baseRateVersion='fixture-v1';
@@ -7,6 +8,7 @@ const policy={accepted:true,billingBasis:'apiwild_admission_time',baseRateVersio
 const rates={[model]:{primary:{accepted:true,supplierSlug:entry.primary.supplier_slug,currency:entry.primary.supplier_currency,off_peak:{input:0.05,output:0.2},peak:{input:0.1,output:0.4}}}}; // synthetic supplier fixture only
 const route={model,upstreamModel:model,providerBudgetId:budget,capability:'chat',maxOutputTokens:1000,maxInputTokens:1000,maxInputChars:1000,supplierReserveCnyMicros:100000,supplierSlug:entry.primary.supplier_slug};
 const env={APIWILD_OWNED_GATEWAY_ENABLED:'true',APIWILD_INFERENCE_ENABLED:'true',APIWILD_BILLING_MODE:'test',SUPABASE_SECRET_KEY:'sb_secret_syntheticFixtureOnly000000',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_syntheticFixtureOnly000000',SUBROUTER_API_KEY:'sk-syntheticFixtureOnly000000',APIWILD_RETAIL_RATE_VERSION:baseRateVersion,APIWILD_GATEWAY_ROUTES_JSON:JSON.stringify([route]),APIWILD_DEEPSEEK_TARIFF_ENABLED:'true',APIWILD_DEEPSEEK_TARIFF_POLICY_JSON:JSON.stringify(policy),APIWILD_DEEPSEEK_SUPPLIER_RATES_JSON:JSON.stringify(rates)};
+env.APIWILD_SUPPLIER_CONVERSION_JSON=JSON.stringify(conversion);
 test('conditional assembly refuses absent accepted policy or supplier rates without network',()=>{
  for(const patch of [{APIWILD_DEEPSEEK_TARIFF_ENABLED:'false'},{APIWILD_DEEPSEEK_SUPPLIER_RATES_JSON:'{}'},{APIWILD_DEEPSEEK_TARIFF_POLICY_JSON:JSON.stringify({...policy,accepted:false})}])assert.throws(()=>createOwnedGatewayFromEnv({env:{...env,...patch},catalog,fetchImpl:()=>{throw Error('unexpected network');}}));
 });
@@ -15,6 +17,7 @@ test('admission tariff stays frozen across dispatch boundary and expired-window 
  let now=Date.parse('2026-10-08T00:59:50Z'),clocks=0,row,upstreamCalls=0,finishCost,lookupCount=0;
  const port=createOwnedGatewayFromEnv({env,catalog,clock:()=>{clocks++;return now;},fetchImpl:async(url,init)=>{
   const p=init.body?JSON.parse(init.body):{};
+  if(url==='https://subrouter.ai/api/status')return Response.json({success:true,data:status});
   if(url.endsWith('/auth/v1/user'))return Response.json({id:customer,email:'fixture@example.test',email_confirmed_at:'2026-10-05T00:00:00Z',is_anonymous:false});
   if(url.endsWith('account_initialize'))return Response.json({initialized:true,customer_id:customer,billing_mode:'test'});
   if(url.endsWith('quote_lookup')){lookupCount++;assert.equal(p.p_owner,'test:supabase:'+customer);return Response.json(row?{found:true,quote:{model,providerBudgetId:budget,rateVersion:row.rate_version,reservedUsdMicros:row.reserved_usd_micros,reservedCnyMicros:row.reserved_cny_micros}}:{found:false});}

@@ -9,6 +9,7 @@ import {createModelAccounting} from './model-accounting.mjs';
 import {chatInputBytes,usesFunctionTools} from './chat-compatibility.mjs';
 import {createDeepSeekTierPolicy} from './deepseek-tier-policy.mjs';
 import {createOwnedDiscoverySnapshot} from './owned-discovery-http.mjs';
+import {createSupplierConversionGuard} from './subrouter-supplier-conversion.mjs';
 export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Date.now}){
  if(env.APIWILD_OWNED_GATEWAY_ENABLED!=='true')return undefined;
  const secretKey=env.SUPABASE_SECRET_KEY,publishableKey=env.SUPABASE_PUBLISHABLE_KEY,billingMode=env.APIWILD_BILLING_MODE;
@@ -36,7 +37,8 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
  const auth=createGatewayRpc(base),keys=createCustomerKeyRpc({supabaseOrigin:SUPABASE_ORIGIN,secretKey,billingMode,verifyOwner:async raw=>{const context=await auth.verifyOwner(raw);await auth.initializeAccount(context);return context;},fetchImpl});
  const rpc=createGatewayRpc({...base,keyVerifier:keys,retailSettlement:true});
  const upstreamDispatch=createSubrouterDispatch({fetchImpl,routes:routes.map(({maxInputTokens,supplierReserveCnyMicros,supplierRole,supplierSlug,...r})=>r)});
- const dispatch=work=>{if(conditional(work.record.model))tierPolicy.assertDispatch(work.record.model,work.record.rate_version);return upstreamDispatch(work);};
+ let conversionGuard;if(inferenceEnabled){try{conversionGuard=createSupplierConversionGuard({conversion:JSON.parse(env.APIWILD_SUPPLIER_CONVERSION_JSON),fetchImpl,clock});}catch{throw new GatewayError('supplier_conversion_unverified');}}
+ const dispatch=async work=>{if(conditional(work.record.model))tierPolicy.assertDispatch(work.record.model,work.record.rate_version);await conversionGuard.assertConversion({signal:work.signal});return upstreamDispatch(work);};
  const service=createGatewayService({rpc,dispatch,verifySettlement:async({record,providerResult})=>{
   const route=routes.find(r=>r.model===record.model&&r.providerBudgetId===record.provider_budget_id&&r.capability===record.capability&&r.rateVersion===record.rate_version);
   if(!route||providerResult.model!==route.upstreamModel||!providerResult.providerResponseId)throw new GatewayError('retail_response_unverified');

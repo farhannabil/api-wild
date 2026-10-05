@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "gate": "supplier-budget-acceptance",
+  "status": "passed",
+  "ownerApproved": true,
+  "observedAt": "2026-10-05T12:02:01.450Z",
+  "scope": "production-configuration",
+  "checks": {
+    "restrictedProductKey": true,
+    "finiteSharedBudget": true,
+    "modelProviderBindings": true,
+    "noAutomaticTopup": true,
+    "approvedExpiry": true
+  },
+  "referenceDigests": [
+    "0745f360311914043078a7f2e773d13ac957f13c06022c34175f4f6037923820",
+    "e5748f03d8b38af017745262b165d6a56af766fa40226555f7b7ff1668fc7f3f",
+    "ac08fc538687b4940fa0ee217cd1c066af7cc61f257be7335657639dc4b6bc90",
+    "f2d258799ca75d90c15dd627b350c16dad3c03281461c9403d8c7879842391b8"
+  ]
+}

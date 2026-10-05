@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "gate": "supplier-debit-acceptance",
+  "status": "passed",
+  "ownerApproved": true,
+  "observedAt": "2026-10-05T12:02:01.450Z",
+  "scope": "genuine-customer-sandbox-request",
+  "checks": {
+    "customerRequestMatched": true,
+    "actualWalletDebit": true,
+    "normalizedCostAudited": true,
+    "holdReconciled": true,
+    "backgroundReconciliation": true
+  },
+  "referenceDigests": [
+    "4d8c1902afdffc9855e9852ae65f5ac0406760dfddba4bd146bdc8b91109a274",
+    "e5748f03d8b38af017745262b165d6a56af766fa40226555f7b7ff1668fc7f3f",
+    "003cd1741ef2b67fc1f41c229e7889590cf450e6c4663b99e940d950a297737a",
+    "f2d258799ca75d90c15dd627b350c16dad3c03281461c9403d8c7879842391b8"
+  ]
+}

@@ -11,6 +11,8 @@ import {readFile} from 'node:fs/promises';
 const fullCatalog=JSON.parse(await readFile(new URL('../../../data/selected-supplier-models.json',import.meta.url),'utf8'));
 const route={providerBudgetId:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',model:'claude-fable-5',upstreamModel:'claude-fable-5',capability:'chat',maxOutputTokens:1000,maxInputTokens:1000,maxInputChars:1000,supplierReserveCnyMicros:1,supplierSlug:'viapi'};
 const activeEnv={...env,APIWILD_INFERENCE_ENABLED:'true',SUBROUTER_API_KEY:'sk-syntheticFixtureOnly000000',APIWILD_RETAIL_RATE_VERSION:'fixture-v1'};
+import {conversion} from './supplier-receipt-fixture.mjs';
+activeEnv.APIWILD_SUPPLIER_CONVERSION_JSON=JSON.stringify(conversion);
 test('activated route must identify its selected catalog supplier',()=>{
  for(const supplierSlug of [undefined,'different-supplier'])assert.throws(()=>createOwnedGatewayFromEnv({env:{...activeEnv,APIWILD_GATEWAY_ROUTES_JSON:JSON.stringify([{...route,supplierSlug}])},catalog:fullCatalog}),/supplier/);
 });

@@ -19,7 +19,8 @@ function assertPublic(value) {
 }
 
 export function assertLiveness(value) {
-  requireValue(value?.alive === true && value.ready === false && value.phase === 'launch-preparation', 'INVALID_RUNTIME_LIVENESS');
+  requireValue(value?.alive === true && ((value.ready === false && value.phase === 'launch-preparation')
+    || (value.ready === true && value.phase === 'launched')), 'INVALID_RUNTIME_LIVENESS');
 }
 
 export function assertModelCatalog(value) {

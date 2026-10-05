@@ -1,7 +1,8 @@
 // Adapter contract, NOT a fabricated Subrouter accounting endpoint. readReceipt
-// must independently fetch authoritative native-CNY accounting, not return a
-// model response, token estimate, quota units or caller-supplied verified=true.
+// must independently fetch authoritative accounting. USD-native quota requires
+// an immutable pinned conversion audit; token estimates are never receipts.
 import {createHash} from 'node:crypto';
+import {validateNativeDebit} from './subrouter-supplier-conversion.mjs';
 import {cloneJsonObject, strictObject, exactInteger, withDeadline} from './supabase-gateway-rpc.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const text=value=>typeof value==='string'&&value.length>0&&value.length<=200&&!/[\x00-\x20\x7f]/.test(value);
@@ -19,14 +20,15 @@ export function createSupplierDebitReconciler({enabled=false,readRequest,readRec
       if(request.owner!==owner||request.requestId!==requestId||request.supplierPending!==true
           ||!UUID.test(request.keyReference)||!text(request.model)||!text(request.upstreamResponseId))throw fail('supplier_request_unverified');
       const receipt=cloneJsonObject(await readReceipt({keyReference:request.keyReference,
-        upstreamResponseId:request.upstreamResponseId},{signal}),4096);
-      strictObject(receipt,['receiptId','keyReference','upstreamResponseId','model','currency','costCnyMicros','final']);
+        upstreamResponseId:request.upstreamResponseId,model:request.model},{signal}),4096);
+      strictObject(receipt,['receiptId','keyReference','upstreamResponseId','model','currency','costCnyMicros','final','nativeDebit']);
       if(!text(receipt.receiptId)||receipt.keyReference!==request.keyReference||receipt.upstreamResponseId!==request.upstreamResponseId
           ||receipt.model!==request.model||receipt.currency!=='CNY'||receipt.final!==true)throw fail('supplier_receipt_unverified');
       exactInteger(receipt.costCnyMicros,0,1000000000000);
       // Fixed field order provides stable idempotency across object insertion orders.
       const fact={receipt_id:receipt.receiptId,key_reference:receipt.keyReference,upstream_response_id:receipt.upstreamResponseId,
-        model:receipt.model,currency:'CNY',cost_cny_micros:receipt.costCnyMicros};
+        model:receipt.model,currency:'CNY',cost_cny_micros:receipt.costCnyMicros,
+        ...(Object.hasOwn(receipt,'nativeDebit')?{native_debit:validateNativeDebit(receipt.nativeDebit,receipt.costCnyMicros)}:{})};
       const digest=createHash('sha256').update(JSON.stringify(fact)).digest('hex');
       if(signal.aborted)throw Error();
       const result=await rpc('apiwild_supplier_debit_apply',{p_owner:owner,p_request:requestId,p_fact:fact,p_digest:digest},{signal});

@@ -43,7 +43,11 @@ jobs:
           infra/railway/tests/chat-compatibility.test.mjs
           infra/railway/tests/subrouter-dispatch.test.mjs
           infra/railway/tests/subrouter-request-binding.test.mjs
+          infra/railway/tests/subrouter-receipt-reader.test.mjs
+          infra/railway/tests/supplier-debit-sweep.test.mjs
+          infra/railway/tests/sandbox-e2e-harness.test.mjs
           infra/railway/tests/launch-status.test.mjs
+          infra/railway/tests/release-acceptance.test.mjs
           infra/railway/tests/supplier-allowance.test.mjs
           infra/railway/tests/supplier-allowance-operator.test.mjs
           infra/railway/tests/reservation-expiry-operator.test.mjs

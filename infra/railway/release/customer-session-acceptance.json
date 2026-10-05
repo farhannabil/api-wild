@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "gate": "customer-session-acceptance",
+  "status": "passed",
+  "ownerApproved": true,
+  "observedAt": "2026-10-05T12:02:01.450Z",
+  "scope": "production-configuration",
+  "checks": {
+    "productionLogin": true,
+    "ownedDashboard": true,
+    "ownerIsolation": true
+  },
+  "referenceDigests": [
+    "089e6abbda5cfc5c7f54bfda2939c10ba60f57dea41b5805772600d7d486251a",
+    "e5748f03d8b38af017745262b165d6a56af766fa40226555f7b7ff1668fc7f3f",
+    "3957b2e6c0ca4774c0511b091c1e00f8bc5d65559edaf0220b15c60d4b95d089"
+  ]
+}
