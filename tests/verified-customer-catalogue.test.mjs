@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {callableCustomerModels,customerRouteExamples} from '../app/models/callable-catalogue.mjs';
+import {approvedModelReferences,callableCustomerModels,customerRouteExamples} from '../app/models/callable-catalogue.mjs';
 
 const publicCatalog = JSON.parse(readFileSync(new URL('../app/models/public-models.json', import.meta.url)));
 const internalCatalog = JSON.parse(readFileSync(new URL('../data/selected-supplier-models.json', import.meta.url)));
+const referenceCatalog = JSON.parse(readFileSync(new URL('../data/models.json', import.meta.url)));
 // Exact model identities from the accepted launch routes; no provider aliases are admitted.
 const accepted = ['MiniMax-M2.7-highspeed','MiniMax-M3','claude-fable-5','claude-fable-5-1',
   'claude-haiku-4-5','claude-haiku-4-5-20251001','claude-opus-4-6','claude-opus-4-7',
@@ -61,4 +62,28 @@ test('directory fails closed for unowned, old, failed and malformed discovery re
     discovery([{...row(accepted[0]),capabilities:['chat','chat']}]),
     discovery([row(' '+accepted[0])]), discovery(Array(2001).fill(row(accepted[0]))),
   ]) assert.throws(() => callableCustomerModels(data, publicCatalog.models), /could not be verified/);
+});
+
+test('public price references intersect exact accepted identities and preserve all original rates and fields', () => {
+  const references = approvedModelReferences(referenceCatalog.models, publicCatalog.models);
+  const approvedIds = new Set(publicCatalog.models.flatMap(model => model.openrouter_reference ? [model.openrouter_reference.model_id] : []));
+  assert.equal(referenceCatalog.models.length, 581);
+  assert.equal(references.length, 17);
+  assert.deepEqual(references, referenceCatalog.models.filter(model => approvedIds.has(model.id)));
+  for (const reference of references) assert.equal(reference, referenceCatalog.models.find(model => model.id === reference.id));
+  assert.ok(references.some(model => model.id === 'google/gemini-3.1-flash-lite'));
+  assert.ok(!references.some(model => model.id === 'google/gemini-3.8-flash'));
+  const absent = [...approvedIds].filter(id => !references.some(model => model.id === id));
+  assert.deepEqual(absent.sort(), ['anthropic/claude-opus-5.5','anthropic/claude-sonnet-5.5','openai/gpt-6-sol','x-ai/grok-4.7','z-ai/glm-5.3-flashx']);
+});
+
+test('reference filtering never guesses an alias, copies retail prices, or fills missing comparisons', () => {
+  const exact = {id:'creator/model-4.5',pricing:{input:0.25,output:2},displayPricing:[]};
+  const alias = {id:'creator/model-4-5',pricing:{input:99,output:999}};
+  const approved = [{openrouter_reference:{model_id:exact.id,input:0,output:0}},
+    {openrouter_reference:{model_id:'creator/missing'}}, {openrouter_reference:null}];
+  assert.deepEqual(approvedModelReferences([alias,exact],approved), [exact]);
+  assert.deepEqual(approvedModelReferences([exact],[{openrouter_reference:{model_id:'CREATOR/MODEL-4.5'}}]), []);
+  assert.deepEqual(approvedModelReferences([exact],[]), []);
+  assert.throws(() => approvedModelReferences([exact],[{openrouter_reference:{model_id:' '+exact.id}}]), /Invalid approved/);
 });

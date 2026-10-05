@@ -1,0 +1,39 @@
+{
+  "task_id": "apiwild-verified-public-reference-ui-20261005",
+  "status": "passed",
+  "summary": "Filtered pricing calculator and landing/price featured references to the exact approved customer OpenRouter model identities. Seventeen historical comparison objects remain unchanged; five missing comparisons stay absent. Removed broader581-model browse wording and every-model promise. Customer24 directory, historical581 snapshot and internal39 supplier records untouched.",
+  "files": [
+    "app/pricing.tsx",
+    "app/landing.tsx",
+    "app/models/callable-catalogue.mjs",
+    "tests/verified-customer-catalogue.test.mjs"
+  ],
+  "checks": [
+    {
+      "command": "node --test tests/verified-customer-catalogue.test.mjs",
+      "exitCode": 0,
+      "result": "6 tests passed, including exact17 reference intersection with all rates/fields preserved, missing5 references absent, no alias/case inference or retail-price replacement, and existing24 customer identity/runtime boundaries."
+    },
+    {
+      "command": "node --input-type=module - (TypeScript compiler API application check)",
+      "exitCode": 0,
+      "result": "Application TypeScript passed with no diagnostics; noEmit:true and incremental:false. Only pre-existing deployment-only vite.config.ts omitted because local .openai/hosting.json is absent."
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "result": "No whitespace errors; Windows line-ending notices only."
+    }
+  ],
+  "review": {
+    "reviewer": "/root/general_web_backend",
+    "result": "passed",
+    "scope": "Compared all four files against0900dc8; both UI reference lists use the exact17 accepted reference intersection, all historical rates unchanged, missing5 comparisons absent and featured Google corrected to Gemini3.1FlashLite. Copy distinguishes third-party references from API WILD retail quotes, removes581 browse count/every-model promise. Independent6 tests passed; no findings."
+  },
+  "limitations": [
+    "Worker source preparation only; root owns production deployment and browser verification of pricing/home featured references and footer.",
+    "Reference comparisons are static third-party historical prices, not API WILD usage quotes or capability guarantees.",
+    "Five approved reference identities absent from the historical snapshot are omitted; no rates or aliases were invented.",
+    "Global historical581 source snapshot, lib/catalog.ts, public24 customer catalogue, supplier39 journal, runtime routing/finance/Stripe/email/voice/hosting remain unchanged."
+  ]
+}
