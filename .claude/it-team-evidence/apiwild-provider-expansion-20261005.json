@@ -1,0 +1,47 @@
+{
+  "task_id": "apiwild-provider-expansion-20261005",
+  "status": "reviewed-and-staged",
+  "scope": "production-configuration-and-direct-supplier-validation",
+  "existingModels": 19,
+  "acceptedModels": 24,
+  "capabilityRoutes": 72,
+  "newAcceptedModels": ["claude-opus-4-8", "claude-sonnet-5-5", "glm-5.1", "glm-5.3", "grok-4.7"],
+  "singleAttemptSupplierTests": 17,
+  "rejectedTests": 12,
+  "supplierTokenUpdates": 1,
+  "continuationTokenUpdates": 0,
+  "automaticRetries": 0,
+  "newCustomerEndToEndClaims": 0,
+  "newLiveCardCharges": 0,
+  "newEmails": 0,
+  "retailPricesAndAllPrimaryOffersUnchanged": true,
+  "existingRouteFieldsAndToolFlagsUnchanged": true,
+  "remainingOwnedBudgetCnyMicros": 48912362,
+  "directProbeDebitsCnyMicros": 1528,
+  "unconfirmedOrRejectedReserveCnyMicros": 80395,
+  "reserveIsActualReceipt": false,
+  "combinedLifetimeCeilingCny": 50,
+  "expiresAt": "2026-11-04T10:25:19.000Z",
+  "automaticTopup": false,
+  "localChecks": {
+    "modelAccountingAndOwnedAssemblyTestsPassed": 12,
+    "configGeneratorPeerTestsPassed": 10,
+    "continuationSyntheticTestsPassed": 20,
+    "continuationIndependentCriticalTestsPassed": 9,
+    "strictCandidateReleaseLoaderPassed": true,
+    "actualKeyBudgetAndStagedConfigurationReadbacksPassed": true
+  },
+  "outputSha256": {
+    "routes": "c8030ead3ff9374c37374780ef86fce97b17dd1ac6bfde31abf6cde8166d01b9",
+    "bindings": "c4ed05a4280383b4a432839a498474fcb10553fe085e126374f3f97186789e6b",
+    "catalog": "6a76746429cb6a8ca20a3067e7d52bacde02b54cbe2a4c9985a34b1b52a23ccb"
+  },
+  "reviewers": ["/root/release_review", "/root/acceptance_probe_review", "/root/launch_board_audit"],
+  "limitations": [
+    "New accepted routes have direct exact-response/native-charge proof, not a separate owned customer purchase per model.",
+    "Existing customer/payment/debit acceptance artifacts and historical timestamps retain their original scopes.",
+    "Failed or mismatched responses and native identities cannot activate a route.",
+    "Two DeepSeek tariff/version gates and the GeminiLite expression gate remain unresolved.",
+    "Post-merge CI, exact deployed commit and24-model public readback are release-owner verification steps."
+  ]
+}

@@ -1,5 +1,21 @@
 # API WILD — agent handover
 
+## Reviewed text-production release — October 5
+
+- This release expands the reviewed configuration from19 to24 models across Chat, Code and Research (72 routes). Five additions passed exact response/native-wallet checks: claude-opus-4-8, claude-sonnet-5-5, glm-5.1, glm-5.3 and grok-4.7. Existing57 route fields, retail prices, primary offers and MiniMax-only function-data support are preserved. Three private backup catalog objects change; rejected candidates remain disabled.
+- Before this expansion, production commit `30da58aa97bda200418d2128c112661c04b02433` and deployment `b6f7a5f8-62ec-4514-8fcf-de1e91010e6f` were verified successful. Both main workflows passed and all31 deployment-aware health/auth/page/email checks passed after admission restoration. Verify this release's exact deployed commit and24-model count through `/health/ready`, `/api/gateway/config` and the latest [Linear checkpoint](https://linear.app/genxintel/issue/GEN-10/build-ai-model-api-resale-platform).
+- Owned API WILD signup/confirmation, accounts, personal keys, live USD prepaid Checkout ($30 minimum), retail usage and private supplier reconciliation are configured. One genuine sandbox lifecycle passed paid Checkout, signed exactly-once credit, owned model response/retail debit, duplicate-safe replay, native supplier charge reconciliation, full signed refund and test-key revocation; final net sandbox credit0 and live-wallet isolation were read back. Live Checkout was inspected unpaid and expired. No live paid customer purchase is claimed.
+- Shared supplier lifetime authorization remains within¥50 across test/production keys, expires November4 at10:25:19UTC and has no deposit or automatic top-up. After these17 one-shot tests, the owned operating allowance is¥48.912362: direct native debits reduce it conservatively by¥0.001528, with¥0.080395 retained as unconfirmed/rejected-attempt reserves. Reserves are not actual receipts. Existing personal keys and all unrelated services are unchanged.
+- Supplier key restrictions were changed exactly once to the19 approved replacements. The subsequent13-model continuation performed zero key updates and never repeated the original four attempts. Five of17 candidates passed; all12 rejected candidates remain excluded. Two DeepSeek models were not probed because served-version/peak supplier tariffs are unresolved; Gemini3.5FlashLite still needs documented expression/cache units and a finite bound. The39-entry catalog is not39 callable models.
+- Deployed recovery settings: `/health/ready`,30-second timeout, ON_FAILURE restart(max3). Receipt and reservation-expiry workers are enabled; actual observed scans had0pending/noerrors. Over-limit observed supplier input holds both reservations and returns no answer. Uncertain requests require manual reconciliation; automatic recovery is not claimed.
+- Research analyzes model input without external browsing. MiniMax-M2.7-highspeed alone has accepted function-call data; no external function executes. Search, voice/media, native Responses/Anthropic, broad coding-agent compatibility and enterprise features remain unavailable or unverified.
+- One approved owner test email was delivered. Custom welcome sending remains off. No additional email, real card charge, supplier top-up or hosting upgrade was performed. Railway trial hosting still needs an owner decision for sustained service.
+- Historical missing-secret, zero-budget, one-day-key and disabled-checkout/inference statements below are superseded. GEN-10 remains In Progress for the broader project. Release evidence scopes retain genuine sandbox acceptance separately from live configuration and direct supplier tests.
+
+---
+
+## Historical checkpoints — superseded where noted above
+
 ## Verified Stripe completion checkpoint — October 5
 
 This checkpoint supersedes the earlier refund-release BUILDING status below.
