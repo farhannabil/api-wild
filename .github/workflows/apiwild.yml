@@ -32,12 +32,12 @@ jobs:
       - name: Build and test
         run: npm test
       - name: Verify owned gateway authentication and assembly
-        run: node --test infra/railway/tests/gateway-ingress.test.mjs infra/railway/tests/owned-gateway-assembly.test.mjs infra/railway/tests/supabase-gateway-rpc.test.mjs
+        run: node --test infra/railway/tests/gateway-ingress.test.mjs infra/railway/tests/owned-gateway-assembly.test.mjs infra/railway/tests/supabase-gateway-rpc.test.mjs infra/railway/tests/owned-discovery-http.test.mjs
   production-health:
     needs: build-and-test
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -47,5 +47,5 @@ jobs:
           node-version: '22'
       - name: Check production routes, access boundaries and email DNS
         env:
-          APIWILD_GATEWAY_OPERATIONS_SECRET: ${{ secrets.APIWILD_GATEWAY_OPERATIONS_SECRET }}
+          APIWILD_EXPECTED_COMMIT: ${{ github.sha }}
         run: node scripts/daily-health.mjs

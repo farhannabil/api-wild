@@ -2,6 +2,7 @@ import {createOwnedBillingFromEnv} from './runtime/owned-billing.mjs';
 import {createWorkspacePolicyHttpFromEnv} from './runtime/workspace-policy-http.mjs';
 import {createOwnedGatewayFromEnv} from './runtime/owned-gateway-assembly.mjs';
 import {isGatewayHttp,isGatewayPath} from './runtime/gateway-http.mjs';
+import {createOwnedDiscoveryHttp,createOwnedDiscoverySnapshot,isOwnedDiscoveryHttp,isOwnedDiscoveryPath} from './runtime/owned-discovery-http.mjs';
 import {createServer, request as upstreamRequest} from 'node:http';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import fs from 'node:fs/promises';
@@ -127,17 +128,19 @@ export function proxyHeaders(incoming, origin = 'https://apiwild.com') {
   return result;
 }
 
-export function createPreparationServer({backendPort, origin = 'https://apiwild.com', publicAssets, stripeWebhookIngress, aaroUsageIngress, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp} = {}) {
+export function createPreparationServer({backendPort, origin = 'https://apiwild.com', publicAssets, stripeWebhookIngress, aaroUsageIngress, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, discoveryHttp} = {}) {
   if (stripeWebhookIngress !== undefined && !isStripeWebhookIngress(stripeWebhookIngress)) {
     throw new Error('Invalid Stripe webhook injection.');
   }
   if (aaroUsageIngress !== undefined && !isAaroUsageIngress(aaroUsageIngress)) throw new Error('Invalid AARO usage injection.');
   if (nativeAuthHttp !== undefined && !isNativeAuthHttp(nativeAuthHttp)) throw new Error('Invalid native auth injection.');
   if(gatewayHttp!==undefined&&!isGatewayHttp(gatewayHttp))throw new Error('Invalid gateway injection.');
+  if(discoveryHttp!==undefined&&!isOwnedDiscoveryHttp(discoveryHttp))throw new Error('Invalid discovery injection.');
   return createServer({requestTimeout: 10000, headersTimeout: 5000, maxHeaderSize: 16384}, (request, response) => {
     // Explicit owner-lane server configuration only; no env flag/default CLI
     // enables this route. All other application/release gates remain closed.
     if(ownedBilling?.matches(request.url)){void ownedBilling.handle(request,response);return;}
+    if(discoveryHttp&&isOwnedDiscoveryPath(request.url)){void discoveryHttp.handle(request,response);return;}
     if(workspacePolicyHttp?.matches(request.url)){void workspacePolicyHttp.handle(request,response);return;}
     if (stripeWebhookIngress && request.url === STRIPE_WEBHOOK_PATH) {
       void stripeWebhookIngress.handle(request, response); return;
@@ -208,10 +211,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   for(const name of ['NATIVE_AUTH_ENABLED','NATIVE_CUSTOMER_ENABLED','NATIVE_KEY_WRITES_ENABLED','NATIVE_CHECKOUT_ENABLED','NATIVE_RELAY_ENABLED'])if(process.env[name]!==undefined&&!['true','false'].includes(process.env[name]))throw new Error('Invalid native enablement.');
   const allowedModels=process.env.NATIVE_RELAY_ENABLED==='true'?JSON.parse(await fs.readFile(path.join(root,'data/selected-supplier-models.json'),'utf8')).models.map(model=>model.model_name):[];
   const nativeAuthHttp = createNativeAuthHttp({enabled:process.env.NATIVE_AUTH_ENABLED==='true',customerOperationsEnabled:process.env.NATIVE_CUSTOMER_ENABLED==='true',keyWritesEnabled:process.env.NATIVE_KEY_WRITES_ENABLED==='true',nativeCheckoutEnabled:process.env.NATIVE_CHECKOUT_ENABLED==='true',relayEnabled:process.env.NATIVE_RELAY_ENABLED==='true',allowedModels});
-  const gatewayHttp=createOwnedGatewayFromEnv({env:process.env,catalog:process.env.APIWILD_OWNED_GATEWAY_ENABLED==='true'?JSON.parse(await fs.readFile(path.join(root,'data/selected-supplier-models.json'),'utf8')):{models:[]}});
+  const catalog=JSON.parse(await fs.readFile(path.join(root,'data/selected-supplier-models.json'),'utf8'));
+  const gatewayHttp=createOwnedGatewayFromEnv({env:process.env,catalog});
+  const discoveryHttp=createOwnedDiscoveryHttp({snapshot:gatewayHttp?.discovery??createOwnedDiscoverySnapshot({catalog,deploymentCommit:process.env.RAILWAY_GIT_COMMIT_SHA})});
   const ownedBilling=await createOwnedBillingFromEnv(process.env);
   const workspacePolicyHttp=createWorkspacePolicyHttpFromEnv(process.env);
-  const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp});
+  const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, discoveryHttp});
   frontend.once('error', () => backend.server.close());
   frontend.listen(listener.port, listener.host, () => {
     console.log(`Guarded ${listener.local ? 'local' : 'Railway'} UI preparation listening; readiness remains closed.`);
