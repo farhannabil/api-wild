@@ -4,6 +4,28 @@ export const customerRouteExamples = Object.freeze([
   Object.freeze({id:'code', name:'Code', model:'gpt-6-sol'}),
   Object.freeze({id:'research', name:'Research', model:'gemini-3.1-pro-preview'}),
 ]);
+
+/**
+ * Keep exact, already approved OpenRouter comparison identities only.
+ * Missing references remain absent; prices and reference objects are unchanged.
+ * @template {{id: string}} T
+ * @param {readonly T[]} references
+ * @param {readonly {openrouter_reference?: {model_id: string}|null}[]} approved
+ * @returns {T[]}
+ */
+export function approvedModelReferences(references, approved) {
+  if (!Array.isArray(references) || !Array.isArray(approved)
+      || references.length > 2000 || approved.length > 2000) throw Error('Invalid model references.');
+  const ids = new Set();
+  for (const model of approved) {
+    const reference = model?.openrouter_reference;
+    if (reference == null) continue;
+    if (typeof reference.model_id !== 'string' || !reference.model_id
+        || reference.model_id.trim() !== reference.model_id || /[\x00-\x1f\x7f]/.test(reference.model_id)) throw Error('Invalid approved model reference.');
+    ids.add(reference.model_id);
+  }
+  return references.filter(row => row && typeof row.id === 'string' && ids.has(row.id));
+}
 /**
  * @template {{model_name: string}} T
  * @param {unknown} data
