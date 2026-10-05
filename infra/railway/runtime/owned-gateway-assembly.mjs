@@ -42,6 +42,9 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
  const service=createGatewayService({rpc,dispatch,verifySettlement:async({record,providerResult})=>{
   const route=routes.find(r=>r.model===record.model&&r.providerBudgetId===record.provider_budget_id&&r.capability===record.capability&&r.rateVersion===record.rate_version);
   if(!route||providerResult.model!==route.upstreamModel||!providerResult.providerResponseId)throw new GatewayError('retail_response_unverified');
+  // Supplier-added input is bounded independently of the doubled money quote.
+  // An overrun stays uncertain; no customer finish or automatic redispatch.
+  exactInteger(providerResult.usage?.prompt_tokens,0,route.maxInputTokens);
   const tokenQuote={model:record.model,promptTokens:providerResult.usage.prompt_tokens,completionTokens:providerResult.usage.completion_tokens,supplier:route.supplierRole||'primary'};
   const economics=conditional(record.model)?accounting.quoteRecorded({...tokenQuote,requestRateVersion:record.rate_version}):accounting.quote(tokenQuote);
   if(economics.estimatedSupplierCnyMicros>record.reserved_cny_micros)throw new GatewayError('supplier_quote_bound_exceeded');
