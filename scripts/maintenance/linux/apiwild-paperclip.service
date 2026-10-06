@@ -1,0 +1,31 @@
+[Unit]
+Description=API WILD existing Paperclip manager
+After=network-online.target docker.service user@999.service
+Requires=docker.service user@999.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=apiwild-maintenance
+Group=apiwild-maintenance
+WorkingDirectory=/srv/apiwild-maintenance/user/.paperclip
+Environment=HOME=/srv/apiwild-maintenance/user
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=PAPERCLIP_CONFIG=/srv/apiwild-maintenance/user/.paperclip/instances/default/config.json
+Environment=HEARTBEAT_SCHEDULER_ENABLED=false
+Environment=NODE_ENV=production
+Environment=XDG_RUNTIME_DIR=/run/user/999
+ExecStart=/usr/local/bin/node /srv/apiwild-maintenance/runtime/node_modules/paperclipai/dist/index.js run --no-repair
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=30
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/srv/apiwild-maintenance/user /srv/apiwild-maintenance/operator /srv/apiwild-maintenance/incidents
+MemoryMax=2G
+TasksMax=128
+
+[Install]
+WantedBy=multi-user.target

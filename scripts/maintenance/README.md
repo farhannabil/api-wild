@@ -1,87 +1,50 @@
 # API WILD autonomous maintenance
 
-The owner authorized this automation on October 5, 2026. Native Paperclip company
-`5b74ebc7-db43-4476-a25c-7d2052881444` remains the sole agent manager.
-Tracking parent: `FAR-59` (`2d436f81-a440-4cad-b541-98b0a8e21e24`).
+- Host: Hostinger KVM4, VPS1993150, dedicated non-root `apiwild-maintenance` account (UID999).
+- Existing Paperclip company: `5b74ebc7-db43-4476-a25c-7d2052881444`. Tracking parent: FAR-59 (`2d436f81-a440-4cad-b541-98b0a8e21e24`).
+- The customer site remains on Railway at `https://apiwild.com`. This installation moves the maintenance control plane, not the site, DNS or customer database.
+- Linux kernel guard checks and native healthy-checkout acceptance passed. Backend run `d688c30b-f2b5-4a8d-8f1b-00dc9240b64b` used three turns; independent review run `836e6a66-ae3e-49ad-9856-8daedeaa13a3` used four. Each ran 127 tests across 11 modules, verified through the private native broker and handed its task back to `in_review`.
+- Both strict final JSON attestations matched the same base commit (`32ea916` prefix) and empty source digest (`e3b0` prefix). No source changes were made; this proves the healthy maintenance workflow, not a production repair or release. The initial pre-admission failure remains preserved with zero model admissions.
 
-## Schedule and operation
+## Services and private paths
 
-- Windows task: `Farhan-APIWILD-Autonomous-Maintenance`, every five minutes.
-- Each tick checks public pages, authentication boundaries, model availability,
-  launch readiness and support DNS using the existing daily-health contract.
-- Every hour, and whenever main changes, inspect main's JSON and exact-commit CI.
-- Healthy scans invoke no model. Two matching failures create one isolated
-  maintenance incident and native backend task. The same failed attempt is never
-  replayed automatically.
-- Native backend makes a minimal source repair. Existing manager independently
-  reviews the unchanged source digest. The operator verifies both native run/issue
-  links, strict final JSON attestations and real product tests. The operator writes
-  canonical receipts after these checks; agents do not write protected files.
-- The controller pushes the isolated branch, opens a PR, waits for exact-head
-  `build-and-test` and `guarded-node-build`, and merges only if main is unchanged.
-- It closes the incident only after the exact merged commit is public, both main
-  workflows pass and production health passes.
-- Operational changes, blocked repairs and resolved incidents are recorded on
-  the native parent. Healthy checks do not generate board notifications.
+- `apiwild-paperclip.service` runs the existing manager with its database, agents, history and budgets preserved. Paperclip listens privately on loopback port3100.
+- `apiwild-maintenance.timer` starts the bounded `apiwild-maintenance.service` every five minutes. Source and exact-commit CI checks run hourly or when main changes.
+- Operator code/state: `/srv/apiwild-maintenance/operator`. Clean monitor: `/srv/apiwild-maintenance/monitor`. Worktrees: `/srv/apiwild-maintenance/incidents/<UUID>`.
+- Claude HOME: `/srv/apiwild-maintenance/user`; native state: `/srv/apiwild-maintenance/user/.paperclip/instances/default`. Guard/hook/helper: `/srv/apiwild-maintenance/guard`.
+- Credential files stay private, outside worktrees, receipts and logs.
+- Installed service units use `ProtectHome=read-only` so the private `/run/user/999` user-bus socket remains accessible; kernel preflight verified this configuration.
+- The service template keeps `HEARTBEAT_SCHEDULER_ENABLED=false` during staging. Enable native scheduling in the installed configuration only after sole-manager ownership and native acceptance pass.
 
-## Installation on the current host
+## Repair and release flow
 
-The reviewed controller, policy, preload and job entry are copied to
-`C:/Users/farha/.claude/it-team/apiwild-autonomy`. The fixed agent verification
-entry is `C:/Users/farha/.claude/scripts/apiwild-maintenance-controller.mjs`.
-Config, durable observations, deduplication, incident journals, receipts and
-the latest job result live outside the repository in that operator directory.
-The clean monitor checkout is `work/apiwild-autonomy-monitor-20261005`;
-each repair uses its own `work/apiwild-autonomous-incidents/<UUID>` worktree.
+1. Healthy scans invoke no model. Two consecutive matching failures create one isolated incident and native backend task.
+2. The backend makes a minimal source repair; the existing manager independently reviews the unchanged source digest.
+3. The operator validates native run/issue links, strict four-field final JSON attestations and actual product tests. Canonical receipts preserve provenance; agents do not write protected receipts.
+4. The operator pushes the reviewed branch and opens a PR. Merge requires unchanged main and exact-head success for `build-and-test` and `guarded-node-build`.
+5. Close an incident only after the exact merged commit is public, both main workflows pass and production health passes.
+6. Preserve failed/ambiguous attempts and consumed intents. Healthy scans stay quiet; meaningful blockers and completed repairs are recorded on FAR-59.
 
-The standalone Windows job reuses the existing authorized GitHub login through
-a per-user DPAPI encrypted credential reference outside the repository. Only
-trusted GitHub/Git child processes receive authentication in memory. Test
-subprocesses and repair/review agents receive no GitHub credential. Missing or
-revoked authentication produces a failed job and an owner-visible blocker.
+## Ownership and authority
 
-The independent manager receives a hash-bound, read-only JSON file containing
-each source file's before/after contents. It cannot edit the repair. Native tasks
-use the installed one-attempt guardian's `maintenance-repair-v1`
-and `maintenance-review-v1` profiles and the user-level scope hook. They retain
-the existing Claude model, native monthly budgets and permissions. `--setting-sources
-user` prevents a repository setting from replacing the installed hook. New task
-approvals expire after six hours; consumed intents and historical failures remain.
-
-The host must be awake and the Windows user session available. Task registration
-uses `IgnoreNew`, starts missed checks when available, and allows battery operation.
-It does not purchase or move hosting, or provide a laptop-off cloud worker.
+- Windows marker: `C:/Users/farha/.claude/it-team/paperclip-host-ownership.json`, with `{"activeHost":"hostinger-kvm4"}` after cutover. Local startup/watchdog respect it; the Windows maintenance schedule remains disabled while VPS ownership is active.
+- Missing marker retains legacy Windows behavior. Invalid/unreadable metadata blocks local Paperclip startup. OpenClaw remains independently observed; `managed-remotely` does not claim remote health or inference readiness.
+- Allow at most two new incidents per UTC day and two occupied native workers. Preserve existing provider/model routes, monthly budgets, supplier ceilings, approvals, consumed intents and failure history.
+- Checks do not charge customers, grant credits, run supplier inference tests, retrieve product secrets, change models/prices/packages, migrate databases or top up accounts. Payment/authentication source repairs require independent review and CI.
+- Existing GitHub authentication reaches only trusted operator Git/GitHub children. Model and test children receive no GitHub credential. Preserve the approved provider helper and route.
 
 ## Verification and limits
 
-The fixed product check runs 127 offline tests across 11 modules with injected
-fixtures and only loopback listeners created by those fixtures with port zero.
-Other local services, including Paperclip itself, cannot be called by test code.
-Credentials are not inherited by test subprocesses;
-filesystem reads are restricted to the checkout and trusted preload. External
-network/subprocess exports are blocked inside test workers. One synthetic
-child-process clock fixture runs in full GitHub CI only. These same-user guards
-are not an OS sandbox against deliberately hostile repository code.
+- The fixed Linux product verifier passed 127 offline tests across 11 modules. Workers may reach only their own ephemeral loopback fixtures; external network, other local services, subprocess exports and reads outside the checkout/preload are refused.
+- One synthetic child-process clock fixture runs in full CI only.
+- Actual Linux tests passed two occupied slots, refusal of a third, durable replay refusal, timeout termination and crash-descendant cleanup.
+- Same-user guardrails are not an OS sandbox or supplier billing meter. An admitted service can continue until its fixed deadline after outer-adapter disconnect; its slot and consumed intent prevent replacement/replay.
 
-At most two new incidents per UTC day and at most two occupied native workers
-are allowed. Existing agent monthly caps stay unchanged. No customer charge,
-credit grant, paid supplier inference, secret retrieval, database migration,
-package/price/model-route change or automatic top-up is performed by the checker.
-Technical repairs in payment/authentication source still require independent
-review and the full CI checks. A failed/ambiguous run, changed base, failed review,
-exhausted budget or failed release is preserved and reported; no manufactured
-passing receipt or unconditional production push is permitted.
+## Owner controls and rollback
 
-## Owner controls
-
-1. Pause: set operator `config.json` `enabled` to false, or disable only
-   `Farhan-APIWILD-Autonomous-Maintenance` in Windows Task Scheduler.
-2. Inspect: read `last-job.json`, `state.json`, `incidents/<UUID>.json` and FAR-59.
-3. Roll back a source repair with a new reviewed revert PR. Preserve incident
-   history, task manifests, consumed intents and customer financial holds.
-4. Update controller policy deliberately and reinstall reviewed source. A repair
-   agent cannot edit its own scheduler, workflow, credentials or policy.
-
-Registration script: `register-task.ps1`; existing service and queue watchdog
-tasks are preserved. This is a Windows cron equivalent managed through native
-Paperclip tasks, not a Codex recurring automation or an unsupported native routine.
+1. Pause new ticks: `sudo systemctl stop apiwild-maintenance.timer`. Keep paused after reboot: `sudo systemctl disable apiwild-maintenance.timer`. An already admitted attempt retains its deadline.
+2. Set operator `config.json` `enabled` to `false` to prevent dispatch by subsequent ticks. Preserve all journals and intents.
+3. Inspect operator `last-job.json`, `state.json`, `incidents/<UUID>.json`, native history and FAR-59. Never replay an ambiguous paid attempt.
+4. Resume only after ownership checks: `sudo systemctl enable --now apiwild-maintenance.timer`.
+5. To move back, stop dispatch and both managers; preserve and restore the latest verified VPS database/state backup. Do not start an old Windows database blindly. Update Windows paths/settings and select `{"activeHost":"windows-local"}` only after current-state restoration; enable exactly one manager/schedule.
+6. Revert product changes through a reviewed PR. Do not delete customer history, receipts, native runs or consumed intents.

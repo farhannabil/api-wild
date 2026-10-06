@@ -1,0 +1,12 @@
+[Unit]
+Description=API WILD five-minute site checks and hourly source scan
+
+[Timer]
+OnBootSec=1min
+OnCalendar=*:0/5
+Persistent=true
+AccuracySec=10s
+Unit=apiwild-maintenance.service
+
+[Install]
+WantedBy=timers.target

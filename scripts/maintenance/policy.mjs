@@ -1,4 +1,6 @@
 import {createHash} from 'node:crypto';
+export {VERIFY} from './platform.mjs';
+import {VERIFY} from './platform.mjs';
 
 export const COMPANY='5b74ebc7-db43-4476-a25c-7d2052881444';
 export const BACKEND='1c309634-6f0e-401f-b339-9d0a7ab7e005';
@@ -6,7 +8,6 @@ export const REVIEWER='69ee8d9b-0326-4a9b-aedf-634c1f216fc1';
 export const REPOSITORY='farhannabil/api-wild';
 export const SHA=/^[a-f0-9]{40}$/;
 export const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-export const VERIFY='node C:/Users/farha/.claude/scripts/apiwild-maintenance-controller.mjs verify-current';
 export const repairTools='Read,Glob,Grep,Edit,Write,Bash('+VERIFY+')';
 export const reviewTools='Read,Glob,Grep,Write,Bash('+VERIFY+')';
 const forbidden=/(^|\/)(?:\.git|\.env[^/]*|node_modules|credentials?|secrets?)(\/|$)|(?:^|\/)[^/]*(?:\.pem|\.key|\.pfx|\.p12)$/i;

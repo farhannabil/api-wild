@@ -1,0 +1,22 @@
+[Unit]
+Description=API WILD bounded maintenance scan
+After=network-online.target apiwild-paperclip.service
+Requires=apiwild-paperclip.service
+
+[Service]
+Type=oneshot
+User=apiwild-maintenance
+Group=apiwild-maintenance
+WorkingDirectory=/srv/apiwild-maintenance/operator
+Environment=HOME=/srv/apiwild-maintenance/user
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=XDG_RUNTIME_DIR=/run/user/999
+ExecStart=/usr/local/bin/node /srv/apiwild-maintenance/operator/job.mjs
+TimeoutStartSec=10min
+KillMode=control-group
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/srv/apiwild-maintenance/user /srv/apiwild-maintenance/operator /srv/apiwild-maintenance/incidents /srv/apiwild-maintenance/monitor
+MemoryMax=1G
+TasksMax=128
