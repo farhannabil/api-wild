@@ -15,7 +15,8 @@ Tracking parent: `FAR-59` (`2d436f81-a440-4cad-b541-98b0a8e21e24`).
   replayed automatically.
 - Native backend makes a minimal source repair. Existing manager independently
   reviews the unchanged source digest. The operator verifies both native run/issue
-  links, receipts and real product tests.
+  links, strict final JSON attestations and real product tests. The operator writes
+  canonical receipts after these checks; agents do not write protected files.
 - The controller pushes the isolated branch, opens a PR, waits for exact-head
   `build-and-test` and `guarded-node-build`, and merges only if main is unchanged.
 - It closes the incident only after the exact merged commit is public, both main
@@ -33,7 +34,9 @@ the latest job result live outside the repository in that operator directory.
 The clean monitor checkout is `work/apiwild-autonomy-monitor-20261005`;
 each repair uses its own `work/apiwild-autonomous-incidents/<UUID>` worktree.
 
-Native tasks use the installed one-attempt guardian's `maintenance-repair-v1`
+The independent manager receives a hash-bound, read-only JSON file containing
+each source file's before/after contents. It cannot edit the repair. Native tasks
+use the installed one-attempt guardian's `maintenance-repair-v1`
 and `maintenance-review-v1` profiles and the user-level scope hook. They retain
 the existing Claude model, native monthly budgets and permissions. `--setting-sources
 user` prevents a repository setting from replacing the installed hook. New task

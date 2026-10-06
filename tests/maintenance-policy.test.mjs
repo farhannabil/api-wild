@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {repairPath,treeDigest,observation,agentAvailable,validReceipt,COMPANY} from '../scripts/maintenance/policy.mjs';
+import {repairPath,treeDigest,observation,agentAvailable,validReceipt,parseAttestation,COMPANY} from '../scripts/maintenance/policy.mjs';
 const commit='a'.repeat(40),id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 test('source fixes are allowed without opening authority, secrets, dependencies or migrations',()=>{
  for(const path of ['app/login/page.tsx','lib/customer-api.ts','infra/railway/runtime/stripe-checkout.mjs','tests/keys.test.mjs','data/model-pricing.json','scripts/daily-health.mjs'])assert.equal(repairPath(path,id),true,path);
@@ -29,3 +29,4 @@ test('review claims require the actual unchanged tree and base commit',()=>{
  assert.equal(validReceipt(receipt,commit,digest),true);
  for(const patch of [{status:'failed'},{baseCommit:'c'.repeat(40)},{treeDigest:'d'.repeat(64)},{summary:''}])assert.equal(validReceipt({...receipt,...patch},commit,digest),false);
 });
+test('authenticated final attestation must be pure JSON with four unique exact fields',()=>{const value={status:'passed',summary:'Reviewed actual source',baseCommit:commit,treeDigest:'b'.repeat(64)},text=JSON.stringify(value);assert.deepEqual(parseAttestation(text,commit,value.treeDigest),value);for(const invalid of ['```json\n'+text+'\n```',text.replace('{','{"status":"failed",'),text.replace('{','{"\\u0073tatus":"failed",'),JSON.stringify({...value,extra:true}),JSON.stringify({...value,status:'blocked'})])assert.throws(()=>parseAttestation(invalid,commit,value.treeDigest));});

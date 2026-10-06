@@ -46,3 +46,9 @@ export function validReceipt(value,baseCommit,digest){
  return value?.status==='passed'&&value.baseCommit===baseCommit&&value.treeDigest===digest
   &&typeof value.summary==='string'&&value.summary.length>0&&value.summary.length<=4000;
 }
+export function parseAttestation(text,baseCommit,digest){
+ if(typeof text!=='string'||text.length>7000)throw Error('invalid_attestation');
+ const value=JSON.parse(text),keys=Object.keys(value),matches=[...text.matchAll(/(?:^|[,{])\s*("(?:[^"\\]|\\.)*")\s*:/g)].map(x=>JSON.parse(x[1]));
+ if(keys.sort().join(',')!=='baseCommit,status,summary,treeDigest'||matches.length!==4||new Set(matches).size!==4||!validReceipt(value,baseCommit,digest))throw Error('invalid_attestation');
+ return value;
+}
