@@ -46,4 +46,3 @@
 4. Resume only after ownership checks: `sudo systemctl enable --now apiwild-maintenance.timer`.
 5. To move back, stop dispatch and both managers; preserve and restore the latest verified VPS database/state backup. Do not start an old Windows database blindly. Update Windows paths/settings and select `{"activeHost":"windows-local"}` only after current-state restoration; enable exactly one manager/schedule.
 6. Revert product changes through a reviewed PR. Do not delete customer history, receipts, native runs or consumed intents.
-
