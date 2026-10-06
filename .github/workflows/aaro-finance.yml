@@ -1,0 +1,53 @@
+name: AARO isolated finance checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/railway/**'
+      - 'lib/aaro-plans.json'
+      - '.github/workflows/aaro-finance.yml'
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  isolated-finance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17.6-alpine
+        env:
+          POSTGRES_USER: aaro_ci_fixture
+          POSTGRES_PASSWORD: synthetic_ci_only
+          POSTGRES_DB: aaro_ci_fixture
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+      - name: Verify isolated AARO adapters and existing supplier/billing contracts
+        run: >-
+          node --test
+          infra/railway/tests/aaro-billing.test.mjs
+          infra/railway/tests/aaro-checkout.test.mjs
+          infra/railway/tests/aaro-stripe-projection.test.mjs
+          infra/railway/tests/aaro-supplier-oracle.test.mjs
+          infra/railway/tests/aaro-usage-assembly.test.mjs
+          infra/railway/tests/aaro-usage-bridge.test.mjs
+          infra/railway/tests/aaro-usage-ingress.test.mjs
+          infra/railway/tests/subrouter-receipt-reader.test.mjs
+          infra/railway/tests/stripe-financial-projection.test.mjs
+          infra/railway/preparation.test.mjs
+      - name: Install isolated database test client
+        run: npm install --prefix "$RUNNER_TEMP/aaro-pg" --no-save --ignore-scripts --no-audit --no-fund pg@8.23.1
+      - name: Verify actual PostgreSQL17 funding, concurrency and holds
+        run: node infra/railway/tests/aaro-stripe-postgres-ci.mjs "$RUNNER_TEMP/aaro-pg/node_modules/pg/lib/index.js"
+      # No production credentials, migration application or payment/provider calls.

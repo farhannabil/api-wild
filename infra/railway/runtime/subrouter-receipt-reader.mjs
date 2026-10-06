@@ -6,10 +6,11 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 // A complete bounded scan is required even after a match, to detect duplicates.
 const MAX_LOG_PAGES=50;
 const fail=()=>Error('supplier_receipt_unverified');
-export function createSubrouterReceiptReader({enabled=false,accessToken,accountUserId,bindings,conversion,fetchImpl=fetch,clock=Date.now,timeoutMs=20000}={}){
+export function createSubrouterReceiptReader({enabled=false,accessToken,accountUserId,bindings,conversion,fetchImpl=fetch,clock=Date.now,timeoutMs=20000,requireUsageTokens=false}={}){
  if(enabled!==true)return Object.freeze({readReceipt:async()=>{throw fail();},assertConversion:async()=>{throw fail();}});
  if(typeof accessToken!=='string'||accessToken.length<16||accessToken.length>8192||/[\x00-\x20\x7f]/.test(accessToken))throw fail();
  exactInteger(accountUserId,1,Number.MAX_SAFE_INTEGER);exactInteger(timeoutMs,1,30000);
+ if(typeof requireUsageTokens!=='boolean')throw fail();
  if(!bindings||typeof bindings!=='object'||Array.isArray(bindings)||!Object.keys(bindings).length||Object.keys(bindings).length>2)throw fail();
  const trusted=new Map();
  for(const [key,value]of Object.entries(bindings)){
@@ -40,7 +41,10 @@ export function createSubrouterReceiptReader({enabled=false,accessToken,accountU
       quota_display_type:c.displayCurrency,display_in_currency:c.displayInCurrency,settings_observed_at:c.observedAt,settings_valid_until:c.validUntil,
       settings_sha256:c.settingsSha256,log_id:row.id,log_created_at:row.created_at,account_user_id:accountUserId,token_id:row.token_id,
       provider_slug:other.provider_slug,billing_source:other.billing_source,billing_multiplier:other.billing_multiplier},costCnyMicros);
-     found=Object.freeze({receiptId:row.request_id,keyReference:query.keyReference,upstreamResponseId:query.upstreamResponseId,model:query.model,currency:'CNY',costCnyMicros,final:true,nativeDebit});
+     // AARO settlement additionally binds the supplier's own token counts.
+     // The default API WILD receipt shape is preserved for its existing oracle.
+     const usage=requireUsageTokens?Object.freeze({inputTokens:exactInteger(row.prompt_tokens,1,1000000000),outputTokens:exactInteger(row.completion_tokens,0,1000000000)}):undefined;
+     found=Object.freeze({receiptId:row.request_id,keyReference:query.keyReference,upstreamResponseId:query.upstreamResponseId,model:query.model,currency:'CNY',costCnyMicros,final:true,nativeDebit,...(usage?{usage}:{})});
     }
     if(!data.has_more){complete=true;break;}cursor=data.next_cursor;
    }

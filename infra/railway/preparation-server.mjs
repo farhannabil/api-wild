@@ -14,6 +14,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {isStripeWebhookIngress, STRIPE_WEBHOOK_PATH} from './runtime/stripe-webhook-ingress.mjs';
 import {isAaroUsageIngress,AARO_USAGE_PATH} from './runtime/aaro-usage-ingress.mjs';
+import {createAaroUsageFromEnv} from './runtime/aaro-usage-assembly.mjs';
+import {createAaroBillingFromEnv,isAaroBilling} from './runtime/aaro-billing.mjs';
 
 import {createNativeAuthHttp,isNativeAuthHttp} from './runtime/native-auth-http.mjs';
 
@@ -133,11 +135,12 @@ export function proxyHeaders(incoming, origin = 'https://apiwild.com') {
   return result;
 }
 
-export function createPreparationServer({backendPort, origin = 'https://apiwild.com', publicAssets, stripeWebhookIngress, aaroUsageIngress, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, launchStatusHttp, discoveryHttp} = {}) {
+export function createPreparationServer({backendPort, origin = 'https://apiwild.com', publicAssets, stripeWebhookIngress, aaroUsageIngress, aaroBilling, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, launchStatusHttp, discoveryHttp} = {}) {
   if (stripeWebhookIngress !== undefined && !isStripeWebhookIngress(stripeWebhookIngress)) {
     throw new Error('Invalid Stripe webhook injection.');
   }
   if (aaroUsageIngress !== undefined && !isAaroUsageIngress(aaroUsageIngress)) throw new Error('Invalid AARO usage injection.');
+  if (aaroBilling !== undefined && !isAaroBilling(aaroBilling)) throw new Error('Invalid AARO billing injection.');
   if (nativeAuthHttp !== undefined && !isNativeAuthHttp(nativeAuthHttp)) throw new Error('Invalid native auth injection.');
   if(gatewayHttp!==undefined&&!isGatewayHttp(gatewayHttp))throw new Error('Invalid gateway injection.');
   if(launchStatusHttp!==undefined&&!isLaunchStatusHttp(launchStatusHttp))throw new Error('Invalid launch status injection.');
@@ -155,6 +158,7 @@ export function createPreparationServer({backendPort, origin = 'https://apiwild.
     if (aaroUsageIngress && request.url === AARO_USAGE_PATH) {
       void aaroUsageIngress.handle(request, response); return;
     }
+    if (aaroBilling && aaroBilling.matches(request.url)) {void aaroBilling.handle(request,response);return;}
     if(gatewayHttp&&isGatewayPath(request.url)){void gatewayHttp.handle(request,response);return;}
     if (nativeAuthHttp && (request.url?.startsWith('/api/native/auth/')||request.url?.startsWith('/api/native/customer/')||request.url==='/v1/chat/completions')) {
       void nativeAuthHttp.handle(request, response); return;
@@ -244,7 +248,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     billingConfigured:process.env.OWN_BILLING_ENABLED==='true'&&Boolean(process.env.STRIPE_SECRET_KEY&&process.env.STRIPE_WEBHOOK_SECRET&&process.env.STRIPE_CREDIT_PRICE_ID&&process.env.SUPABASE_SECRET_KEY),
     inferenceConfigured:Boolean(gatewayHttp)&&process.env.APIWILD_INFERENCE_ENABLED==='true',
     checkoutEnabled:process.env.APIWILD_CHECKOUT_ENABLED==='true'});
-  const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, launchStatusHttp, discoveryHttp});
+  const aaroUsageIngress=createAaroUsageFromEnv({env:listener.local?{}:process.env});
+  const aaroBilling=await createAaroBillingFromEnv(listener.local?{}:process.env);
+  const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, launchStatusHttp, discoveryHttp,aaroUsageIngress,aaroBilling});
   frontend.once('error', () => {void supplierSweep.stop();void reservationExpirySweep.stop();backend.server.close();});
   const shutdown=()=>{void supplierSweep.stop();void reservationExpirySweep.stop();frontend.close();backend.server.close();};
   process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);

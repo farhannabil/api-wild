@@ -32,5 +32,6 @@ COPY --from=build /app/infra/railway/runtime/native-auth-http.mjs ./infra/railwa
 COPY --from=build /app/infra/railway/runtime/customer-key-rpc.mjs ./infra/railway/runtime/customer-key-rpc.mjs
 COPY --from=build /app/infra/railway/runtime ./infra/railway/runtime
 COPY --from=build /app/data/selected-supplier-models.json ./data/selected-supplier-models.json
+COPY --from=build /app/lib/aaro-plans.json ./lib/aaro-plans.json
 USER node
 CMD ["node", "infra/railway/preparation-server.mjs"]

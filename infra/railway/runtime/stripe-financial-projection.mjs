@@ -38,7 +38,7 @@ export function verifyStripeSignature(raw,header,secret,now=Math.floor(Date.now(
     .some(p=>timingSafeEqual(expected,Buffer.from(p[1],'hex')));
 }
 
-async function boundedJson(response,url,signal){
+export async function boundedJson(response,url,signal){
   const cancel=()=>{try{void response?.body?.cancel().catch(()=>{});}catch{}};
   if(signal.aborted||!response?.ok||response.redirected||(response.url&&response.url!==url)
     ||!/^(?:application\/json)(?:\s*;|$)/i.test(response.headers?.get('content-type')||'')){cancel();fail('stripe_read_unavailable');}
