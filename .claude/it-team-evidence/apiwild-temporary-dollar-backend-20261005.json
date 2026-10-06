@@ -1,0 +1,48 @@
+{
+  "task_id": "apiwild-temporary-dollar-backend-20261005",
+  "status": "passed",
+  "workspace": "C:/Users/farha/OneDrive/Documents/ChatGPT/Websites/work/apiwild-verified-model-release-20261005",
+  "summary": "Disabled-by-default owner-bound genuine USD1 prepaid offer; one durable order; normal Stripe financial projection unchanged; standard packages and USD30 custom floor preserved.",
+  "files": {
+    "infra/railway/runtime/temporary-credit-offer.mjs": "bfb37b1010f9e1d2c563f73b7f35a84d315a2bb1ada52996412bfd1139db1a47",
+    "infra/railway/runtime/stripe-checkout.mjs": "447eba80db3e2909d4c03defbca9b01774da0ee4e5bab722fed6e5570014398d",
+    "infra/railway/runtime/owned-billing.mjs": "44bb75f546c7f32c3451fd7c62def21229d23da803939a059667ae71db07d236",
+    "supabase/migrations/20261006002100_temporary_dollar_credit_offer.sql": "7d9895d74e6b5d50d5ef3231c5b5e598ec78e27f446a28c129c99d20d1632a2f",
+    "infra/railway/tests/temporary-credit-offer.test.mjs": "1103aa0edd52f0ea26f8b731c53fe5d3bc0de33b7e14569ebab9dfd3a2e63ecb",
+    "tests/integration/temporary-credit-offer-pglite.mjs": "bf9f486cef168064c9fcfafe6b512b0bf37e3629d59b0e251717cc4b1616739f"
+  },
+  "checks": [
+    {
+      "command": "node --test infra/railway/tests/temporary-credit-offer.test.mjs infra/railway/tests/stripe-checkout.test.mjs infra/railway/tests/owned-billing.test.mjs infra/railway/tests/credit-offers.test.mjs infra/railway/tests/stripe-financial-projection.test.mjs infra/railway/tests/stripe-webhook-ingress.test.mjs",
+      "exitCode": 0,
+      "assertionsPassed": 69
+    },
+    {
+      "command": "node tests/integration/temporary-credit-offer-pglite.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "exitCode": 0,
+      "assertionsPassed": 44
+    },
+    {
+      "command": "node tests/integration/credit-promotion-pglite.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "exitCode": 0,
+      "assertionsPassed": 51
+    },
+    {
+      "command": "node --check (each of the five changed/new .mjs files)",
+      "exitCode": 0,
+      "filesPassed": 5
+    }
+  ],
+  "review": {
+    "reviewer": "/root/sandbox_matrix_qa",
+    "status": "passed",
+    "independentChecks": "25 targeted runtime checks, 44 isolated SQL assertions, full six-file source review, all frozen hashes matched; root source review also passed.",
+    "result": "passed"
+  },
+  "limitations": [
+    "Actual live purchase, buyer enrollment, production activation and signed live webhook acceptance remain pending root execution and buyer identity.",
+    "PGlite uses a single isolated connection; locking and durable uniqueness were reviewed, but this is not a concurrent production database stress test.",
+    "No money, enrollment, checkout, credentials, supplier calls or external account changes were made by this worker.",
+    "No source commits, Git operations or deployment were performed by this worker."
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-06T00:28:09.767Z",
+  "reviewer": "/root/sandbox_matrix_qa",
+  "result": "PASS",
+  "scope": "Independent offline review of frozen private owner-bound one-dollar credit offer; source acceptance only",
+  "sourceHashes": {
+    "app/console/billing-client.tsx": "3efdc4dd0aab5e96f99d8ebf0c8a44eacf80d162daf78620ebed7d82ade2136c",
+    "lib/owned-credit-offers.mjs": "e640aa19d014d7dee14f71d1a026c2ebdc43c66769ddca3f2db80a3b4dd82b73",
+    "lib/owned-credit-offers.d.mts": "85269999ba793ee4a8744bae35c87174da96e3866df6556171964fec4599b2b7",
+    "tests/owned-credit-offers.test.mjs": "c8a49b8d351655a7bbb162a9d354e21c1782055c9e6283d44e5abcfc3d718f59",
+    "tests/billing-temporary-offer.test.mjs": "44c4cdef102715983d29f2442e0f0e3d00391b411a8965321ad88620bf75d371",
+    "infra/railway/runtime/temporary-credit-offer.mjs": "bfb37b1010f9e1d2c563f73b7f35a84d315a2bb1ada52996412bfd1139db1a47",
+    "infra/railway/runtime/owned-billing.mjs": "44bb75f546c7f32c3451fd7c62def21229d23da803939a059667ae71db07d236",
+    "infra/railway/runtime/stripe-checkout.mjs": "447eba80db3e2909d4c03defbca9b01774da0ee4e5bab722fed6e5570014398d",
+    "supabase/migrations/20261006002100_temporary_dollar_credit_offer.sql": "7d9895d74e6b5d50d5ef3231c5b5e598ec78e27f446a28c129c99d20d1632a2f",
+    "infra/railway/tests/temporary-credit-offer.test.mjs": "1103aa0edd52f0ea26f8b731c53fe5d3bc0de33b7e14569ebab9dfd3a2e63ecb",
+    "tests/integration/temporary-credit-offer-pglite.mjs": "bf9f486cef168064c9fcfafe6b512b0bf37e3629d59b0e251717cc4b1616739f"
+  },
+  "ownedEdits": [
+    "app/console/billing-client.tsx",
+    "lib/owned-credit-offers.mjs",
+    "lib/owned-credit-offers.d.mts",
+    "tests/owned-credit-offers.test.mjs",
+    "tests/billing-temporary-offer.test.mjs"
+  ],
+  "assertions": [
+    "Temporary UI offer requires exact launch-dollar id/name,100-cent price,0 bonus,100-cent usable credit and canonical future UTC expiry. Invalid/absent offer remains hidden.",
+    "UI checkout cutoff is endsAt minus31 minutes; interval hides expired offer and stale click revalidates. Double click uses one POST and retained package-only request; custom minimum stays3000 cents.",
+    "Offer backend is disabled without all three private environment values; authenticated confirmed owner and eligible database enrollment must agree on owner/price/expiry.",
+    "Database enrollment seeds no wallet credit and pins immutable owner/price/expiry plus one lifetime order. Same exact enrollment may be retried after expiry without new eligibility.",
+    "Only launch-dollar can prepare/register100 cents, with0 bonus and null promotion. Raw100-cent/custom and unrelated packages remain rejected; standard functions are private wrappers retaining existing package and custom behavior.",
+    "Prepared terms, canonical native account/price/session identity, deterministic order/idempotency, zero automatic Stripe retries, registration-before-URL and normal signed paid/refund projection remain enforced.",
+    "RLS and table privileges block browser/service-role direct offer-table mutations; explicit service-role enrollment/read functions remain operator/server authority.",
+    "Existing financial records remain unchanged by migration; native unknown GLM hold is outside this change."
+  ],
+  "independentChecks": [
+    {
+      "command": "node --import ../apiwild-offline-review-dependencies-20261005.mjs --test tests/billing-temporary-offer.test.mjs tests/owned-credit-offers.test.mjs tests/owned-client-config.test.mjs",
+      "result": "PASS",
+      "tests": 12
+    },
+    {
+      "command": "node --import ../apiwild-offline-review-dependencies-20261005.mjs --test infra/railway/tests/temporary-credit-offer.test.mjs infra/railway/tests/stripe-checkout.test.mjs infra/railway/tests/owned-billing.test.mjs",
+      "result": "PASS",
+      "tests": 25
+    },
+    {
+      "command": "node --import ../apiwild-offline-review-dependencies-20261005.mjs tests/integration/temporary-credit-offer-pglite.mjs C:/Users/farha/AppData/Local/Temp/apiwild-launch-pglite-20261005/node_modules/@electric-sql/pglite/dist/index.js",
+      "result": "PASS",
+      "assertions": 44,
+      "environment": "Synthetic isolated PGlite; external fetch disabled"
+    },
+    {
+      "command": "node --check temporary-credit-offer.mjs,owned-billing.mjs,stripe-checkout.mjs (each runtime file)",
+      "result": "PASS",
+      "files": 3
+    }
+  ],
+  "rootReviewReported": {
+    "uiSource": "PASS",
+    "uiTests": 12,
+    "runtimeTests": 84,
+    "newSqlAssertions": 44,
+    "historicalPromotionAssertions": 51,
+    "runtimeScope": "Expanded runtime and container suite, reported PASS by root"
+  },
+  "protectedUncertainHold": {
+    "requestId": "26c33561-18fe-4008-85a6-c829ed5a10f4",
+    "reservedUsdMicros": 3149,
+    "reservedCnyMicros": 7022,
+    "unchanged": true
+  },
+  "limits": [
+    "No live purchase, paid public customer journey or live fulfillment has been performed by this worker.",
+    "Buyer account selection and private offer activation remain pending root/user action.",
+    "This receipt approves disabled-by-default source/deployment preparation, not a claim that a real customer has paid.",
+    "No network, Stripe/native supplier/remote database mutation, credential access, Git operation or delegation was performed.",
+    "Native temporary-offer catalogue remains inactive; buyer selection unanswered at signoff."
+  ]
+}

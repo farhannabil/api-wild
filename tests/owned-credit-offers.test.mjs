@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createCreditOfferPolicy} from '../infra/railway/runtime/credit-offers.mjs';
-import {verifiedCreditOffers,promotionalCheckoutRemaining,checkoutStorageKey,checkoutRequest,saveCheckoutOrder,saveFailedCheckoutOrder,clearConfirmedCheckouts} from '../lib/owned-credit-offers.mjs';
+import {verifiedCreditOffers,verifiedTemporaryCreditOffer,promotionalCheckoutRemaining,checkoutStorageKey,checkoutRequest,saveCheckoutOrder,saveFailedCheckoutOrder,clearConfirmedCheckouts} from '../lib/owned-credit-offers.mjs';
 
 const start=Date.parse('2026-10-05T18:00:00.000Z'),cutoff=start+15*86400000,end=cutoff+31*60000;
 const prices={smart:'price_SmartFixture',nerd:'price_NerdFixture',newton:'price_NewtonFixture',alien:'price_AlienFixture'};
@@ -72,5 +72,32 @@ test('failed sessionless checkout preserves its request until the exact authenti
   clearConfirmedCheckouts(local,[{id:orderId,status:'pending',package_id:'smart',promotion_id:identity.promotionId,amount_cents:7700,session_id:null}],identity.promotionId);
   assert.ok(local.getItem(request.key));
   clearConfirmedCheckouts(local,[{id:orderId,status:'expired',package_id:'smart',promotion_id:identity.promotionId,amount_cents:7700,session_id:null}],identity.promotionId);
+  assert.equal(local.getItem(request.key),null);
+});
+
+const temporaryOffer={id:'launch-dollar',name:'API WILD $1 credits',priceCents:100,bonusCents:0,totalCreditCents:100,endsAt:new Date(start+60*60000).toISOString()};
+test('optional dollar offer is hidden when absent, malformed, disabled or expired and cannot alter its usable credit',()=>{
+  assert.deepEqual(verifiedTemporaryCreditOffer(temporaryOffer,start),temporaryOffer);
+  assert.ok(Object.isFrozen(verifiedTemporaryCreditOffer(temporaryOffer,start)));
+  for(const value of [undefined,null,false,{}, {...temporaryOffer,id:'smart'}, {...temporaryOffer,name:'Other offer'},
+    {...temporaryOffer,priceCents:101}, {...temporaryOffer,priceCents:'100'}, {...temporaryOffer,bonusCents:1},
+    {...temporaryOffer,totalCreditCents:101}, {...temporaryOffer,endsAt:'tomorrow'},
+    {...temporaryOffer,endsAt:'2026-02-30T18:00:00.000Z'}, {...temporaryOffer,endsAt:'2026-10-05T18:15:00-00:00'},
+  ]) assert.equal(verifiedTemporaryCreditOffer(value,start),null);
+  assert.equal(verifiedTemporaryCreditOffer(temporaryOffer,Date.parse(temporaryOffer.endsAt)-31*60000),null);
+  assert.equal(verifiedTemporaryCreditOffer(temporaryOffer,NaN),null);
+  assert.ok(verifiedTemporaryCreditOffer(temporaryOffer,Date.parse(temporaryOffer.endsAt)-31*60000-1));
+});
+test('dollar checkout submits only its package and one retained request, without lowering the custom minimum',()=>{
+  const local=storage(),request=checkoutRequest(local,{packageId:'launch-dollar'},()=> 'checkout-dollar-once-0001');
+  assert.deepEqual(request.body,{packageId:'launch-dollar',requestId:'checkout-dollar-once-0001'});
+  assert.equal(checkoutRequest(local,{packageId:'launch-dollar'},()=>{throw Error('Must not duplicate checkout');}).requestId,request.requestId);
+  assert.notEqual(request.key,checkoutStorageKey(identity));
+  for(const bad of [{amountCents:100},{packageId:'launch-dollar',amountCents:100},{packageId:'launch-dollar',promotionId:identity.promotionId},{packageId:'arbitrary-dollar'}])assert.throws(()=>checkoutRequest(local,bad),/could not be verified/);
+  saveCheckoutOrder(local,request,'order-dollar');
+  clearConfirmedCheckouts(local,[{id:'order-dollar',status:'pending',package_id:'launch-dollar',amount_cents:100}],identity.promotionId);
+  clearConfirmedCheckouts(local,[{id:'other-order',status:'paid',package_id:'launch-dollar',amount_cents:100}],identity.promotionId);
+  assert.ok(local.getItem(request.key));
+  clearConfirmedCheckouts(local,[{id:'order-dollar',status:'paid',package_id:'launch-dollar',amount_cents:100}],identity.promotionId);
   assert.equal(local.getItem(request.key),null);
 });

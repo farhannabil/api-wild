@@ -4,6 +4,7 @@ import {createStripeWebhookIngress} from './stripe-webhook-ingress.mjs';
 import {SUPABASE_ORIGIN} from './supabase-gateway-rpc.mjs';
 import {STRIPE_ACCOUNTS} from './stripe-financial-projection.mjs';
 import {createCreditOfferPolicy} from './credit-offers.mjs';
+import {createTemporaryCreditOfferFromEnv} from './temporary-credit-offer.mjs';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const routes=['/api/billing','/api/billing/offers','/api/billing/checkout','/api/billing/reconcile','/api/billing/webhook'];
 const error=(status=503)=>Object.assign(new Error('Billing unavailable.'),{status});
@@ -13,6 +14,7 @@ export async function createOwnedBillingFromEnv(env,{fetchImpl=fetch,stripeClien
  const enabled=env.OWN_BILLING_ENABLED==='true',mode=env.BILLING_MODE||'live',account=STRIPE_ACCOUNTS[mode],secret=env.SUPABASE_SECRET_KEY||env.SUPABASE_SERVICE_ROLE_KEY,apiKey=env.STRIPE_SECRET_KEY;
  let stripe,checkout,webhook;
  const creditOffers=env.APIWILD_PACK_PRICES_JSON?createCreditOfferPolicy({prices:JSON.parse(env.APIWILD_PACK_PRICES_JSON),startsAt:env.APIWILD_CREDIT_PROMO_START_AT||null,endsAt:env.APIWILD_CREDIT_PROMO_END_AT||null,clock}):undefined;
+ const temporaryOffer=createTemporaryCreditOfferFromEnv(env,{clock});
  const readReady=enabled&&account&&secret;
  const ready=readReady&&apiKey&&env.STRIPE_WEBHOOK_SECRET&&env.STRIPE_CREDIT_PRICE_ID;
  // Credential entry enables signed fulfillment, never credit sales by itself.
@@ -23,7 +25,7 @@ export async function createOwnedBillingFromEnv(env,{fetchImpl=fetch,stripeClien
  if(ready){
   if(!new RegExp('^(sk|rk)_'+mode+'_[A-Za-z0-9]+$').test(apiKey))throw error();
   stripe=stripeClient??new (await import('stripe')).default(apiKey,{maxNetworkRetries:0,timeout:15000});
-  if(checkoutReady)checkout=createOwnStripeCheckout({enabled:true,billingMode:mode,accountId:account,priceId:env.STRIPE_CREDIT_PRICE_ID,stripeClient:stripe,register:rpc,...(creditOffers?{creditOffers}:{}),resolveCustomer:async owner=>{
+  if(checkoutReady)checkout=createOwnStripeCheckout({enabled:true,billingMode:mode,accountId:account,priceId:env.STRIPE_CREDIT_PRICE_ID,stripeClient:stripe,register:rpc,...(creditOffers?{creditOffers}:{}),...(temporaryOffer?{temporaryOffer}:{}),resolveCustomer:async owner=>{
    const existing=await rpc('apiwild_stripe_customer',{p_owner:owner});if(existing.customerId)return existing.customerId;
    const created=await stripe.customers.create({metadata:{apiwild_owner:owner}},{idempotencyKey:'apiwild-owner-'+createHash('sha256').update(owner).digest('hex')});
    const bound=await rpc('apiwild_stripe_customer',{p_owner:owner,p_customer:created.id});return bound.customerId;
@@ -49,7 +51,16 @@ export async function createOwnedBillingFromEnv(env,{fetchImpl=fetch,stripeClien
    const user=await json(authResponse);
    if(!uuid.test(user.id)||!user.email_confirmed_at||user.is_anonymous===true)throw error(401);const owner=mode+':supabase:'+user.id;
    const initialized=await rpc('apiwild_gateway_account_initialize',{p_owner:owner});if(initialized.initialized!==true||initialized.customer_id!==user.id||initialized.billing_mode!==mode)throw error();
-   if(path==='/api/billing'&&req.method==='GET'){const info=await rpc('apiwild_billing_read',{p_owner:owner});return send(res,200,{...info,checkoutEnabled:Boolean(checkoutReady)&&info.suspended===false,minimumTopupCents:3000,...(creditOffers?{creditOffers:creditOffers.read()}:{})})}
+   if(path==='/api/billing'&&req.method==='GET'){
+    const info=await rpc('apiwild_billing_read',{p_owner:owner});let privateOffer;
+    if(checkoutReady&&info.suspended===false&&temporaryOffer?.read(owner)){
+     const trusted=await rpc('apiwild_temporary_credit_offer_read',{p_owner:owner});
+     const visible=temporaryOffer.read(owner);
+     if(visible&&trusted.eligible===true&&trusted.user_id===owner&&trusted.price_id===temporaryOffer.priceId&&Date.parse(trusted.ends_at)===Date.parse(temporaryOffer.endsAt)
+      &&(trusted.order_id===null||uuid.test(trusted.order_id)))privateOffer={...visible,orderId:trusted.order_id};
+    }
+    return send(res,200,{...info,checkoutEnabled:Boolean(checkoutReady)&&info.suspended===false,minimumTopupCents:3000,...(creditOffers?{creditOffers:creditOffers.read()}:{}),...(privateOffer?{temporaryOffer:privateOffer}:{})});
+   }
    if(path==='/api/billing/reconcile'&&req.method==='GET'){const session=url.searchParams.get('sessionId');if(!new RegExp('^cs_'+mode+'_[A-Za-z0-9]+$').test(session||''))throw error(400);return send(res,200,await rpc('apiwild_billing_read',{p_owner:owner,p_session:session}))}
    if(path!=='/api/billing/checkout'||req.method!=='POST')throw error(405);
    if(!checkout)throw error();
