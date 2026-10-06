@@ -14,6 +14,7 @@
 !hooks/**
 !lib
 !lib/**
+!lib/aaro-plans.json
 !db
 !db/**
 !data
@@ -41,6 +42,11 @@
 !infra/railway/runtime
 !infra/railway/runtime/aaro-usage-ingress.mjs
 !infra/railway/runtime/aaro-usage-bridge.mjs
+!infra/railway/runtime/aaro-usage-assembly.mjs
+!infra/railway/runtime/aaro-supplier-oracle.mjs
+!infra/railway/runtime/aaro-billing.mjs
+!infra/railway/runtime/aaro-checkout.mjs
+!infra/railway/runtime/aaro-stripe-projection.mjs
 !infra/railway/runtime/stripe-webhook-ingress.mjs
 !infra/railway/runtime/stripe-projection-rpc.mjs
 !infra/railway/runtime/stripe-financial-projection.mjs
