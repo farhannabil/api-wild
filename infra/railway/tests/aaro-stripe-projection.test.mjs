@@ -80,6 +80,11 @@ await test('checkout completion is only a binding receipt, never credit funding'
  const f=fixture();await f.client.handle(envelope('checkout.session.completed','cs_live_Fixture'));assert.equal(f.projects[0].p.p_operation,'checkout');assert.equal(f.projects[0].p.p_fact.paid,undefined);
  const bad=fixture();bad.objects['checkout/sessions/cs_live_Fixture'].id='cs_live_other';await assert.rejects(bad.client.handle(envelope('checkout.session.completed','cs_live_Fixture')));assert.equal(bad.projects.length,0);
 });
+await test('one native charge cannot be counted twice, or substituted for a different PaymentIntent',async()=>{
+ const f=fixture(),pay=f.objects['invoice_payments?invoice=in_Fixture&status=paid&limit=100'];pay.data.push({...pay.data[0],id:'inpay_other'});Object.assign(f.objects['invoices/in_Fixture'],{total:3000,amount_paid:3000});
+ await assert.rejects(f.client.handle(envelope()));assert.equal(f.projects.length,0);
+ const other=fixture();other.objects['charges/ch_Fixture'].payment_intent='pi_other';await assert.rejects(other.client.handle(envelope()));assert.equal(other.projects.length,0);
+});
 await test('refunds/disputes are native invoice holds with no automatic credit release',async()=>{
  for(const [type,id] of [['refund.created','re_Fixture'],['charge.dispute.closed','dp_Fixture'],['charge.refunded','ch_Fixture']]){
   const f=fixture();await f.client.handle(envelope(type,id));assert.equal(f.projects[0].p.p_operation,'hold');assert.equal(f.projects[0].p.p_fact.invoiceId,'in_Fixture');assert.equal(f.projects[0].p.p_fact.sourceReference,id);

@@ -63,7 +63,7 @@ export function createAaroStripeProjection(config={}){
  const processorPaid=async(bound,signal)=>{
   const {inv,plan,b}=bound;
   if(plan.amount===0)return inv.total===0&&inv.amount_paid===0;
-  const payments=list(await read('invoice_payments?invoice='+inv.id+'&status=paid&limit=100',signal),20),seen=new Set();let total=0n;
+  const payments=list(await read('invoice_payments?invoice='+inv.id+'&status=paid&limit=100',signal),20),seen=new Set(),charges=new Set();let total=0n;
   if(!payments.length)fail();
   for(const p of payments){
    checkMode(p);id(p.id,'inpay');if(seen.has(p.id)||objectId(p.invoice)!==inv.id||p.status!=='paid'||p.currency!==plan.currency||money(p.amount_paid)===0)fail();seen.add(p.id);total+=BigInt(p.amount_paid);
@@ -75,8 +75,10 @@ export function createAaroStripeProjection(config={}){
    }else if(p.payment?.type==='charge'){chargeReference=id(p.payment.charge,'ch');charge=await read('charges/'+chargeReference,signal);}
    else fail();
    checkMode(charge);
-   if(charge.id!==chargeReference||objectId(charge.customer)!==b.customer_id||charge.currency!==plan.currency||charge.status!=='succeeded'||charge.paid!==true||charge.captured!==true
+   if(charge.id!==chargeReference||charges.has(charge.id)||p.payment.type==='payment_intent'&&objectId(charge.payment_intent)!==objectId(p.payment.payment_intent)
+    ||objectId(charge.customer)!==b.customer_id||charge.currency!==plan.currency||charge.status!=='succeeded'||charge.paid!==true||charge.captured!==true
     ||charge.disputed!==false||money(charge.amount_refunded)!==0||money(charge.amount)<p.amount_paid)fail();
+   charges.add(charge.id);
    // Pending refunds also hold fulfillment. Complete canonical lists only.
    const refunds=list(await read('refunds?charge='+id(charge.id,'ch')+'&limit=100',signal));
    const refundIds=new Set();for(const refund of refunds){id(refund.id,'re');if(refundIds.has(refund.id)||objectId(refund.charge)!==charge.id||refund.currency!==plan.currency)fail();refundIds.add(refund.id);if(!['failed','canceled'].includes(refund.status))fail('aaro_payment_under_review');}
