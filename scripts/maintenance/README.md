@@ -3,7 +3,8 @@
 - Host: Hostinger KVM4, VPS1993150, dedicated non-root `apiwild-maintenance` account (UID999).
 - Existing Paperclip company: `5b74ebc7-db43-4476-a25c-7d2052881444`. Tracking parent: FAR-59 (`2d436f81-a440-4cad-b541-98b0a8e21e24`).
 - The customer site remains on Railway at `https://apiwild.com`. This installation moves the maintenance control plane, not the site, DNS or customer database.
-- Linux kernel guard acceptance has passed. Native model acceptance remains pending; runtime health does not establish that acceptance.
+- Linux kernel guard checks and native healthy-checkout acceptance passed. Backend run `d688c30b-f2b5-4a8d-8f1b-00dc9240b64b` used three turns; independent review run `836e6a66-ae3e-49ad-9856-8daedeaa13a3` used four. Each ran 127 tests across 11 modules, verified through the private native broker and handed its task back to `in_review`.
+- Both strict final JSON attestations matched the same base commit (`32ea916` prefix) and empty source digest (`e3b0` prefix). No source changes were made; this proves the healthy maintenance workflow, not a production repair or release. The initial pre-admission failure remains preserved with zero model admissions.
 
 ## Services and private paths
 
@@ -12,6 +13,7 @@
 - Operator code/state: `/srv/apiwild-maintenance/operator`. Clean monitor: `/srv/apiwild-maintenance/monitor`. Worktrees: `/srv/apiwild-maintenance/incidents/<UUID>`.
 - Claude HOME: `/srv/apiwild-maintenance/user`; native state: `/srv/apiwild-maintenance/user/.paperclip/instances/default`. Guard/hook/helper: `/srv/apiwild-maintenance/guard`.
 - Credential files stay private, outside worktrees, receipts and logs.
+- Installed service units use `ProtectHome=read-only` so the private `/run/user/999` user-bus socket remains accessible; kernel preflight verified this configuration.
 - The service template keeps `HEARTBEAT_SCHEDULER_ENABLED=false` during staging. Enable native scheduling in the installed configuration only after sole-manager ownership and native acceptance pass.
 
 ## Repair and release flow

@@ -1,6 +1,7 @@
 [Unit]
 Description=API WILD existing Paperclip manager
-After=network-online.target docker.service
+After=network-online.target docker.service user@999.service
+Requires=docker.service user@999.service
 Wants=network-online.target
 
 [Service]

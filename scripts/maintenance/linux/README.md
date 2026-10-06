@@ -1,7 +1,7 @@
 # API WILD Linux maintenance guardian
 
 - Installed maintenance control plane target: Hostinger KVM4 VPS1993150. The customer site remains on Railway; product/DNS migration is not implied.
-- Linux kernel guard acceptance passed. Native model acceptance remains pending; autonomous dispatch stays gated on that acceptance and sole-manager ownership.
+- Linux kernel guard checks and native healthy-checkout acceptance passed. Sole-manager ownership still gates autonomous dispatch; acceptance did not change product source or demonstrate a production repair/release.
 - Fixed company and existing backend/reviewer IDs; only the two maintenance profiles are admitted. Old inventory/review queues are refused.
 - Exact root: `/srv/apiwild-maintenance/incidents/<lowercase UUID>`.
 - Operator state: `/srv/apiwild-maintenance/operator`; Claude HOME: `/srv/apiwild-maintenance/user`.
@@ -10,6 +10,7 @@
 - Executables: `/usr/local/bin/node`, `/usr/local/bin/claude`, `/usr/bin/systemd-run`, `/usr/bin/systemctl`. All pinned paths must resolve to regular, non-symlink files with trusted ownership and no group/other write permissions.
 - Use dedicated non-root `apiwild-maintenance`, UID999. Paperclip listens privately on loopback port3100; do not expose its local-board API publicly.
 - `apiwild-maintenance.timer` runs the bounded service every five minutes; source/CI checks run hourly or on a changed main commit. The service template intentionally sets `HEARTBEAT_SCHEDULER_ENABLED=false` during staging.
+- Installed service units use `ProtectHome=read-only`, preserving access to the private `/run/user/999` bus socket. Kernel preflight verified this configuration; `ProtectHome=true` masked the required socket.
 
 ## Installation contract for the owner lane
 
@@ -20,13 +21,14 @@
 5. Keep user systemd manager/linger available. The fixed slot0/slot1 transient services use `KillMode=control-group`, `Restart=no`, and manifest-bounded `RuntimeMaxSec`. The launcher fails closed without Linux/non-root identity, pinned binaries, user bus, expected cgroup, or authority files.
 6. Fixed verifier loads `operator/run-auth/<validated run UUID>.json`: `apiKey`, `runId`, `companyId`, `agentId`, `taskId`, `pid`, `createdAt`, `expiresAt` (plus version1). It must check0600, same UID, regular non-link file, live guardian PID in its ancestry, timestamps/expiry <=240seconds, and actual authenticated native agent/run/issue links. No token is passed in Claude environment or systemd arguments.
 7. Normal service exit removes its private auth record. Crash-stale records must be ignored after expiry/dead PID and cleaned during owner-controlled startup; the consumed intent is never removed. The token crosses into the service only through private stdin, then only the original prompt is forwarded to Claude.
-8. Owner-run Linux tests passed two slots, third-slot refusal, intent replay refusal, timeout and crash-descendant cleanup. Native model acceptance is a separate pending gate. Enable one controller after Windows schedules are disabled and ownership/budget/state migration passes. Windows marker `C:/Users/farha/.claude/it-team/paperclip-host-ownership.json` must name `hostinger-kvm4`; invalid markers block local startup. Preserve OpenClaw and unrelated schedules.
+8. Owner-run Linux tests passed two slots, third-slot refusal, intent replay refusal, timeout and crash-descendant cleanup. Native healthy-checkout acceptance also passed. Enable one controller after Windows schedules are disabled and ownership/budget/state migration passes. Windows marker `C:/Users/farha/.claude/it-team/paperclip-host-ownership.json` must name `hostinger-kvm4`; invalid markers block local startup. Preserve OpenClaw and unrelated schedules.
 
 ## Evidence and limits
 
 - `node --test guard/guard.test.mjs` exercises exact identity/manifest/argv/paths, MCP/prompt bounds, secret isolation, immutable intents, both roles, symlink/private-path refusal, and fixed systemd properties.
 - Unit path fixtures simulate POSIX realpaths on Windows. The intent test performs real exclusive file creation and file fsync; its Windows directory-fsync facade checks the call, not the Linux kernel behavior.
-- Owner-run Linux kernel acceptance passed; the Linux product verifier passed 127 offline tests across 11 modules. Native model acceptance remains pending.
+- Native backend run `d688c30b-f2b5-4a8d-8f1b-00dc9240b64b` passed in three turns; independent reviewer run `836e6a66-ae3e-49ad-9856-8daedeaa13a3` passed in four. Each ran 127 tests across 11 modules through the private verifier broker, then handed the authenticated task back to `in_review`.
+- Strict final JSON attestations matched the same base (`32ea916` prefix) and empty source digest (`e3b0` prefix), with no product-source changes. The initial pre-admission failure remains preserved with zero model admissions. This is healthy runtime acceptance, not a fabricated production repair.
 - Same-user guardrails are not an OS sandbox or actual supplier spending meter. Existing company/provider caps must remain independently enforced.
 - If an outer adapter disconnects while its admitted systemd service remains alive, that single attempt can continue until its fixed runtime deadline. Systemd retains the occupied slot; no replay is allowed. Immediate outer-process-death parity with Windows Job Objects is not claimed.
 - New tasks return strict final JSON attestations; operator-written canonical receipts retain provenance. Do not pretend a denied `.claude` Write succeeded.
