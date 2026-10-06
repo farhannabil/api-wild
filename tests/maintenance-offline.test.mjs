@@ -1,0 +1,20 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{spawnSync}from'node:child_process';import{fileURLToPath}from'node:url';import path from'node:path';
+test('offline product workers can use their fixtures but cannot access Paperclip, the network, subprocesses or outside files',()=>{
+ const root=fileURLToPath(new URL('../',import.meta.url)),loader=new URL('../scripts/maintenance/offline-tests.mjs',import.meta.url),outside=path.resolve(root,'..','outside-maintenance-fixture.json');
+ const script=`import assert from 'node:assert/strict';import http from 'node:http';import net from 'node:net';import tls from 'node:tls';import http2 from 'node:http2';import cp from 'node:child_process';import fs from 'node:fs';
+ const denied={code:'OFFLINE_EXTERNAL_EFFECT_DENIED'};
+ assert.throws(()=>http.request('http://127.0.0.1:3100/api/health'),denied);
+ assert.throws(()=>net.connect({host:'127.0.0.1',port:3100}),denied);
+ assert.throws(()=>new net.Socket().connect({host:'127.0.0.1',port:3100}),denied);
+ assert.throws(()=>tls.connect({host:'127.0.0.1',port:3100}),denied);
+ assert.throws(()=>http.request('https://external.invalid/'),denied);
+ assert.throws(()=>http2.connect('https://external.invalid/'),denied);
+ assert.throws(()=>globalThis.fetch('https://external.invalid/'),denied);
+ assert.throws(()=>cp.execFileSync(process.execPath,['--version']),denied);
+ assert.throws(()=>fs.readFileSync(${JSON.stringify(outside)}),{code:'ERR_ACCESS_DENIED'});
+ const server=http.createServer((_,res)=>res.end('fixture'));await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const result=await new Promise((resolve,reject)=>http.get({host:'127.0.0.1',port:server.address().port,path:'/'},res=>{let body='';res.on('data',b=>body+=b);res.on('end',()=>resolve(body));}).on('error',reject));
+ assert.equal(result,'fixture');await new Promise(resolve=>server.close(resolve));console.log('FIXTURE_ONLY_PASSED');`;
+ const result=spawnSync(process.execPath,['--permission','--allow-fs-read='+root,'--import',loader.href,'--input-type=module','--eval',script],{cwd:root,env:{SystemRoot:process.env.SystemRoot,NODE_TEST_CONTEXT:'maintenance-probe'},encoding:'utf8',timeout:10000,windowsHide:true});
+ assert.equal(result.status,0,result.stderr);assert.equal(result.stdout.trim(),'FIXTURE_ONLY_PASSED');
+});

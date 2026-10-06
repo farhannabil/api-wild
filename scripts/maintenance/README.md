@@ -49,7 +49,9 @@ It does not purchase or move hosting, or provide a laptop-off cloud worker.
 ## Verification and limits
 
 The fixed product check runs 127 offline tests across 11 modules with injected
-fixtures and loopback HTTP. Credentials are not inherited by test subprocesses;
+fixtures and only loopback listeners created by those fixtures with port zero.
+Other local services, including Paperclip itself, cannot be called by test code.
+Credentials are not inherited by test subprocesses;
 filesystem reads are restricted to the checkout and trusted preload. External
 network/subprocess exports are blocked inside test workers. One synthetic
 child-process clock fixture runs in full GitHub CI only. These same-user guards
