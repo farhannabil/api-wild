@@ -34,6 +34,12 @@ the latest job result live outside the repository in that operator directory.
 The clean monitor checkout is `work/apiwild-autonomy-monitor-20261005`;
 each repair uses its own `work/apiwild-autonomous-incidents/<UUID>` worktree.
 
+The standalone Windows job reuses the existing authorized GitHub login through
+a per-user DPAPI encrypted credential reference outside the repository. Only
+trusted GitHub/Git child processes receive authentication in memory. Test
+subprocesses and repair/review agents receive no GitHub credential. Missing or
+revoked authentication produces a failed job and an owner-visible blocker.
+
 The independent manager receives a hash-bound, read-only JSON file containing
 each source file's before/after contents. It cannot edit the repair. Native tasks
 use the installed one-attempt guardian's `maintenance-repair-v1`

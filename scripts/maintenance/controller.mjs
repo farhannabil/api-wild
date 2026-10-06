@@ -2,6 +2,8 @@
 import fs from 'node:fs/promises';import path from 'node:path';import {spawn} from 'node:child_process';
 import {randomUUID,createHash} from 'node:crypto';import {pathToFileURL} from 'node:url';
 import {COMPANY,BACKEND,REVIEWER,REPOSITORY,SHA,UUID,VERIFY,repairTools,reviewTools,repairPath,treeDigest,observation,agentAvailable,validReceipt,parseAttestation} from './policy.mjs';
+import {createCredentialLoader} from './github-credential.mjs';
+const credentials=createCredentialLoader();
 const HOME='C:/Users/farha/.claude/it-team/apiwild-autonomy';
 const INCIDENTS='C:/Users/farha/OneDrive/Documents/ChatGPT/Websites/work/apiwild-autonomous-incidents';
 const GIT='C:/Users/farha/.cache/codex-runtimes/codex-primary-runtime/dependencies/native/git/cmd/git.exe';
@@ -27,8 +29,8 @@ async function command(executable,args,{cwd,timeout=30000,limit=2*1024*1024,env=
   child.once('close',code=>{clearTimeout(timer);resolve({code,stdout:Buffer.concat(chunks).toString('utf8'),bounded:bytes<=limit&&stderrBytes<=limit});});
  });
 }
-async function git(cwd,args,options={}){const result=await command(GIT,args,{cwd,...options});assert(result.code===0&&result.bounded,'GIT_OPERATION_FAILED');return result.stdout.trim();}
-async function github(args){const r=await command(GH,args);assert(r.code===0&&r.bounded,'GITHUB_OPERATION_FAILED');return r.stdout.trim();}
+async function git(cwd,args,options={}){const env=['fetch','push'].includes(args[0])?(await credentials()).git:{GIT_TERMINAL_PROMPT:'0'};const result=await command(GIT,args,{cwd,...options,env});assert(result.code===0&&result.bounded,'GIT_OPERATION_FAILED');return result.stdout.trim();}
+async function github(args){const r=await command(GH,args,{env:(await credentials()).github});assert(r.code===0&&r.bounded,'GITHUB_OPERATION_FAILED');return r.stdout.trim();}
 async function api(endpoint,{method='GET',body,worker=false}={}){
  assert(/^\/[a-zA-Z0-9_/?=&,.-]+$/.test(endpoint),'INVALID_LOCAL_ENDPOINT');
  const headers={'content-type':'application/json'};
@@ -237,8 +239,8 @@ async function tick(){
   state.lastTickAt=new Date().toISOString();
   if(!c.enabled){console.log('Maintenance paused by owner.');return;}
   const health=await api('/health');assert(health.status==='ok'&&health.databaseBackup?.status==='ok'&&health.databaseBackup?.enabled===true&&!health.databaseBackup.lastFailure&&health.databaseBackup.warnings?.length===0&&health.databaseBackup.latestBackup?.ageHours<=health.databaseBackup.maxAgeHours,'PAPERCLIP_BACKUP_OR_RUNTIME_UNHEALTHY');
-  if(state.activeIncident){const incident=await json(HOME+'/incidents/'+state.activeIncident+'.json');try{await advance(c,state,incident);}catch(error){await block(state,incident,error);}await atomic(STATE,state);return;}
-  let snapshot;try{snapshot=await scan(c,state);}catch(error){const code=safeError(error);if(state.lastOperationalError!==code)await report({id:'monitor',parentIssueId:c.parentIssueId},'Repository scan blocked: '+code+'. Source and external state preserved.');state.lastOperationalError=code;await atomic(STATE,state);console.log(code);return;}
+  if(state.activeIncident){const incident=await json(HOME+'/incidents/'+state.activeIncident+'.json');try{await advance(c,state,incident);}catch(error){process.exitCode=1;await block(state,incident,error);}await atomic(STATE,state);return;}
+  let snapshot;try{snapshot=await scan(c,state);}catch(error){const code=safeError(error);if(state.lastOperationalError!==code)await report({id:'monitor',parentIssueId:c.parentIssueId},'Repository scan blocked: '+code+'. Source and external state preserved.');state.lastOperationalError=code;await atomic(STATE,state);process.exitCode=1;console.log(code);return;}
   state.observation=observation(state.observation,snapshot,Date.now());state.lastSnapshot=snapshot;state.lastOperationalError=null;
   if(state.observation.action==='confirmed_failure'&&!state.incidents.some(x=>x.fingerprint===state.observation.fingerprint)){
    const today=new Date().toISOString().slice(0,10);assert(state.incidents.filter(x=>x.createdAt.startsWith(today)).length<c.maxIncidentsPerDay,'DAILY_INCIDENT_LIMIT');if(!await available(BACKEND)){await atomic(STATE,state);console.log('Existing workers are reserved; maintenance waits.');return;}
@@ -246,7 +248,7 @@ async function tick(){
    await git(c.repoPath,['worktree','add',root,'-b',branch,snapshot.commit]);
    const incident={id,root,branch,baseCommit:snapshot.commit,failures:snapshot.failures,fingerprint:state.observation.fingerprint,parentIssueId:c.parentIssueId,stage:'created',createdAt:new Date().toISOString()};
    await saveIncident(incident);state.activeIncident=id;state.incidents.push({id,fingerprint:incident.fingerprint,createdAt:incident.createdAt});await atomic(STATE,state);
-   try{await newTask(c,incident,'repair');await report(incident,'Two matching failures confirmed; native backend repair dispatched once.');}catch(error){await block(state,incident,error);}
+   try{await newTask(c,incident,'repair');await report(incident,'Two matching failures confirmed; native backend repair dispatched once.');}catch(error){process.exitCode=1;await block(state,incident,error);}
   }
   await atomic(STATE,state);console.log(JSON.stringify({checkedAt:new Date().toISOString(),state:state.observation.action,commit:snapshot.commit,activeIncident:state.activeIncident??null,modelCallsOnHealthyScan:0}));
  }finally{if(held)await fs.unlink(lock);}
