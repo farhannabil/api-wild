@@ -80,6 +80,7 @@
 !infra/railway/runtime/retail-token-pricing.mjs
 !infra/railway/runtime/model-accounting.mjs
 !infra/railway/runtime/credit-offers.mjs
+!infra/railway/runtime/temporary-credit-offer.mjs
 !infra/railway/runtime/stripe-checkout.mjs
 !infra/railway/runtime/subrouter-dispatch.mjs
 !infra/railway/runtime/workspace-policy-http.mjs
