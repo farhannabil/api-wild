@@ -3,30 +3,25 @@ import fs from 'node:fs/promises';import path from 'node:path';import {spawn} fr
 import {randomUUID,createHash} from 'node:crypto';import {pathToFileURL} from 'node:url';
 import {COMPANY,BACKEND,REVIEWER,REPOSITORY,SHA,UUID,VERIFY,repairTools,reviewTools,repairPath,treeDigest,observation,agentAvailable,validReceipt,parseAttestation} from './policy.mjs';
 import {createCredentialLoader} from './github-credential.mjs';
+import {LINUX,HOME,INCIDENTS,GIT,GH,NODE,GUARD,MANIFEST,REPO_PREFIX,normal,childEnvironment} from './platform.mjs';
 const credentials=createCredentialLoader();
-const HOME='C:/Users/farha/.claude/it-team/apiwild-autonomy';
-const INCIDENTS='C:/Users/farha/OneDrive/Documents/ChatGPT/Websites/work/apiwild-autonomous-incidents';
-const GIT='C:/Users/farha/.cache/codex-runtimes/codex-primary-runtime/dependencies/native/git/cmd/git.exe';
-const GH='C:/Users/farha/AppData/Local/Programs/GitHub CLI/bin/gh.exe';
-const NODE='C:/Program Files/nodejs/node.exe';
-const GUARD='C:/Users/farha/.claude/setup-runtime/paperclip-cli-once.exe';
-const MANIFEST='C:/Users/farha/.claude/it-team/paperclip-cli-once-jobs.tsv';
 const BASE='http://127.0.0.1:3100/api';
 const STATE=HOME+'/state.json',CONFIG=HOME+'/config.json';
-const normal=value=>path.resolve(value).replaceAll('\\','/').toLowerCase();
 const safeError=error=>/^[A-Z0-9_]{1,100}$/.test(error?.code??'')?error.code:'MAINTENANCE_OPERATION_FAILED';
 const assert=(value,code)=>{if(!value)throw Object.assign(Error(code),{code});};
 async function atomic(file,value){const temporary=file+'.'+randomUUID()+'.tmp';await fs.writeFile(temporary,JSON.stringify(value,null,2)+'\n',{flag:'wx'});await fs.rename(temporary,file);}
 async function json(file){return JSON.parse(await fs.readFile(file,'utf8'));}
 async function command(executable,args,{cwd,timeout=30000,limit=2*1024*1024,env={}}={}){
  return new Promise((resolve,reject)=>{
-  const inherited={SystemRoot:process.env.SystemRoot??'C:/Windows',WINDIR:process.env.WINDIR??'C:/Windows',TEMP:process.env.TEMP,TMP:process.env.TMP,USERPROFILE:'C:/Users/farha',APPDATA:'C:/Users/farha/AppData/Roaming',LOCALAPPDATA:'C:/Users/farha/AppData/Local',PATH:path.dirname(GIT)+';C:/Program Files/nodejs;C:/Windows/System32',...env};
-  const child=spawn(executable,args,{cwd,env:inherited,windowsHide:true,stdio:['ignore','pipe','pipe']}),chunks=[];let bytes=0,stderrBytes=0;
-  child.stdout.on('data',b=>{bytes+=b.length;if(bytes>limit)child.kill();else chunks.push(b);});
-  child.stderr.on('data',b=>{stderrBytes+=b.length;if(stderrBytes>limit)child.kill();});
-  const timer=setTimeout(()=>child.kill(),timeout);
-  child.once('error',()=>{clearTimeout(timer);reject(Object.assign(Error('COMMAND_START_FAILED'),{code:'COMMAND_START_FAILED'}));});
-  child.once('close',code=>{clearTimeout(timer);resolve({code,stdout:Buffer.concat(chunks).toString('utf8'),bounded:bytes<=limit&&stderrBytes<=limit});});
+  const inherited=childEnvironment(env);
+  const child=spawn(executable,args,{cwd,env:inherited,windowsHide:true,detached:LINUX,stdio:['ignore','pipe','pipe']}),chunks=[];let bytes=0,stderrBytes=0,timedOut=false,stopped=false,escalation;
+  const signal=kind=>{try{if(LINUX&&child.pid)process.kill(-child.pid,kind);else child.kill(kind);}catch(error){if(error.code!=='ESRCH')child.kill(kind);}};
+  const stop=()=>{if(stopped)return;stopped=true;signal('SIGTERM');escalation=setTimeout(()=>signal('SIGKILL'),250);};
+  child.stdout.on('data',b=>{bytes+=b.length;if(bytes>limit)stop();else chunks.push(b);});
+  child.stderr.on('data',b=>{stderrBytes+=b.length;if(stderrBytes>limit)stop();});
+  const timer=setTimeout(()=>{timedOut=true;stop();},timeout);
+  child.once('error',()=>{clearTimeout(timer);clearTimeout(escalation);reject(Object.assign(Error('COMMAND_START_FAILED'),{code:'COMMAND_START_FAILED'}));});
+  child.once('close',code=>{clearTimeout(timer);clearTimeout(escalation);if(stopped&&LINUX)signal('SIGKILL');resolve({code:timedOut||stopped?1:code,stdout:Buffer.concat(chunks).toString('utf8'),bounded:!timedOut&&bytes<=limit&&stderrBytes<=limit,timedOut});});
  });
 }
 async function git(cwd,args,options={}){const env=['fetch','push'].includes(args[0])?(await credentials()).git:{GIT_TERMINAL_PROMPT:'0'};const result=await command(GIT,args,{cwd,...options,env});assert(result.code===0&&result.bounded,'GIT_OPERATION_FAILED');return result.stdout.trim();}
@@ -38,7 +33,7 @@ async function api(endpoint,{method='GET',body,worker=false}={}){
  const response=await fetch(BASE+endpoint,{method,headers,body:body?JSON.stringify(body):undefined,redirect:'error',signal:AbortSignal.timeout(10000)});
  assert(response.ok,'PAPERCLIP_REQUEST_FAILED');return response.json();
 }
-async function config(){const c=await json(CONFIG);assert(c.schemaVersion===1&&typeof c.enabled==='boolean'&&c.repository===REPOSITORY&&c.site==='https://apiwild.com'&&normal(c.repoPath).startsWith('c:/users/farha/onedrive/documents/chatgpt/websites/work/')&&UUID.test(c.parentIssueId)&&c.hourlyScanMinutes===60&&c.consecutiveFailures===2&&c.maxIncidentsPerDay===2,'INVALID_CONFIG');assert(await git(c.repoPath,['remote','get-url','origin'])==='https://github.com/'+REPOSITORY+'.git','REPOSITORY_IDENTITY_MISMATCH');return c;}
+async function config(){const c=await json(CONFIG);assert(c.schemaVersion===1&&typeof c.enabled==='boolean'&&c.repository===REPOSITORY&&c.site==='https://apiwild.com'&&normal(c.repoPath).startsWith(REPO_PREFIX)&&UUID.test(c.parentIssueId)&&c.hourlyScanMinutes===60&&c.consecutiveFailures===2&&c.maxIncidentsPerDay===2,'INVALID_CONFIG');assert(await git(c.repoPath,['remote','get-url','origin'])==='https://github.com/'+REPOSITORY+'.git','REPOSITORY_IDENTITY_MISMATCH');return c;}
 async function entries(root,taskIds=[]){
  const changed=(await git(root,['diff','--name-only','HEAD'])).split('\n').filter(Boolean);
  const untracked=(await git(root,['ls-files','--others','--exclude-standard'])).split('\n').filter(Boolean);
@@ -71,6 +66,7 @@ async function verify(root,taskIds=[]){
  return{baseCommit,treeDigest:digest,changedPaths:changed.map(x=>x.path),tests:'passed',testCount,modules:11,limitations:['One synthetic child-process clock test runs in full CI only.']};
 }
 async function verifyCurrent(){
+ if(LINUX){const id=process.env.PAPERCLIP_RUN_ID;assert(UUID.test(id??''),'NATIVE_RUN_REQUIRED');const file=HOME+'/run-auth/'+id+'.json',stat=await fs.lstat(file);assert(stat.isFile()&&!stat.isSymbolicLink()&&(stat.mode&0o077)===0&&stat.uid===process.getuid()&&stat.size<16384,'NATIVE_BROKER_FILE_REQUIRED');const context=await json(file),created=Date.parse(context.createdAt),expires=Date.parse(context.expiresAt);assert(context.runId===id&&context.companyId===COMPANY&&context.agentId===process.env.PAPERCLIP_AGENT_ID&&context.taskId===process.env.PAPERCLIP_TASK_ID&&typeof context.apiKey==='string'&&context.apiKey.length>20&&Number.isSafeInteger(context.pid)&&context.pid>1&&created<=Date.now()&&expires-created<=240000&&expires>created&&Date.now()<expires,'NATIVE_BROKER_CONTEXT_REQUIRED');process.kill(context.pid,0);assert((await fs.readFile('/proc/'+context.pid+'/cmdline','utf8')).split('\0').includes(GUARD),'NATIVE_GUARD_PROCESS_REQUIRED');let parent=process.ppid,linked=false;for(let depth=0;depth<64&&parent>1;depth++){if(parent===context.pid){linked=true;break;}const status=await fs.readFile('/proc/'+parent+'/stat','utf8');parent=Number(status.slice(status.lastIndexOf(') ')+2).split(' ')[1]);}assert(linked,'NATIVE_GUARD_ANCESTOR_REQUIRED');process.env.PAPERCLIP_API_KEY=context.apiKey;}
  assert(process.env.PAPERCLIP_COMPANY_ID===COMPANY&&[BACKEND,REVIEWER].includes(process.env.PAPERCLIP_AGENT_ID)&&UUID.test(process.env.PAPERCLIP_TASK_ID??''),'NATIVE_IDENTITY_REQUIRED');
  const root=normal(process.cwd()),id=path.basename(root);assert(UUID.test(id)&&root===normal(INCIDENTS)+'/'+id,'INCIDENT_ROOT_REQUIRED');
  const incident=await json(HOME+'/incidents/'+id+'.json');assert(incident.root&&normal(incident.root)===root&&[incident.repairIssueId,incident.reviewIssueId].includes(process.env.PAPERCLIP_TASK_ID),'INCIDENT_IDENTITY_MISMATCH');
