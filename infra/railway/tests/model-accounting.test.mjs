@@ -9,9 +9,9 @@ test('all 39 models have independent retail and private supplier calculations',(
   assert.equal(q.retailUsdMicros,Math.round((r.input+r.output)*1e6));assert.equal(q.supplierCostVerified,false);assert.ok(q.estimatedSupplierCnyMicros>0);
  }}
 });
-test('Fable preserves $30 retail and separate approximately $7.81 supplier cost',()=>{
+test('Fable preserves $30 retail with supplier cost converted at native CNY 6.8 per USD',()=>{
  const q=make().quote({model:'claude-fable-5',promptTokens:1000000,completionTokens:1000000});
- assert.equal(q.retailUsdMicros,30000000);assert.equal(q.estimatedSupplierNativeMicros,52380000);assert.equal(q.estimatedSupplierUsdMicros,7812561);assert.equal(q.estimatedGrossUsdMicros,22187439);
+ assert.equal(q.retailUsdMicros,30000000);assert.equal(q.estimatedSupplierNativeMicros,52380000);assert.equal(q.estimatedSupplierUsdMicros,7702942);assert.equal(q.estimatedGrossUsdMicros,22297058);
 });
 test('mixed models use their own prices, not a universal 3.75 multiplier',()=>{
  const p=make(),a=p.quote({model:'claude-fable-5',promptTokens:500000,completionTokens:500000}),b=p.quote({model:'gpt-6-sol',promptTokens:1000000,completionTokens:1000000});
