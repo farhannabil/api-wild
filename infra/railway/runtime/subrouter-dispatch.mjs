@@ -89,8 +89,8 @@ export function createSubrouterDispatch(config) {
       const total = exactInteger(input + output);
       if (value.usage.total_tokens !== undefined && value.usage.total_tokens !== total) fail('subrouter_invalid_usage', true);
       if (!Array.isArray(value.choices) || value.choices.length !== 1 || (value.choices[0]?.index !== undefined && value.choices[0].index !== 0)) fail('subrouter_invalid_response', true);
-      const assistant = validateAssistantMessage(value.choices[0].message, body);
       const finish = value.choices[0].finish_reason;
+      const assistant = validateAssistantMessage(value.choices[0].message, body, {finishReason:finish,completionTokens:output});
       if ((assistant.toolCalls && finish !== 'tool_calls') || (!assistant.toolCalls && finish === 'tool_calls')) fail('subrouter_incomplete_tool_result', true);
       const result = { providerResponseId: value.id, ...(providerRequestId ? {providerRequestId} : {}), model: value.model, ...assistant,
         created: exactInteger(value.created ?? Math.floor(Date.now() / 1000)),

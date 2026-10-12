@@ -124,7 +124,7 @@ export function normalizeChatRequest(input, {native = false} = {}) {
   return {capability, body, stream: raw.stream === true, includeUsage, usesTools: usesFunctionTools(body)};
 }
 export function chatInputBytes(body) { return Buffer.byteLength(JSON.stringify(body)); }
-export function validateAssistantMessage(message, body) {
+export function validateAssistantMessage(message, body, {finishReason, completionTokens} = {}) {
   if (!object(message) || message.role !== 'assistant') fail(503);
   const calls = message.tool_calls === undefined ? undefined : validateToolCalls(message.tool_calls);
   if (calls) {
@@ -134,8 +134,9 @@ export function validateAssistantMessage(message, body) {
       || (object(body.tool_choice) && calls.some(call => call.function.name !== body.tool_choice.function.name))) fail(503);
   } else if (body.tool_choice === 'required' || object(body.tool_choice)) fail(503);
   if (message.content !== null && message.content !== undefined) string(message.content, 900000, undefined, true);
-  if (!calls && (typeof message.content !== 'string' || !message.content.length)) fail(503);
-  return {text: message.content ?? null, ...(calls ? {toolCalls: calls} : {})};
+  const exhausted = finishReason === 'length' && Number.isSafeInteger(completionTokens) && completionTokens > 0;
+  if (!calls && (typeof message.content !== 'string' || !message.content.length) && !(exhausted && (message.content === '' || message.content === null))) fail(503);
+  return {text: !calls && exhausted && message.content === null ? '' : message.content ?? null, ...(calls ? {toolCalls: calls} : {})};
 }
 export function settledChatCompletion(value) {
   const result = value?.result;
@@ -144,7 +145,7 @@ export function settledChatCompletion(value) {
   const total = exactInteger(prompt + completion);
   const calls = result.toolCalls === undefined ? undefined : validateToolCalls(result.toolCalls);
   if (result.text !== null && result.text !== undefined) string(result.text, 900000, undefined, true);
-  if (!calls && (typeof result.text !== 'string' || !result.text.length)) fail(503);
+  if (!calls && (typeof result.text !== 'string' || (!result.text.length && !(result.finishReason === 'length' && completion > 0)))) fail(503);
   const finish = ['stop', 'length', 'content_filter', 'tool_calls'].includes(result.finishReason) ? result.finishReason : null;
   if (calls && finish !== 'tool_calls') fail(503);
   return {id: string(value.id, 160, /^[^\x00-\x20\x7f]+$/), object: 'chat.completion',

@@ -54,9 +54,13 @@ test('route configuration is snapshotted and empty configuration remains unavail
   const empty = createSubrouterDispatch({ routes: [], fetchImpl: () => { throw new Error('must not call'); } }); await assert.rejects(empty({ record: record(), payload: payload(), signal: new AbortController().signal }));
 });
 test('diagnostics contain only fixed response metadata, never supplier content or credentials',async()=>{
- const diagnostics=[];const raw={...result(),choices:[{message:{role:'assistant',content:''},finish_reason:'length'}],usage:{prompt_tokens:8,completion_tokens:32,total_tokens:40},private:TOKEN};
+ const diagnostics=[];const raw={...result(),choices:[{message:{role:'assistant',content:''},finish_reason:'stop'}],usage:{prompt_tokens:8,completion_tokens:32,total_tokens:40},private:TOKEN};
  const d=createSubrouterDispatch({routes:[route()],fetchImpl:async()=>response(raw),observeFailure:r=>diagnostics.push(r)});
  await assert.rejects(d({record:record(),payload:payload(),signal:new AbortController().signal}));
- assert.deepEqual(diagnostics,[{phase:'validation',status:200,modelMatches:true,contentLength:0,finishReason:'length',completionTokens:32,maxTokens:32}]);
+ assert.deepEqual(diagnostics,[{phase:'validation',status:200,modelMatches:true,contentLength:0,finishReason:'stop',completionTokens:32,maxTokens:32}]);
  assert.ok(!JSON.stringify(diagnostics).includes(TOKEN));
+});
+test('a reasoning model exhausting its output cap is a metered length completion, not an indefinite hold',async()=>{
+ const f=fixture(()=>response({...result(),usage:{prompt_tokens:8,completion_tokens:32,total_tokens:40},choices:[{message:{role:'assistant',content:'',reasoning_content:'private reasoning'},finish_reason:'length'}]}));
+ const resultValue=await f.run();assert.equal(resultValue.text,'');assert.equal(resultValue.finishReason,'length');assert.equal(resultValue.usage.completion_tokens,32);assert.equal(f.calls.length,1);assert.ok(!JSON.stringify(resultValue).includes('private reasoning'));
 });
