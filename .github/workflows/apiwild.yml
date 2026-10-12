@@ -78,6 +78,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/apiwild-promotion-pglite" --no-save --ignore-scripts --no-audit --no-fund @electric-sql/pglite@0.5.8
           node tests/integration/credit-promotion-pglite.mjs "$RUNNER_TEMP/apiwild-promotion-pglite/node_modules/@electric-sql/pglite/dist/index.js"
           node tests/integration/temporary-credit-offer-pglite.mjs "$RUNNER_TEMP/apiwild-promotion-pglite/node_modules/@electric-sql/pglite/dist/index.js"
+          node tests/integration/active-concurrency-pglite.mjs "$RUNNER_TEMP/apiwild-promotion-pglite/node_modules/@electric-sql/pglite/dist/index.js"
   production-health:
     needs: build-and-test
     if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push')

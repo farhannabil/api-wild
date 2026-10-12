@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {pathToFileURL} from 'node:url';
+const {PGlite}=await import(pathToFileURL(process.argv[2]).href);
+const db=new PGlite();
+await db.exec("create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key,email_confirmed_at timestamptz,is_anonymous boolean default false);create table public.customer_profiles(user_id uuid primary key,onboarding_completed_at timestamptz);");
+for(const name of ['20261003060000_apiwild_gateway_portability.sql','20261005030000_retail_supplier_separation.sql','20261005032721_nullable_customer_key_limits.sql','20261012193000_gateway_active_concurrency.sql'])await db.exec(fs.readFileSync(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
+const user='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',owner='live:supabase:'+user,budget='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+await db.exec(`insert into auth.users values('${user}',now(),false);select apiwild_gateway_account_initialize('${owner}');update apiwild_finance.gateway_accounts set funded_usd_micros=10000;insert into apiwild_finance.provider_budgets values('${budget}','apiwild','live','CNY','cccccccc-cccc-4ccc-8ccc-cccccccccccc',true,10000,10000,'v1',array['model']);`);
+const reserve=async key=>(await db.query('select apiwild_gateway_reserve($1,null,$2,$3,$4,$5,$6,$7,$8,$9) r',[owner,budget,key,'a'.repeat(64),'chat','model','v1',1000,1000])).rows[0].r;
+for(const key of ['uncertain_request_01','uncertain_request_02']){let r=(await reserve(key)).record;r=(await db.query('select apiwild_gateway_claim($1,$2,$3) r',[owner,r.id,r.version])).rows[0].r.record;await db.query('select apiwild_gateway_uncertain($1,$2,$3)',[owner,r.id,r.version]);}
+const before=(await db.query('select apiwild_gateway_usage($1) r',[owner])).rows[0].r;
+assert.equal(before.reservedUsdMicros,2000);assert.equal(before.availableUsdMicros,8000);
+assert.equal((await reserve('new_request_000001')).fresh,true);
+assert.equal((await reserve('new_request_000002')).fresh,true);
+await assert.rejects(reserve('new_request_000003'),/gateway_request_limit/);
+assert.equal((await reserve('uncertain_request_01')).fresh,false);
+await db.exec('update apiwild_finance.gateway_accounts set funded_usd_micros=4000');
+await assert.rejects(reserve('new_request_000004'),/gateway_customer_limit/);
+const usage=(await db.query('select apiwild_gateway_usage($1) r',[owner])).rows[0].r;assert.equal(usage.reservedUsdMicros,4000);assert.equal(usage.spentUsdMicros,0);
+console.log('PASS: uncertain holds preserved, active concurrency enforced, no redispatch, credit limits preserved');await db.close();

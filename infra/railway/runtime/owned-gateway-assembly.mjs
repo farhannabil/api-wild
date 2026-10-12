@@ -37,10 +37,10 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
  const base={supabaseOrigin:SUPABASE_ORIGIN,secretKey,publishableKey,billingMode,fetchImpl};
  const auth=createGatewayRpc(base),keys=createCustomerKeyRpc({supabaseOrigin:SUPABASE_ORIGIN,secretKey,billingMode,verifyOwner:async raw=>{const context=await auth.verifyOwner(raw);await auth.initializeAccount(context);return context;},fetchImpl});
  const rpc=createGatewayRpc({...base,keyVerifier:keys,retailSettlement:true});
- const upstreamDispatch=createSubrouterDispatch({fetchImpl,routes:routes.map(({maxInputTokens,supplierReserveCnyMicros,supplierRole,...r})=>r)});
+ const upstreamDispatch=createSubrouterDispatch({fetchImpl,observeFailure:record=>console.log(JSON.stringify({supplierResponseFailure:record})),routes:routes.map(({maxInputTokens,supplierReserveCnyMicros,supplierRole,...r})=>r)});
  let conversionGuard;if(inferenceEnabled){try{conversionGuard=createSupplierConversionGuard({conversion:JSON.parse(env.APIWILD_SUPPLIER_CONVERSION_JSON),fetchImpl,clock});}catch{throw new GatewayError('supplier_conversion_unverified');}}
  const dispatch=async work=>{if(conditional(work.record.model))tierPolicy.assertDispatch(work.record.model,work.record.rate_version);await conversionGuard.assertConversion({signal:work.signal});return upstreamDispatch(work);};
- const service=createGatewayService({rpc,dispatch,verifySettlement:async({record,providerResult})=>{
+ const service=createGatewayService({rpc,dispatch,observeFailure:record=>console.log(JSON.stringify({gatewayFailure:record})),verifySettlement:async({record,providerResult})=>{
   const route=routes.find(r=>r.model===record.model&&r.providerBudgetId===record.provider_budget_id&&r.capability===record.capability&&r.rateVersion===record.rate_version);
   if(!route||providerResult.model!==route.upstreamModel||!providerResult.providerResponseId)throw new GatewayError('retail_response_unverified');
   // Supplier-added input is bounded independently of the doubled money quote.

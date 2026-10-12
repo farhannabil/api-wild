@@ -32,7 +32,7 @@ async function boundedJson(response, signal) {
 // Empty routes are allowed and fail closed. Creation does not call an endpoint,
 // create a key, accept a price or mount a production request route.
 export function createSubrouterDispatch(config) {
-  strictObject(config, ['routes', 'fetchImpl']);
+  strictObject(config, ['routes', 'fetchImpl', 'observeFailure']);
   if (!Array.isArray(config.routes) || config.routes.length > 1000) fail('subrouter_invalid_configuration');
   const fetchImpl = config.fetchImpl ?? globalThis.fetch;
   if (typeof fetchImpl !== 'function') fail('subrouter_invalid_configuration');
@@ -72,11 +72,14 @@ export function createSubrouterDispatch(config) {
     // over the whole dispatched JSON, including tool schemas and call history.
     if (chatInputBytes(request) > route.maxInputChars) fail('subrouter_invalid_messages');
     if (secrets.some(secret => JSON.stringify(request).includes(secret))) fail('subrouter_private_payload_rejected');
+    let diagnostic = {phase:'transport'};
     try {
       // One request, fixed host, redirects forbidden. No automatic fallback or retry.
       const response = await fetchImpl(SUBROUTER_CHAT_ENDPOINT, { method: 'POST', headers: { Authorization: 'Bearer ' + route.apiKey, 'Content-Type': 'application/json' }, body: JSON.stringify(request), redirect: 'error', cache: 'no-store', signal });
+      diagnostic = {phase:'response',status:response.status};
       if (!response.ok || response.redirected) fail('subrouter_dispatch_not_confirmed', true);
       const value = await boundedJson(response, signal);
+      diagnostic = {...diagnostic,phase:'validation',modelMatches:value?.model===route.upstreamModel,contentLength:typeof value?.choices?.[0]?.message?.content==='string'?value.choices[0].message.content.length:null,finishReason:['stop','length','content_filter','tool_calls'].includes(value?.choices?.[0]?.finish_reason)?value.choices[0].finish_reason:null,completionTokens:Number.isSafeInteger(value?.usage?.completion_tokens)?value.usage.completion_tokens:null,maxTokens};
       if (!value || typeof value !== 'object' || typeof value.id !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(value.id) || value.model !== route.upstreamModel) fail('subrouter_response_identity_unconfirmed', true);
       // The wallet log identifies this exact HTTP response by x-request-id.
       // Preserve completion identity separately; neither ID is customer output.
@@ -86,8 +89,8 @@ export function createSubrouterDispatch(config) {
       const total = exactInteger(input + output);
       if (value.usage.total_tokens !== undefined && value.usage.total_tokens !== total) fail('subrouter_invalid_usage', true);
       if (!Array.isArray(value.choices) || value.choices.length !== 1 || (value.choices[0]?.index !== undefined && value.choices[0].index !== 0)) fail('subrouter_invalid_response', true);
-      const assistant = validateAssistantMessage(value.choices[0].message, body);
       const finish = value.choices[0].finish_reason;
+      const assistant = validateAssistantMessage(value.choices[0].message, body, {finishReason:finish,completionTokens:output});
       if ((assistant.toolCalls && finish !== 'tool_calls') || (!assistant.toolCalls && finish === 'tool_calls')) fail('subrouter_incomplete_tool_result', true);
       const result = { providerResponseId: value.id, ...(providerRequestId ? {providerRequestId} : {}), model: value.model, ...assistant,
         created: exactInteger(value.created ?? Math.floor(Date.now() / 1000)),
@@ -95,6 +98,9 @@ export function createSubrouterDispatch(config) {
         usage: { prompt_tokens: input, completion_tokens: output }, settlementVerified: false };
       if (secrets.some(secret => JSON.stringify(result).includes(secret))) fail('subrouter_private_response_rejected', true);
       return Object.freeze(result);
-    } catch { fail('subrouter_dispatch_requires_reconciliation', true); }
+    } catch (error) {
+      try { config.observeFailure?.(diagnostic); } catch {}
+      fail('subrouter_dispatch_requires_reconciliation', true);
+    }
   };
 }
