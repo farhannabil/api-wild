@@ -34,7 +34,7 @@ export default function Pricing(){
     </div>
     <div className="estimate-total" aria-live="polite"><span>API WILD wallet deduction estimate</span><strong>{estimate===null?'Enter valid whole token counts':usd(estimate)}</strong></div>
     {official!==null&&estimate!==null&&<p>Official standard API estimate for the same tokens: <b>{usd(official)}</b>. API WILD saves <b>{usd(official-estimate)}</b> before purchase bonuses. <a className="text-link" href={model.official_reference.source} target="_blank" rel="noreferrer">Official pricing ↗</a> <small>Reference checked {model.official_reference.checked_date}.</small></p>}
-    <p className="section-fine">This estimates one request at standard uncached text rates, rounded up to the nearest $0.000001. Multiple requests round separately. Actual token counts determine the charge. Long-context, cache, audio and optional provider tools are not included; current route limits apply.</p>
+    <p className="section-fine">Base-rate volume estimate, rounded once to the nearest $0.000001 upward. Large totals represent multiple requests; each actual request has input/output limits and rounds separately. Actual token counts determine the charge. Long-context, cache, audio and optional provider tools are not included.</p>
    </>}
   </section>
   <div className="offering-title"><span className="section-overline">PREPAID CREDIT</span><h2>Add dollars. Use any available model.</h2><p>Custom top-ups start at $30 and add the same amount to your wallet. These are one-time purchases. Pack bonuses are shown separately; credit does not represent a fixed number of tokens.</p><a className="pill-button dark" href="/console/billing">Manage credits →</a></div>
