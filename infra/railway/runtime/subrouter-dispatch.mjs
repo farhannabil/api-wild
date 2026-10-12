@@ -4,6 +4,7 @@
 import { GatewayError, cloneJsonObject, exactInteger, strictObject } from './supabase-gateway-rpc.mjs';
 import { normalizeChatRequest, chatInputBytes, validateAssistantMessage } from './chat-compatibility.mjs';
 import {isSupplierRequestIdentity} from './supplier-request-identity.mjs';
+import {assertPrepaidRoutingEnvelope} from './prepaid-smart-router.mjs';
 
 export const SUBROUTER_CHAT_ENDPOINT = 'https://subrouter.ai/v1/chat/completions';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -56,7 +57,8 @@ export function createSubrouterDispatch(config) {
     if (!route || record?.state !== 'executing') fail('subrouter_route_unavailable');
     if (!(signal instanceof AbortSignal) || signal.aborted) fail('subrouter_invalid_dispatch_signal');
     const envelope = cloneJsonObject(payload, 65536);
-    strictObject(envelope, ['body', 'format', 'delivery']);
+    strictObject(envelope, ['body', 'format', 'delivery', 'routing']);
+    if(envelope.routing!==undefined)assertPrepaidRoutingEnvelope(envelope.routing,envelope.body);
     if (!['native', 'openai'].includes(envelope.format)) fail('subrouter_unsupported_format');
     if (envelope.delivery !== undefined) {
       strictObject(envelope.delivery, ['stream', 'includeUsage']);

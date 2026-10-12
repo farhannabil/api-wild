@@ -43,6 +43,7 @@ jobs:
           infra/railway/tests/owned-discovery-http.test.mjs
           infra/railway/tests/gateway-service.test.mjs
           infra/railway/tests/chat-compatibility.test.mjs
+          infra/railway/tests/prepaid-smart-router.test.mjs
           infra/railway/tests/subrouter-dispatch.test.mjs
           infra/railway/tests/subrouter-request-binding.test.mjs
           infra/railway/tests/supplier-request-identity.test.mjs
