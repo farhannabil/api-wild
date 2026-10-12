@@ -62,6 +62,7 @@ jobs:
           infra/railway/tests/deepseek-assembly.test.mjs
           infra/railway/tests/gateway-quote-lookup.test.mjs
           infra/railway/tests/retail-token-pricing.test.mjs
+          infra/railway/tests/native-customer-hourly.test.mjs
           infra/railway/tests/model-accounting.test.mjs
           infra/railway/tests/welcome-brand.test.mjs
           infra/railway/tests/welcome-rpc.test.mjs
