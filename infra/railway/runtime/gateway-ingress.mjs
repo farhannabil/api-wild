@@ -27,7 +27,7 @@ async function body(request, signal) {
   } finally { signal.removeEventListener('abort', abort); void reader.cancel().catch(() => {}); }
 }
 export function createGatewayIngress(config) {
-  strictObject(config, ['rpc', 'keys', 'service', 'selectQuote', 'origin', 'enabled', 'maxConcurrent', 'maxToolConcurrent', 'playgroundModels', 'discovery', 'researchTools', 'clock', 'smartRoutingEnabled']);
+  strictObject(config, ['rpc', 'keys', 'nativeKeys', 'service', 'selectQuote', 'origin', 'enabled', 'maxConcurrent', 'maxToolConcurrent', 'playgroundModels', 'discovery', 'researchTools', 'clock', 'smartRoutingEnabled']);
   if (config.origin !== 'https://apiwild.com' || typeof config.rpc?.verifyOwner !== 'function' || typeof config.rpc?.verifyKeyOwner !== 'function' || !isCustomerKeyRpc(config.keys) || typeof config.service?.execute !== 'function' || typeof config.selectQuote !== 'function') throw new GatewayError('gateway_ingress_unconfigured');
   const playgroundModels=(config.playgroundModels??[]).map(row=>{strictObject(row,['model','capability','maxOutputTokens','supportsTools']);if(typeof row.model!=='string'||!['chat','code','research'].includes(row.capability)||(row.supportsTools!==undefined&&typeof row.supportsTools!=='boolean'))throw new GatewayError('gateway_ingress_unconfigured');exactInteger(row.maxOutputTokens,1,32768);return Object.freeze({...row,supportsTools:row.supportsTools===true});});
   if(config.discovery!==undefined&&!isOwnedDiscoverySnapshot(config.discovery))throw new GatewayError('gateway_ingress_unconfigured');
@@ -46,6 +46,7 @@ export function createGatewayIngress(config) {
     window.count++;
   };
   const rpc = config.rpc, keys = config.keys, service = config.service, selector = config.selectQuote;
+  const customerKeys=config.nativeKeys??keys;
   const origin = config.origin, enabled = config.enabled === true, limit = exactInteger(config.maxConcurrent ?? 4, 1, 16), toolLimit=exactInteger(config.maxToolConcurrent??2,1,4); let active = 0, toolsActive=0;
   const ingress=Object.freeze({ async handle(request) {
     if (!(request instanceof Request)) return reply(400, { error: 'Invalid request.' });
@@ -108,14 +109,14 @@ export function createGatewayIngress(config) {
       }
       if(url.pathname==='/api/usage'){if(request.method!=='GET')bad(405);const context=await rpc.verifyOwner({authorization});await rpc.initializeAccount(context);return reply(200,await rpc.usage(context));}
       if (['/api/keys','/api/gateway/keys'].includes(url.pathname)) {
-        if (request.method === 'GET') return reply(200, { keys: await keys.list({ authorization }) });
+        if (request.method === 'GET') return reply(200, { keys: await customerKeys.list({ authorization }), ...(config.nativeKeys?{issuance:'subrouter',baseUrl:'https://subrouter.ai/v1',billingSync:'hourly'}:{}) });
         if (request.method !== 'POST') bad(405);
         const raw = await withDeadline(signal => body(request, signal), 5000);
         strictObject(raw, ['scopes', 'dailyLimitUsdMicros', 'totalLimitUsdMicros', 'expiresAt']);
-        return reply(201, await keys.issue({ authorization, ...raw }));
+        return reply(201, await customerKeys.issue({ authorization, ...raw }));
       }
       const revoke = url.pathname.match(/^\/api\/(?:gateway\/)?keys\/([0-9a-f-]{36})$/);
-      if (revoke) { if (request.method !== 'DELETE') bad(405); return reply(200, { key: await keys.revoke({ authorization, keyId: revoke[1] }) }); }
+      if (revoke) { if (request.method !== 'DELETE') bad(405); return reply(200, { key: await customerKeys.revoke({ authorization, keyId: revoke[1] }) }); }
       const native = url.pathname === '/api/gateway';
       if (!native && url.pathname !== '/v1/chat/completions') bad(404);
       if (request.method !== 'POST') bad(405);

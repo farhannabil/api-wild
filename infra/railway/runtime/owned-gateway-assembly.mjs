@@ -11,6 +11,8 @@ import {createDeepSeekTierPolicy} from './deepseek-tier-policy.mjs';
 import {createOwnedDiscoverySnapshot} from './owned-discovery-http.mjs';
 import {createSupplierConversionGuard} from './subrouter-supplier-conversion.mjs';
 import {createResearchTools} from './research-tools.mjs';
+import {createNativeCustomerKeys} from './native-customer-keys.mjs';
+import {createNativeUsageSync} from './native-usage-sync.mjs';
 export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Date.now}){
  if(env.APIWILD_OWNED_GATEWAY_ENABLED!=='true')return undefined;
  const secretKey=env.SUPABASE_SECRET_KEY,publishableKey=env.SUPABASE_PUBLISHABLE_KEY,billingMode=env.APIWILD_BILLING_MODE;
@@ -37,6 +39,8 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
  const base={supabaseOrigin:SUPABASE_ORIGIN,secretKey,publishableKey,billingMode,fetchImpl};
  const auth=createGatewayRpc(base),keys=createCustomerKeyRpc({supabaseOrigin:SUPABASE_ORIGIN,secretKey,billingMode,verifyOwner:async raw=>{const context=await auth.verifyOwner(raw);await auth.initializeAccount(context);return context;},fetchImpl});
  const rpc=createGatewayRpc({...base,keyVerifier:keys,retailSettlement:true});
+ const nativeKeys=createNativeCustomerKeys({env,catalog,legacyKeys:keys,verifyOwner:async raw=>{const context=await auth.verifyOwner(raw);await auth.initializeAccount(context);return context;},fetchImpl,clock});
+ const nativeUsageSync=createNativeUsageSync({manager:nativeKeys,clock,write:result=>console.log(JSON.stringify({nativeCustomerUsageSync:result}))});
  const upstreamDispatch=createSubrouterDispatch({fetchImpl,observeFailure:record=>console.log(JSON.stringify({supplierResponseFailure:record})),routes:routes.map(({maxInputTokens,supplierReserveCnyMicros,supplierRole,...r})=>r)});
  let conversionGuard;if(inferenceEnabled){try{conversionGuard=createSupplierConversionGuard({conversion:JSON.parse(env.APIWILD_SUPPLIER_CONVERSION_JSON),fetchImpl,clock});}catch{throw new GatewayError('supplier_conversion_unverified');}}
  const dispatch=async work=>{if(conditional(work.record.model))tierPolicy.assertDispatch(work.record.model,work.record.rate_version);await conversionGuard.assertConversion({signal:work.signal});return upstreamDispatch(work);};
@@ -58,7 +62,7 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
  const playgroundModels=[...new Map(routes.map(r=>[r.model+'|'+r.capability,{model:r.model,capability:r.capability,maxOutputTokens:r.maxOutputTokens,supportsTools:r.supportsTools===true}])).values()];
  const smartRoutingEnabled=inferenceEnabled&&env.APIWILD_SMART_ROUTER_ENABLED==='true';
  const discovery=createOwnedDiscoverySnapshot({catalog,routes:playgroundModels,rateVersion,tierPolicy,deploymentCommit:env.RAILWAY_GIT_COMMIT_SHA,workspaceToolsEnabled:true,smartRoutingEnabled});
- const ingress=createGatewayIngress({rpc,keys,service,discovery,smartRoutingEnabled,researchTools:createResearchTools({observeFailure:record=>console.log(JSON.stringify({researchSourceFailure:record}))}),origin:'https://apiwild.com',enabled:true,playgroundModels,selectQuote:async({context,model,capability,maxTokens,payload,requestKey,payloadHash})=>{
+ const ingress=createGatewayIngress({rpc,keys,nativeKeys,service,discovery,smartRoutingEnabled,researchTools:createResearchTools({observeFailure:record=>console.log(JSON.stringify({researchSourceFailure:record}))}),origin:'https://apiwild.com',enabled:true,playgroundModels,selectQuote:async({context,model,capability,maxTokens,payload,requestKey,payloadHash})=>{
   if(!inferenceEnabled)throw new GatewayError('gateway_inference_disabled');
   if(conditional(model)){
    const prior=await rpc.lookupQuote(context,{keyId:context.keyId??null,requestKey,payloadHash,capability,model});
@@ -74,5 +78,5 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
   const requestRateVersion=selection?.rateVersion??rateVersion;
   return {providerBudgetId:route.providerBudgetId,model,rateVersion:requestRateVersion,reservedUsdMicros:Math.max(1,pricing.charge({model,promptTokens:route.maxInputTokens,completionTokens:maxTokens,requestRateVersion}).costUsdMicros),reservedCnyMicros:route.supplierReserveCnyMicros};
  }});
- return createGatewayHttp({ingress,discovery});
+ return createGatewayHttp({ingress,discovery,nativeUsageSync});
 }
