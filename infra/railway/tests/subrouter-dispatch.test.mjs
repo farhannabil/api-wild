@@ -53,3 +53,10 @@ test('route configuration is snapshotted and empty configuration remains unavail
   r.apiKey = 'sk-lateMutationMustNotBeSent000001'; await d({ record: record(), payload: payload(), signal: new AbortController().signal }); assert.equal(calls[0].headers.Authorization, 'Bearer ' + TOKEN);
   const empty = createSubrouterDispatch({ routes: [], fetchImpl: () => { throw new Error('must not call'); } }); await assert.rejects(empty({ record: record(), payload: payload(), signal: new AbortController().signal }));
 });
+test('diagnostics contain only fixed response metadata, never supplier content or credentials',async()=>{
+ const diagnostics=[];const raw={...result(),choices:[{message:{role:'assistant',content:''},finish_reason:'length'}],usage:{prompt_tokens:8,completion_tokens:32,total_tokens:40},private:TOKEN};
+ const d=createSubrouterDispatch({routes:[route()],fetchImpl:async()=>response(raw),observeFailure:r=>diagnostics.push(r)});
+ await assert.rejects(d({record:record(),payload:payload(),signal:new AbortController().signal}));
+ assert.deepEqual(diagnostics,[{phase:'validation',status:200,modelMatches:true,contentLength:0,finishReason:'length',completionTokens:32,maxTokens:32}]);
+ assert.ok(!JSON.stringify(diagnostics).includes(TOKEN));
+});

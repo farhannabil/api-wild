@@ -276,3 +276,4 @@ test('inert JSON DTO snapshot rejects accessors, cycles, sparse arrays and overs
 });
 
 test('known atomic budget rejections map to payment-required without exposing SQL detail',async()=>{for(const message of ['gateway_customer_limit','gateway_key_limit']){const f=fixture({handlers:{reserve:()=>json({message,detail:'private SQL detail'},{status:400})}});await assert.rejects(f.rpc.reserve(await f.owner(),input()),error=>error.code===message&&error.status===402&&!error.ambiguous&&!error.message.includes('private'));}});
+test('active request limit is 429 rather than a misleading credit error',async()=>{const f=fixture({handlers:{reserve:()=>json({message:'gateway_request_limit',detail:'private SQL detail'},{status:400})}});await assert.rejects(f.rpc.reserve(await f.owner(),input()),error=>error.code==='gateway_request_limit'&&error.status===429&&!error.ambiguous);});

@@ -233,6 +233,7 @@ export function createGatewayRpc(config) {
           if(['reserve','claim','lookupQuote'].includes(rpcOperation)&&/^application\/json(?:\s*;|$)/i.test(response?.headers?.get('content-type')||'')){
             const failure=await jsonResponse(response,8192,signal);
             if(['gateway_customer_limit','gateway_key_limit'].includes(failure?.message))throw new GatewayError(failure.message,402,false);
+            if(failure?.message==='gateway_request_limit')throw new GatewayError('gateway_request_limit',429,false);
             if(failure?.message==='gateway_idempotency_conflict')throw new GatewayError('gateway_idempotency_conflict',409,false);
           }
           cancel(response); // Never parse/echo database messages, HTML or upstream credential errors.

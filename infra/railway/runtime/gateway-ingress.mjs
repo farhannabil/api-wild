@@ -141,6 +141,7 @@ export function createGatewayIngress(config) {
         {status: 200, headers: {...HEADERS, 'Content-Type': 'text/event-stream; charset=utf-8', 'X-Accel-Buffering': 'no'}});
       return reply(200, completion);
     } catch (error) {
+      if(error instanceof GatewayError&&error.code==='gateway_request_limit')return reply(429,{error:'Too many active or recent requests. Wait before submitting a new request.',code:'gateway_request_limit',automaticRetry:false});
       if(error instanceof GatewayError&&error.code?.startsWith('research_tools_')){
         const status=[400,413,429].includes(error.status)?error.status:503;
         const message=status===429?'Research tools are limited to 8 requests per minute. Please wait and try again.':status===413?'The source or input is too large. Choose a shorter article or input.':status===400?'Use a supported Wikipedia article, a short search query or a valid arithmetic expression.':'The research source is temporarily unavailable. Please try again later.';
