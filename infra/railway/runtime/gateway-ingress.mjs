@@ -5,6 +5,7 @@ import { gatewayPayloadFingerprint } from './gateway-service.mjs';
 import { normalizeChatRequest, settledChatCompletion, bufferedChatStream } from './chat-compatibility.mjs';
 import { isOwnedDiscoverySnapshot } from './owned-discovery-http.mjs';
 import { validateResearchToolInput, RESEARCH_TOOL_METADATA } from './research-tools.mjs';
+import {resolvePrepaidSmartRoute,SMART_MODEL} from './prepaid-smart-router.mjs';
 const instances=new WeakSet();
 export const isGatewayIngress=value=>instances.has(value);
 const HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' };
@@ -26,12 +27,13 @@ async function body(request, signal) {
   } finally { signal.removeEventListener('abort', abort); void reader.cancel().catch(() => {}); }
 }
 export function createGatewayIngress(config) {
-  strictObject(config, ['rpc', 'keys', 'service', 'selectQuote', 'origin', 'enabled', 'maxConcurrent', 'maxToolConcurrent', 'playgroundModels', 'discovery', 'researchTools', 'clock']);
+  strictObject(config, ['rpc', 'keys', 'service', 'selectQuote', 'origin', 'enabled', 'maxConcurrent', 'maxToolConcurrent', 'playgroundModels', 'discovery', 'researchTools', 'clock', 'smartRoutingEnabled']);
   if (config.origin !== 'https://apiwild.com' || typeof config.rpc?.verifyOwner !== 'function' || typeof config.rpc?.verifyKeyOwner !== 'function' || !isCustomerKeyRpc(config.keys) || typeof config.service?.execute !== 'function' || typeof config.selectQuote !== 'function') throw new GatewayError('gateway_ingress_unconfigured');
   const playgroundModels=(config.playgroundModels??[]).map(row=>{strictObject(row,['model','capability','maxOutputTokens','supportsTools']);if(typeof row.model!=='string'||!['chat','code','research'].includes(row.capability)||(row.supportsTools!==undefined&&typeof row.supportsTools!=='boolean'))throw new GatewayError('gateway_ingress_unconfigured');exactInteger(row.maxOutputTokens,1,32768);return Object.freeze({...row,supportsTools:row.supportsTools===true});});
   if(config.discovery!==undefined&&!isOwnedDiscoverySnapshot(config.discovery))throw new GatewayError('gateway_ingress_unconfigured');
   if(config.researchTools!==undefined&&typeof config.researchTools?.execute!=='function')throw new GatewayError('gateway_ingress_unconfigured');
   if(config.clock!==undefined&&typeof config.clock!=='function')throw new GatewayError('gateway_ingress_unconfigured');
+  if(config.smartRoutingEnabled!==undefined&&typeof config.smartRoutingEnabled!=='boolean')throw new GatewayError('gateway_ingress_unconfigured');
   const clock=config.clock??Date.now, toolWindows=new Map();
   // Utilities never reserve model money. Bound their external reads separately,
   // by verified owner rather than by a caller-controlled key or header.
@@ -117,15 +119,18 @@ export function createGatewayIngress(config) {
       const native = url.pathname === '/api/gateway';
       if (!native && url.pathname !== '/v1/chat/completions') bad(404);
       if (request.method !== 'POST') bad(405);
-      const input = normalizeChatRequest(await withDeadline(signal => body(request, signal), 5000), {native});
+      const normalized = normalizeChatRequest(await withDeadline(signal => body(request, signal), 5000), {native});
       const requestKey = request.headers.get('idempotency-key') || '';
       if (!/^[A-Za-z0-9_-]{16,100}$/.test(requestKey)) bad();
       if (!native && !keyAuth) bad(401);
-      const context = keyAuth ? await rpc.verifyKeyOwner({ authorization, capability: input.capability }) : await rpc.verifyOwner({ authorization });
+      const context = keyAuth ? await rpc.verifyKeyOwner({ authorization, capability: normalized.capability }) : await rpc.verifyOwner({ authorization });
       if(!keyAuth&&typeof rpc.initializeAccount==='function')await rpc.initializeAccount(context);
+      const {input,routing}=normalized.body.model===SMART_MODEL
+        ? resolvePrepaidSmartRoute(normalized,{enabled:config.smartRoutingEnabled===true,models:config.discovery?.read().catalog.models??[],native})
+        : {input:normalized};
       // Delivery options are part of the immutable reservation fingerprint. The
       // supplier still receives stream:false; no unverified output is exposed.
-      const payload = { body: input.body, format: native ? 'native' : 'openai',
+      const payload = { body: input.body, format: native ? 'native' : 'openai', ...(routing?{routing}:{}),
         ...(input.stream ? {delivery: {stream: true, includeUsage: input.includeUsage}} : {}) };
       const payloadHash = gatewayPayloadFingerprint(payload);
       const selected = await withDeadline(() => selector({ context, requestKey, payloadHash, capability: input.capability, model: input.body.model, maxTokens: input.body.max_tokens, payload: cloneJsonObject(payload, 65536) }), 5000);

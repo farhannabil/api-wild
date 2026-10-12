@@ -56,8 +56,9 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
   return {state:'succeeded',costUsdMicros:charge.costUsdMicros,costCnyMicros:0,settlementReference:'usage:'+supplierCorrelationId,result:{text:providerResult.text,model:record.model,created:providerResult.created,finishReason:providerResult.finishReason,usage:providerResult.usage,...(providerResult.toolCalls?{toolCalls:providerResult.toolCalls}:{})},usage:{...providerResult.usage,supplierReconciliationPending:true,estimatedSupplierCnyMicros:economics.estimatedSupplierCnyMicros,providerCompletionId:providerResult.providerResponseId,supplierSlug:route.supplierSlug,...(providerResult.providerRequestId?{providerRequestId:providerResult.providerRequestId}:{})}};
  }});
  const playgroundModels=[...new Map(routes.map(r=>[r.model+'|'+r.capability,{model:r.model,capability:r.capability,maxOutputTokens:r.maxOutputTokens,supportsTools:r.supportsTools===true}])).values()];
- const discovery=createOwnedDiscoverySnapshot({catalog,routes:playgroundModels,rateVersion,tierPolicy,deploymentCommit:env.RAILWAY_GIT_COMMIT_SHA,workspaceToolsEnabled:true});
- const ingress=createGatewayIngress({rpc,keys,service,discovery,researchTools:createResearchTools({observeFailure:record=>console.log(JSON.stringify({researchSourceFailure:record}))}),origin:'https://apiwild.com',enabled:true,playgroundModels,selectQuote:async({context,model,capability,maxTokens,payload,requestKey,payloadHash})=>{
+ const smartRoutingEnabled=inferenceEnabled&&env.APIWILD_SMART_ROUTER_ENABLED==='true';
+ const discovery=createOwnedDiscoverySnapshot({catalog,routes:playgroundModels,rateVersion,tierPolicy,deploymentCommit:env.RAILWAY_GIT_COMMIT_SHA,workspaceToolsEnabled:true,smartRoutingEnabled});
+ const ingress=createGatewayIngress({rpc,keys,service,discovery,smartRoutingEnabled,researchTools:createResearchTools({observeFailure:record=>console.log(JSON.stringify({researchSourceFailure:record}))}),origin:'https://apiwild.com',enabled:true,playgroundModels,selectQuote:async({context,model,capability,maxTokens,payload,requestKey,payloadHash})=>{
   if(!inferenceEnabled)throw new GatewayError('gateway_inference_disabled');
   if(conditional(model)){
    const prior=await rpc.lookupQuote(context,{keyId:context.keyId??null,requestKey,payloadHash,capability,model});
