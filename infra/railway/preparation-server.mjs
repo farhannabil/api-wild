@@ -251,10 +251,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   const aaroUsageIngress=createAaroUsageFromEnv({env:listener.local?{}:process.env});
   const aaroBilling=await createAaroBillingFromEnv(listener.local?{}:process.env);
   const frontend = createPreparationServer({backendPort: backend.port, publicAssets, nativeAuthHttp, gatewayHttp, ownedBilling, workspacePolicyHttp, launchStatusHttp, discoveryHttp,aaroUsageIngress,aaroBilling});
-  frontend.once('error', () => {void supplierSweep.stop();void reservationExpirySweep.stop();backend.server.close();});
-  const shutdown=()=>{void supplierSweep.stop();void reservationExpirySweep.stop();frontend.close();backend.server.close();};
+  frontend.once('error', () => {void gatewayHttp?.nativeUsageSync?.stop();void supplierSweep.stop();void reservationExpirySweep.stop();backend.server.close();});
+  const shutdown=()=>{void gatewayHttp?.nativeUsageSync?.stop();void supplierSweep.stop();void reservationExpirySweep.stop();frontend.close();backend.server.close();};
   process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
   frontend.listen(listener.port, listener.host, () => {
+    if(!listener.local)gatewayHttp?.nativeUsageSync?.start();
     supplierSweep.start();
     reservationExpirySweep.start();
     void createSupplierStartupProbeFromEnv({env:listener.local?{}:process.env,write:result=>console.log(JSON.stringify(result))}).start();

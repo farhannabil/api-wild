@@ -56,6 +56,8 @@
 !infra/railway/runtime/subrouter-native-auth.mjs
 !infra/railway/runtime/subrouter-native-customer.mjs
 !infra/railway/runtime/native-customer-api.mjs
+!infra/railway/runtime/native-customer-keys.mjs
+!infra/railway/runtime/native-usage-sync.mjs
 !infra/railway/runtime/native-relay-api.mjs
 !infra/railway/runtime/subrouter-native-billing.mjs
 !infra/railway/runtime/customer-key-rpc.mjs
