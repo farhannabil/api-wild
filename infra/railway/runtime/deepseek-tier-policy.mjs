@@ -6,7 +6,7 @@ const instances=new WeakSet();
 export const isDeepSeekTierPolicy=value=>instances.has(value);
 export const DEEPSEEK_SOURCE_REVISION='deepseek-pricing-2026-10-05';
 export const DEEPSEEK_CALENDAR_VERSION='cn-state-council-2026-7';
-const servedVersions=Object.freeze({'deepseek-v4-flash':'DeepSeek-V4.1-Flash','deepseek-v4-pro':'DeepSeek-V4-Pro-0813'});
+const servedVersions=Object.freeze({'deepseek-v4-flash':'DeepSeek-V4.1-Flash','deepseek-v4-pro':'DeepSeek-V4-Pro-0813','deepseek-v4.1-flash':'DeepSeek-V4.1-Flash'});
 const holidayRanges=[['01-01','01-03'],['02-15','02-23'],['04-04','04-06'],['05-01','05-05'],['06-19','06-21'],['09-25','09-27'],['10-01','10-07']];
 const calendarStart=Date.parse('2025-12-31T16:00:00Z'),calendarEnd=Date.parse('2026-12-31T16:00:00Z');
 const fail=()=>{throw new GatewayError('deepseek_tariff_unverified');};
@@ -29,7 +29,7 @@ export function createDeepSeekTierPolicy({enabled=false,config,clock=Date.now}={
       ||c.sourceRevision!==DEEPSEEK_SOURCE_REVISION||c.calendarVersion!==DEEPSEEK_CALENDAR_VERSION||typeof clock!=='function')fail();
   const start=stamp(c.validFrom),end=stamp(c.validUntil);
   // Price snapshot validity is finite and explicit. No future-year calendar guess.
-  if(start<Date.parse('2026-10-05T00:00:00Z')||start<calendarStart||end<=start||end>calendarEnd||end-start>7*86400000)fail();
+  if(start<Date.parse('2026-10-05T00:00:00Z')||start<calendarStart||end<=start||end>calendarEnd||end-start>30*86400000)fail();
   strictObject(c.servedVersions,Object.keys(servedVersions));
   const models=Object.keys(c.servedVersions);if(!models.length||models.some(model=>c.servedVersions[model]!==servedVersions[model]))fail();
   const now=()=>{const t=clock();exactInteger(t,start,end-1);return t;};

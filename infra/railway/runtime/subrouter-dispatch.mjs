@@ -4,6 +4,7 @@
 import { GatewayError, cloneJsonObject, exactInteger, strictObject } from './supabase-gateway-rpc.mjs';
 import { normalizeChatRequest, chatInputBytes, validateAssistantMessage } from './chat-compatibility.mjs';
 import {isSupplierRequestIdentity} from './supplier-request-identity.mjs';
+import {canonicalSupplierModel} from './supplier-model-identity.mjs';
 import {assertPrepaidRoutingEnvelope} from './prepaid-smart-router.mjs';
 
 export const SUBROUTER_CHAT_ENDPOINT = 'https://subrouter.ai/v1/chat/completions';
@@ -82,7 +83,8 @@ export function createSubrouterDispatch(config) {
       if (!response.ok || response.redirected) fail('subrouter_dispatch_not_confirmed', true);
       const value = await boundedJson(response, signal);
       diagnostic = {...diagnostic,phase:'validation',modelMatches:value?.model===route.upstreamModel,contentLength:typeof value?.choices?.[0]?.message?.content==='string'?value.choices[0].message.content.length:null,finishReason:['stop','length','content_filter','tool_calls'].includes(value?.choices?.[0]?.finish_reason)?value.choices[0].finish_reason:null,completionTokens:Number.isSafeInteger(value?.usage?.completion_tokens)?value.usage.completion_tokens:null,maxTokens};
-      if (!value || typeof value !== 'object' || typeof value.id !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(value.id) || value.model !== route.upstreamModel) fail('subrouter_response_identity_unconfirmed', true);
+      const canonical=canonicalSupplierModel(value?.model,{supplierSlug:route.supplierSlug,model:route.model,upstreamModel:route.upstreamModel});
+      if (!value || typeof value !== 'object' || typeof value.id !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(value.id) || canonical===null) fail('subrouter_response_identity_unconfirmed', true);
       // The wallet log identifies this exact HTTP response by x-request-id.
       // Preserve completion identity separately; neither ID is customer output.
       const providerRequestId = response.headers.get('x-request-id');
@@ -94,7 +96,7 @@ export function createSubrouterDispatch(config) {
       const finish = value.choices[0].finish_reason;
       const assistant = validateAssistantMessage(value.choices[0].message, body, {finishReason:finish,completionTokens:output});
       if ((assistant.toolCalls && finish !== 'tool_calls') || (!assistant.toolCalls && finish === 'tool_calls')) fail('subrouter_incomplete_tool_result', true);
-      const result = { providerResponseId: value.id, ...(providerRequestId ? {providerRequestId} : {}), model: value.model, ...assistant,
+      const result = { providerResponseId: value.id, ...(providerRequestId ? {providerRequestId} : {}), model: canonical, ...(canonical!==value.model?{providerModel:value.model}:{}), ...assistant,
         created: exactInteger(value.created ?? Math.floor(Date.now() / 1000)),
         finishReason: ['stop', 'length', 'content_filter', 'tool_calls'].includes(finish) ? finish : null,
         usage: { prompt_tokens: input, completion_tokens: output }, settlementVerified: false };

@@ -21,7 +21,7 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
  const inferenceEnabled=env.APIWILD_INFERENCE_ENABLED==='true';
  let entries=[];if(inferenceEnabled){if(!env.SUBROUTER_API_KEY)throw Error('Subrouter upstream key is missing.');try{entries=JSON.parse(env.APIWILD_GATEWAY_ROUTES_JSON);}catch{throw Error('Owned gateway routes are missing.');}if(!Array.isArray(entries)||!entries.length)throw Error('Owned gateway routes are empty.');}
  const rateVersion=env.APIWILD_RETAIL_RATE_VERSION||'inactive';
- const conditional=model=>['deepseek-v4-flash','deepseek-v4-pro'].includes(model);
+ const conditional=model=>['deepseek-v4-flash','deepseek-v4-pro','deepseek-v4.1-flash'].includes(model);
  let tierPolicy,conditionalSupplierRates={};
  if(inferenceEnabled&&env.APIWILD_DEEPSEEK_TARIFF_ENABLED==='true'){
   try{tierPolicy=createDeepSeekTierPolicy({enabled:true,config:JSON.parse(env.APIWILD_DEEPSEEK_TARIFF_POLICY_JSON),clock});conditionalSupplierRates=JSON.parse(env.APIWILD_DEEPSEEK_SUPPLIER_RATES_JSON);}catch{throw new GatewayError('deepseek_tariff_unverified');}
@@ -34,7 +34,7 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
   const offer=catalog.models.find(m=>m.model_name===e.model)?.[e.supplierRole||'primary'];
   if(!offer||!e.supplierSlug||offer.supplier_slug!==e.supplierSlug)throw Error('Route supplier must match the selected catalog offer.');
   if(conditional(e.model)&&!accounting.conditionalReady(e.model,e.supplierRole||'primary'))throw new GatewayError('deepseek_supplier_tariff_unverified');
-  const versions=conditional(e.model)?tierPolicy.versions(e.model):[rateVersion];
+  const versions=conditional(e.model)?tierPolicy.versions(e.model):[pricing.versionFor(e.model)];
   return versions.map(version=>({...e,rateVersion:version,apiKey:env.SUBROUTER_API_KEY}));
  });
  const base={supabaseOrigin:SUPABASE_ORIGIN,secretKey,publishableKey,billingMode,fetchImpl};
@@ -76,7 +76,7 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
   const quote={model,promptTokens:route.maxInputTokens,completionTokens:maxTokens,supplier:route.supplierRole||'primary'};
   const economics=selection?accounting.quoteConditional({...quote,selection}):accounting.quote(quote);
   if(economics.estimatedSupplierCnyMicros>route.supplierReserveCnyMicros)throw new GatewayError('supplier_reserve_below_quote');
-  const requestRateVersion=selection?.rateVersion??rateVersion;
+  const requestRateVersion=selection?.rateVersion??route.rateVersion;
   return {providerBudgetId:route.providerBudgetId,model,rateVersion:requestRateVersion,reservedUsdMicros:Math.max(1,supplierCostReserve(route.supplierReserveCnyMicros),pricing.charge({model,promptTokens:route.maxInputTokens,completionTokens:maxTokens,requestRateVersion}).costUsdMicros),reservedCnyMicros:route.supplierReserveCnyMicros};
  }});
  return createGatewayHttp({ingress,discovery,nativeUsageSync});

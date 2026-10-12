@@ -7,25 +7,25 @@ const publicCatalog = JSON.parse(readFileSync(new URL('../app/models/public-mode
 const internalCatalog = JSON.parse(readFileSync(new URL('../data/selected-supplier-models.json', import.meta.url)));
 const referenceCatalog = JSON.parse(readFileSync(new URL('../data/models.json', import.meta.url)));
 // Exact model identities from the accepted launch routes; no provider aliases are admitted.
-const accepted = ['MiniMax-M2.7-highspeed','MiniMax-M3','claude-fable-5','claude-fable-5-1',
+const accepted = ['MiniMax-M2.7-highspeed','claude-fable-5','claude-fable-5-1',
   'claude-haiku-4-5','claude-haiku-4-5-20251001','claude-opus-4-6','claude-opus-4-7',
   'claude-opus-4-8','claude-opus-5','claude-opus-5-5','claude-sonnet-4-6','claude-sonnet-5',
-  'claude-sonnet-5-5','gemini-2.5-flash-lite','gemini-3.1-flash-lite','gemini-3.1-pro-preview',
-  'glm-5.1','glm-5.3','glm-5.3-flashx','gpt-6-astra','gpt-6-sol','grok-4.5','grok-4.7'];
+  'claude-sonnet-5-5','gemini-3.1-flash-lite','gemini-3.1-pro-preview','gemini-3.8-flash',
+  'glm-5.3','gpt-6-astra','gpt-6-sol','grok-4.5','grok-4.7','deepseek-v4.1-flash'];
 const row = (id, callable = true) => ({id, callable, capabilities: callable ? ['chat','code','research'] : []});
 const discovery = models => ({schemaVersion:1, authority:'apiwild-owned-runtime', source:'apiwild-approved-retail', count:models.length, models});
 
-test('customer catalogue contains exactly the accepted 24 identities while the internal supplier journal remains 39', () => {
-  assert.equal(publicCatalog.count, 24);
-  assert.equal(publicCatalog.models.length, 24);
+test('customer catalogue contains 22 owner-priced identities while the private historical supplier journal is retained', () => {
+  assert.equal(publicCatalog.count, 22);
+  assert.equal(publicCatalog.models.length, 22);
   assert.deepEqual(publicCatalog.models.map(model => model.model_name).sort(), accepted.slice().sort());
-  assert.equal(internalCatalog.count, 39);
-  assert.equal(internalCatalog.models.length, 39);
-  assert.equal(internalCatalog.models.filter(model => !accepted.includes(model.model_name)).length, 15);
+  assert.equal(internalCatalog.count, 40);
+  assert.equal(internalCatalog.models.length, 40);
+  assert.equal(internalCatalog.models.filter(model => !accepted.includes(model.model_name)).length, 18);
   for (const model of publicCatalog.models) {
     const original = internalCatalog.models.find(item => item.model_name === model.model_name);
     assert.ok(original);
-    for (const [key, value] of Object.entries(model)) {if(key!=='official_reference')assert.deepEqual(value, original[key], `${model.model_name}: ${key} changed`);} assert.equal(model.official_reference.currency, 'USD'); assert.equal(model.official_reference.unit, 'per_million_tokens'); assert.equal(model.official_reference.checked_date, '2026-10-05'); assert.ok(Number.isFinite(model.official_reference.input)&&model.official_reference.input>=0); assert.ok(Number.isFinite(model.official_reference.output)&&model.official_reference.output>=0); assert.equal(new URL(model.official_reference.source).protocol, 'https:');
+    for (const [key, value] of Object.entries(model)) {if(!['official_reference','billing_note'].includes(key))assert.deepEqual(value, original[key], `${model.model_name}: ${key} changed`);} assert.equal(model.official_reference.currency, 'USD'); assert.equal(model.official_reference.unit, 'per_million_tokens'); assert.match(model.official_reference.checked_date,/^2026-10-(05|12)$/); assert.ok(Number.isFinite(model.official_reference.input)&&model.official_reference.input>=0); assert.ok(Number.isFinite(model.official_reference.output)&&model.official_reference.output>=0); assert.equal(new URL(model.official_reference.source).protocol, 'https:');
   }
 });
 
@@ -68,13 +68,13 @@ test('public price references intersect exact accepted identities and preserve a
   const references = approvedModelReferences(referenceCatalog.models, publicCatalog.models);
   const approvedIds = new Set(publicCatalog.models.flatMap(model => model.openrouter_reference ? [model.openrouter_reference.model_id] : []));
   assert.equal(referenceCatalog.models.length, 581);
-  assert.equal(references.length, 17);
+  assert.equal(references.length, 15);
   assert.deepEqual(references, referenceCatalog.models.filter(model => approvedIds.has(model.id)));
   for (const reference of references) assert.equal(reference, referenceCatalog.models.find(model => model.id === reference.id));
   assert.ok(references.some(model => model.id === 'google/gemini-3.1-flash-lite'));
-  assert.ok(!references.some(model => model.id === 'google/gemini-3.8-flash'));
+  assert.ok(references.some(model => model.id === 'google/gemini-3.8-flash'));
   const absent = [...approvedIds].filter(id => !references.some(model => model.id === id));
-  assert.deepEqual(absent.sort(), ['anthropic/claude-opus-5.5','anthropic/claude-sonnet-5.5','openai/gpt-6-sol','x-ai/grok-4.7','z-ai/glm-5.3-flashx']);
+  assert.deepEqual(absent.sort(), ['anthropic/claude-opus-5.5','anthropic/claude-sonnet-5.5','openai/gpt-6-sol','x-ai/grok-4.7']);
 });
 
 test('reference filtering never guesses an alias, copies retail prices, or fills missing comparisons', () => {
