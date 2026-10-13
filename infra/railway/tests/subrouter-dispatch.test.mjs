@@ -57,10 +57,21 @@ test('diagnostics contain only fixed response metadata, never supplier content o
  const diagnostics=[];const raw={...result(),choices:[{message:{role:'assistant',content:''},finish_reason:'stop'}],usage:{prompt_tokens:8,completion_tokens:32,total_tokens:40},private:TOKEN};
  const d=createSubrouterDispatch({routes:[route()],fetchImpl:async()=>response(raw),observeFailure:r=>diagnostics.push(r)});
  await assert.rejects(d({record:record(),payload:payload(),signal:new AbortController().signal}));
- assert.deepEqual(diagnostics,[{phase:'validation',status:200,modelMatches:true,contentLength:0,finishReason:'stop',completionTokens:32,maxTokens:32}]);
+ assert.deepEqual(diagnostics,[{phase:'validation',status:200,modelMatches:true,contentLength:0,finishReason:'stop',completionTokens:32,maxTokens:32,canonicalModelMatches:true,completionIdentityValid:true,usageTotalMatches:true,code:'gateway_request_rejected'}]);
  assert.ok(!JSON.stringify(diagnostics).includes(TOKEN));
 });
 test('a reasoning model exhausting its output cap is a metered length completion, not an indefinite hold',async()=>{
  const f=fixture(()=>response({...result(),usage:{prompt_tokens:8,completion_tokens:32,total_tokens:40},choices:[{message:{role:'assistant',content:'',reasoning_content:'private reasoning'},finish_reason:'length'}]}));
  const resultValue=await f.run();assert.equal(resultValue.text,'');assert.equal(resultValue.finishReason,'length');assert.equal(resultValue.usage.completion_tokens,32);assert.equal(f.calls.length,1);assert.ok(!JSON.stringify(resultValue).includes('private reasoning'));
+});
+test('a6aa DeepSeek auxiliary cache total preserves receipt-metered usage and stays narrowly scoped',async()=>{
+ const model='deepseek-v4.1-flash',r={...route(),model,upstreamModel:model,supplierSlug:'a6aa'};
+ const raw={...result(),model:'cb/'+model,usage:{prompt_tokens:25,completion_tokens:2,total_tokens:86,prompt_cache_hit_tokens:0,prompt_cache_miss_tokens:84}};
+ const work={record:{...record(),model},payload:{...payload(),body:{...payload().body,model}},signal:new AbortController().signal};
+ const invoke=(patch={},body=raw,identity=true)=>createSubrouterDispatch({routes:[{...r,...patch}],fetchImpl:async()=>new Response(JSON.stringify(body),{headers:{'content-type':'application/json',...(identity?{'x-request-id':'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}:{})}})})(work);
+ const accepted=await invoke();assert.equal(accepted.model,model);assert.deepEqual(accepted.usage,{prompt_tokens:25,completion_tokens:2});assert.equal(accepted.providerReportedTotalTokens,86);
+ await assert.rejects(invoke({supplierSlug:'kriora'}));await assert.rejects(invoke({}, {...raw,model}));
+ await assert.rejects(invoke({},raw,false));
+ for(const usage of [{...raw.usage,total_tokens:87},{...raw.usage,prompt_cache_miss_tokens:undefined},{...raw.usage,prompt_cache_hit_tokens:-1}])await assert.rejects(invoke({}, {...raw,usage}));
+ const generic=fixture(()=>response({...result(),usage:raw.usage}));await assert.rejects(generic.run());
 });

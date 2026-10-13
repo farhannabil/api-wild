@@ -68,11 +68,14 @@ test('observed input at the route ceiling settles; a one-token overrun holds wit
 
 test('bangai assembly carries the selected private binding through settlement without exposing it',async()=>{
  // Captured correlation fields, reconstructed response/RPC shapes, synthetic credentials.
+ // These captured legacy GPT pairs are protocol fixtures, not current routing.
+ const legacyCatalog=structuredClone(fullCatalog);
+ for(const model of ['gpt-6-astra','gpt-6-sol']){const entry=legacyCatalog.models.find(m=>m.model_name===model);entry.primary.supplier_slug='bangai';delete entry.apiwild_selling_price.rate_version;}
  const pairs=[['claude-opus-4-6','c2ea8134'],['claude-opus-4-7','b9b162d7'],['gpt-6-astra','afda6e04'],['gpt-6-sol','df8fae53']];
  for(const [model,identity]of pairs){
   const acceptedRoute={...route,model,upstreamModel:model,supplierSlug:'bangai',maxOutputTokens:32,supplierReserveCnyMicros:100000};
   let stored,finished,calls=0;const stamp=new Date().toISOString();
-  const port=createOwnedGatewayFromEnv({env:{...activeEnv,APIWILD_GATEWAY_ROUTES_JSON:JSON.stringify([acceptedRoute])},catalog:fullCatalog,fetchImpl:async(url,init)=>{
+  const port=createOwnedGatewayFromEnv({env:{...activeEnv,APIWILD_GATEWAY_ROUTES_JSON:JSON.stringify([acceptedRoute])},catalog:legacyCatalog,fetchImpl:async(url,init)=>{
    if(url.endsWith('/auth/v1/user'))return Response.json({id:customer,email:'fixture@example.test',email_confirmed_at:stamp,is_anonymous:false});
    if(url.endsWith('account_initialize'))return Response.json({initialized:true,customer_id:customer,billing_mode:'test'});
    if(url==='https://subrouter.ai/api/status')return Response.json({success:true,data:{quota_per_unit:500000,quota_display_type:'CNY',display_in_currency:true,price:6.8,usd_exchange_rate:6.8}});

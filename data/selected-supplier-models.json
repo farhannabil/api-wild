@@ -1132,7 +1132,70 @@
         "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
         "matched_dated_alias": false,
         "time_tier_applicability": "unspecified"
-      }
+      },
+      "prior_supplier_quotes": [
+        {
+          "source_commit": "762915277efb1e345d023b64b1cc8346949f8958",
+          "primary": {
+            "offer_id": 15168,
+            "supplier_id": 342,
+            "supplier": "apiun",
+            "supplier_slug": "apiun",
+            "supplier_rating": 5,
+            "actual_reviews": 1,
+            "supplier_availability_percent": 98.62025713389777,
+            "supplier_currency": "CNY",
+            "supplier_input": 0.4,
+            "supplier_output": 2,
+            "billing_mode": "ratio",
+            "potential_savings_percent": 97.01696807026401,
+            "supplier_actual_debit_verified": false,
+            "supplier_identity_verified": false,
+            "unit": "per_million_tokens",
+            "apiwild_selling_price": null
+          },
+          "backup": {
+            "offer_id": 14598,
+            "supplier_id": 226,
+            "supplier": "lingai",
+            "supplier_slug": "lingai",
+            "supplier_rating": null,
+            "actual_reviews": null,
+            "supplier_availability_percent": null,
+            "supplier_currency": "CNY",
+            "supplier_input": 0.58,
+            "supplier_output": 2.9,
+            "billing_mode": "ratio",
+            "potential_savings_percent": null,
+            "supplier_actual_debit_verified": false,
+            "supplier_identity_verified": false,
+            "unit": "per_million_tokens",
+            "apiwild_selling_price": null
+          }
+        }
+      ],
+      "prior_retail_prices": [
+        {
+          "rate_version": "apiwild-launch-20261005",
+          "price": {
+            "currency": "USD",
+            "unit": "per_million_tokens",
+            "input": 1,
+            "output": 5,
+            "cache_read": 0.1,
+            "cache_write_5m": 1.25,
+            "cache_write_1h": 2,
+            "processing": "standard",
+            "input_cache": "uncached",
+            "approved": true,
+            "discount_policy": "half_matched_official_rate",
+            "peak": null,
+            "long_context": null,
+            "tier_schedule": null,
+            "runtime_tier_selection_active": false
+          }
+        }
+      ]
     },
     {
       "model_name": "deepseek-v4-flash",
@@ -1732,7 +1795,68 @@
         "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
         "matched_dated_alias": false,
         "time_tier_applicability": "unspecified"
-      }
+      },
+      "prior_supplier_quotes": [
+        {
+          "source_commit": "762915277efb1e345d023b64b1cc8346949f8958",
+          "primary": {
+            "offer_id": 10981,
+            "supplier_id": 285,
+            "supplier": "PandaAI",
+            "supplier_slug": "panda-ai",
+            "supplier_rating": 5,
+            "actual_reviews": 1,
+            "supplier_availability_percent": 99.33797511699578,
+            "supplier_currency": "USD",
+            "supplier_input": 0.065,
+            "supplier_output": 0.325,
+            "billing_mode": "ratio",
+            "potential_savings_percent": 91.33333333333333,
+            "supplier_actual_debit_verified": false,
+            "supplier_identity_verified": false,
+            "unit": "per_million_tokens",
+            "apiwild_selling_price": null
+          },
+          "backup": {
+            "offer_id": 13400,
+            "supplier_id": 282,
+            "supplier": "兄弟连",
+            "supplier_slug": "leapnode",
+            "supplier_rating": 5,
+            "actual_reviews": 1,
+            "supplier_availability_percent": 96.58725657024011,
+            "supplier_currency": "CNY",
+            "supplier_input": 0.35,
+            "supplier_output": 1.75,
+            "billing_mode": "ratio",
+            "potential_savings_percent": 93.03959216394938,
+            "supplier_actual_debit_verified": false,
+            "supplier_identity_verified": false,
+            "unit": "per_million_tokens",
+            "apiwild_selling_price": null
+          }
+        }
+      ],
+      "prior_retail_prices": [
+        {
+          "rate_version": "apiwild-launch-20261005",
+          "price": {
+            "currency": "USD",
+            "unit": "per_million_tokens",
+            "input": 0.375,
+            "output": 1.875,
+            "cache_read": 0.0375,
+            "processing": "standard",
+            "input_cache": "uncached",
+            "approved": true,
+            "discount_policy": "half_matched_official_rate",
+            "peak": null,
+            "long_context": null,
+            "tier_schedule": null,
+            "runtime_tier_selection_active": false
+          }
+        }
+      ]
     },
     {
       "model_name": "glm-5.1",
@@ -1954,7 +2078,68 @@
         "snapshot_saved_at": "2026-10-05T00:55:37.430Z",
         "matched_dated_alias": false,
         "time_tier_applicability": "unspecified"
-      }
+      },
+      "prior_supplier_quotes": [
+        {
+          "source_commit": "762915277efb1e345d023b64b1cc8346949f8958",
+          "primary": {
+            "offer_id": 11334,
+            "supplier_id": 304,
+            "supplier": "a6aa",
+            "supplier_slug": "a6aa",
+            "supplier_rating": 5,
+            "actual_reviews": 4,
+            "supplier_availability_percent": 96.21874582163392,
+            "supplier_currency": "CNY",
+            "supplier_input": 0.193,
+            "supplier_output": 0.606571,
+            "billing_mode": "ratio",
+            "potential_savings_percent": 97.94383980768023,
+            "supplier_actual_debit_verified": false,
+            "supplier_identity_verified": false,
+            "unit": "per_million_tokens",
+            "apiwild_selling_price": null
+          },
+          "backup": {
+            "offer_id": 13392,
+            "supplier_id": 282,
+            "supplier": "兄弟连",
+            "supplier_slug": "leapnode",
+            "supplier_rating": 5,
+            "actual_reviews": 1,
+            "supplier_availability_percent": 96.58725657024011,
+            "supplier_currency": "CNY",
+            "supplier_input": 0.48,
+            "supplier_output": 1.508571,
+            "billing_mode": "ratio",
+            "potential_savings_percent": 94.88623207970086,
+            "supplier_actual_debit_verified": false,
+            "supplier_identity_verified": false,
+            "unit": "per_million_tokens",
+            "apiwild_selling_price": null
+          }
+        }
+      ],
+      "prior_retail_prices": [
+        {
+          "rate_version": "apiwild-launch-20261005",
+          "price": {
+            "currency": "USD",
+            "unit": "per_million_tokens",
+            "input": 0.7,
+            "output": 2.2,
+            "cache_read": 0.13,
+            "processing": "standard",
+            "input_cache": "uncached",
+            "approved": true,
+            "discount_policy": "half_matched_official_rate",
+            "peak": null,
+            "long_context": null,
+            "tier_schedule": null,
+            "runtime_tier_selection_active": false
+          }
+        }
+      ]
     },
     {
       "model_name": "glm-5.3-flash",
@@ -2574,7 +2759,74 @@
         "matched_dated_alias": false,
         "time_tier_applicability": "unspecified"
       },
-      "billing_note": "Input billing uses the upstream model’s reported prompt tokens, including cached and added context."
+      "billing_note": "Input billing uses the upstream model’s reported prompt tokens, including cached and added context.",
+      "prior_supplier_quotes": [
+        {
+          "source_commit": "762915277efb1e345d023b64b1cc8346949f8958",
+          "primary": {
+            "offer_id": 13341,
+            "supplier_id": 318,
+            "supplier": "BangAi",
+            "supplier_slug": "bangai",
+            "supplier_rating": 5,
+            "actual_reviews": 1,
+            "supplier_availability_percent": 99.67330937602091,
+            "supplier_currency": "CNY",
+            "supplier_input": 1.6,
+            "supplier_output": 8,
+            "billing_mode": "ratio",
+            "potential_savings_percent": 97.61357445621121,
+            "supplier_actual_debit_verified": false,
+            "supplier_identity_verified": false,
+            "unit": "per_million_tokens",
+            "apiwild_selling_price": null
+          },
+          "backup": {
+            "offer_id": 11509,
+            "supplier_id": 163,
+            "supplier": "One-API",
+            "supplier_slug": "one-api",
+            "supplier_rating": 5,
+            "actual_reviews": 1,
+            "supplier_availability_percent": 99.62962962962963,
+            "supplier_currency": "USD",
+            "supplier_input": 1.5,
+            "supplier_output": 7.5,
+            "billing_mode": "ratio",
+            "potential_savings_percent": 85,
+            "supplier_actual_debit_verified": false,
+            "supplier_identity_verified": false,
+            "unit": "per_million_tokens",
+            "apiwild_selling_price": null
+          }
+        }
+      ],
+      "prior_retail_prices": [
+        {
+          "rate_version": "apiwild-launch-20261005",
+          "price": {
+            "currency": "USD",
+            "unit": "per_million_tokens",
+            "input": 5,
+            "output": 25,
+            "cache_read": 0.5,
+            "cache_write": 6.25,
+            "processing": "standard",
+            "input_cache": "uncached",
+            "approved": true,
+            "discount_policy": "half_matched_official_rate",
+            "peak": null,
+            "long_context": {
+              "input": 10,
+              "output": 37.5,
+              "cache_read": 1,
+              "cache_write": 12.5
+            },
+            "tier_schedule": null,
+            "runtime_tier_selection_active": false
+          }
+        }
+      ]
     },
     {
       "model_name": "gpt-6-luna",
@@ -2729,7 +2981,69 @@
         "matched_dated_alias": false,
         "time_tier_applicability": "unspecified"
       },
-      "billing_note": "Input billing uses the upstream model’s reported prompt tokens, including cached and added context."
+      "billing_note": "Input billing uses the upstream model’s reported prompt tokens, including cached and added context.",
+      "prior_supplier_quotes": [
+        {
+          "source_commit": "762915277efb1e345d023b64b1cc8346949f8958",
+          "primary": {
+            "offer_id": 14312,
+            "supplier_id": 318,
+            "supplier": "BangAi",
+            "supplier_slug": "bangai",
+            "supplier_rating": 5,
+            "actual_reviews": 1,
+            "supplier_availability_percent": 99.67330937602091,
+            "supplier_currency": "CNY",
+            "supplier_input": 0.6,
+            "supplier_output": 3,
+            "billing_mode": "ratio",
+            "potential_savings_percent": 95.52545210539604,
+            "supplier_actual_debit_verified": false,
+            "supplier_identity_verified": false,
+            "unit": "per_million_tokens",
+            "apiwild_selling_price": null
+          },
+          "backup": {
+            "offer_id": 14454,
+            "supplier_id": 282,
+            "supplier": "兄弟连",
+            "supplier_slug": "leapnode",
+            "supplier_rating": 5,
+            "actual_reviews": 1,
+            "supplier_availability_percent": 96.58725657024011,
+            "supplier_currency": "CNY",
+            "supplier_input": 0.72,
+            "supplier_output": 3.6,
+            "billing_mode": "ratio",
+            "potential_savings_percent": 94.63054252647524,
+            "supplier_actual_debit_verified": false,
+            "supplier_identity_verified": false,
+            "unit": "per_million_tokens",
+            "apiwild_selling_price": null
+          }
+        }
+      ],
+      "prior_retail_prices": [
+        {
+          "rate_version": "apiwild-launch-20261005",
+          "price": {
+            "currency": "USD",
+            "unit": "per_million_tokens",
+            "input": 1,
+            "output": 5,
+            "cache_read": 0.1,
+            "cache_write": 1.25,
+            "processing": "standard",
+            "input_cache": "uncached",
+            "approved": true,
+            "discount_policy": "half_matched_official_rate",
+            "peak": null,
+            "long_context": null,
+            "tier_schedule": null,
+            "runtime_tier_selection_active": false
+          }
+        }
+      ]
     },
     {
       "model_name": "gpt-6.1-sol",

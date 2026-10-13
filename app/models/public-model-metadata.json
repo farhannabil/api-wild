@@ -744,7 +744,7 @@
   },
   "glm-5.3": {
     "reference_model": "Z.ai: GLM 5.3",
-    "description": "Z.ai’s coding-focused model for complex software engineering and long-horizon agent tasks. Reasoning is enabled for this model.",
+    "description": "Z.ai’s coding-focused model for complex software engineering and long-horizon agent tasks.",
     "context_tokens": 1048576,
     "max_output_tokens": 131072,
     "input_modalities": [

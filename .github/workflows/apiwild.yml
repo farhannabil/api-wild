@@ -61,6 +61,7 @@ jobs:
           infra/railway/tests/deepseek-tier-policy.test.mjs
           infra/railway/tests/deepseek-assembly.test.mjs
           infra/railway/tests/gateway-quote-lookup.test.mjs
+          infra/railway/tests/six-model-prices.test.mjs
           infra/railway/tests/retail-token-pricing.test.mjs
           infra/railway/tests/native-customer-hourly.test.mjs
           infra/railway/tests/model-accounting.test.mjs

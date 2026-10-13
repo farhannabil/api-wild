@@ -5,10 +5,11 @@ const {PGlite}=await import(pathToFileURL(process.argv[2]).href);
 const db=new PGlite();
 try {
  await db.exec("create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key,email_confirmed_at timestamptz,is_anonymous boolean default false);create table public.customer_profiles(user_id uuid primary key,onboarding_completed_at timestamptz);");
- for(const name of ['20261003060000_apiwild_gateway_portability.sql','20261005030000_retail_supplier_separation.sql','20261005031735_workspace_policy.sql','20261005032721_nullable_customer_key_limits.sql','20261012193000_gateway_active_concurrency.sql','20261012234347_native_customer_hourly_billing.sql','20261013003000_native_key_name_limit.sql']) {
+ for(const name of ['20261003060000_apiwild_gateway_portability.sql','20261005030000_retail_supplier_separation.sql','20261005031735_workspace_policy.sql','20261005032721_nullable_customer_key_limits.sql','20261005084607_deepseek_request_tariff_version.sql','20261012193000_gateway_active_concurrency.sql','20261012234347_native_customer_hourly_billing.sql','20261012234922_six_model_retail_tariffs.sql','20261013000311_deepseek_native_hourly_tariffs.sql','20261013002536_deepseek_native_allowance_version.sql','20261013003000_native_key_name_limit.sql']) {
   await db.exec(fs.readFileSync(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
  }
  await db.exec(fs.readFileSync(new URL('../../infra/railway/tests/native-hourly-acceptance.sql',import.meta.url),'utf8'));
+ await db.exec(fs.readFileSync(new URL('../../infra/railway/tests/deepseek-native-tier-acceptance.sql',import.meta.url),'utf8'));
  for (const table of ['auth.users','apiwild_finance.gateway_accounts','apiwild_finance.gateway_requests','apiwild_finance.native_customer_keys','apiwild_finance.native_usage_receipts']) {
   assert.equal(Number((await db.query(`select count(*) n from ${table}`)).rows[0].n),0,`${table}: fixture rollback retained rows`);
  }

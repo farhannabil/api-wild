@@ -44,7 +44,7 @@ export function createDeepSeekTierPolicy({enabled=false,config,clock=Date.now}={
     const admitted=now(),until=admitted+maxExecutionMs;if(until>=end||until>=calendarEnd)fail();
     return {admitted,until};
   };
-  const policy=Object.freeze({baseRateVersion:c.baseRateVersion,sourceRevision:c.sourceRevision,calendarVersion:c.calendarVersion,
+  const policy=Object.freeze({baseRateVersion:c.baseRateVersion,sourceRevision:c.sourceRevision,calendarVersion:c.calendarVersion,validFrom:start,validUntil:end,
     models:Object.freeze(models),versions:model=>Object.freeze(['peak','off_peak'].map(tier=>version(model,tier))),
     // Nonspending current availability only. Never mint a tariff selection or
     // turn an invalid/expired clock into an active discovery route.

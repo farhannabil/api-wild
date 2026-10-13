@@ -1,6 +1,8 @@
 import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import {GatewayError,SUPABASE_ORIGIN,exactInteger} from './supabase-gateway-rpc.mjs';
 import {createSupplierConversionGuard} from './subrouter-supplier-conversion.mjs';
+import {nativeTariffCharge} from './native-retail-tier.mjs';
+import {isDeepSeekTierPolicy} from './deepseek-tier-policy.mjs';
 const ORIGIN='https://subrouter.ai';
 const unavailable=()=>new GatewayError('native_key_unavailable',503,true);
 export async function boundedNativeJson(response,max=2000000){
@@ -17,7 +19,18 @@ export function createNativeTokenClient({accessToken,accountId,fetchImpl=fetch})
  const payload=Object.fromEntries(fields.filter(k=>Object.hasOwn(t,k)).map(k=>[k,t[k]]));await call('/api/token/','PUT',{...payload,...changes});return this.read(t.id);
  },async setStatus(t,status){if(![1,2].includes(status))throw unavailable();await call('/api/token/?status_only=true','PUT',{id:t.id,status});const result=await this.read(t.id);if(result.status!==status)throw unavailable();return result;}});
 }
-export function nativeRateSnapshot(catalog,routes){const rates={};for(const route of routes){if(rates[route.model])continue;const m=catalog.models.find(x=>x.model_name===route.model),r=m?.apiwild_selling_price,s=m?.[route.supplierRole||'primary'];if(!r?.approved||r.currency!=='USD'||r.processing!=='standard'||s?.supplier_slug!==route.supplierSlug||s.supplier_currency!=='CNY')throw unavailable();rates[route.model]={input:Math.round(r.input*1e6),output:Math.round(r.output*1e6),provider:route.supplierSlug,supplierInput:s.supplier_input,supplierOutput:s.supplier_output};}if(!Object.keys(rates).length)throw unavailable();return rates;}
+export function nativeRateSnapshot(catalog,routes,{tierPolicy}={}){
+ const rates={};for(const route of routes){
+  if(rates[route.model])continue;const m=catalog.models.find(x=>x.model_name===route.model),r=m?.apiwild_selling_price,s=m?.[route.supplierRole||'primary'];
+  if(!r?.approved||r.currency!=='USD'||!['standard','off_peak'].includes(r.processing)||s?.supplier_slug!==route.supplierSlug||s.supplier_currency!=='CNY')throw unavailable();
+  const value={input:Math.round(r.input*1e6),output:Math.round(r.output*1e6),provider:route.supplierSlug,supplierInput:s.supplier_input,supplierOutput:s.supplier_output,version:r.rate_version??route.rateVersion};
+  if(r.processing==='off_peak'){
+   if(route.model!=='deepseek-v4.1-flash'||!r.peak||!isDeepSeekTierPolicy(tierPolicy)||!tierPolicy.canAdmit(route.model))throw unavailable();
+   Object.assign(value,{processing:'off_peak',peak:{input:Math.round(r.peak.input*1e6),output:Math.round(r.peak.output*1e6)},calendar:tierPolicy.calendarVersion,validFrom:tierPolicy.validFrom/1000,validUntil:tierPolicy.validUntil/1000});
+  }
+  rates[route.model]=value;
+ }if(!Object.keys(rates).length)throw unavailable();return rates;
+}
 export function nativeReceipt(row,key){
  if(row.type!==2||row.token_id!==key.token_id||row.user_id!==key.account_id)throw unavailable();
  const other=typeof row.other==='string'?JSON.parse(row.other):row.other,rate=key.rates[row.model_name];
@@ -26,22 +39,22 @@ export function nativeReceipt(row,key){
  exactInteger(row.prompt_tokens,0,10000000);exactInteger(row.completion_tokens,0,10000000);
  return {id:row.id,account:row.user_id,token:row.token_id,created:row.created_at,model:row.model_name,provider:other.provider_slug,prompt:row.prompt_tokens,completion:row.completion_tokens,quota:row.quota};
 }
-export function nativeRetailMicros(fact,rates){const r=rates[fact.model];if(!r)throw unavailable();return Number((BigInt(fact.prompt)*BigInt(r.input)+BigInt(fact.completion)*BigInt(r.output)+999999n)/1000000n);}
+export function nativeRetailMicros(fact,rates){return nativeTariffCharge(fact,rates);}
 export function nativeAllowance(available,rates,costBased=false){
  exactInteger(available,0,1000000000000);const reserve=Math.min(available,1000000);
  if(costBased){const quota=Math.floor(reserve/10);return {quota,reserveUsdMicros:quota*10,reserveCnyMicros:Math.ceil(quota*68/5)};}
  // Small supplier allowance, with headroom for discounted/cache usage. Actual
  // retail usage still reconciles hourly; this is not a real-time retail cutoff.
- const ratio=Math.max(...Object.values(rates).flatMap(r=>[r.input/1e6/(r.supplierInput/6.8),r.output/1e6/(r.supplierOutput/6.8)]));
+ const ratio=Math.max(...Object.values(rates).flatMap(r=>[r.input/1e6/(r.supplierInput/6.8),r.output/1e6/(r.supplierOutput/6.8),...(r.peak?[r.peak.input/1e6/(r.supplierInput/6.8),r.peak.output/1e6/(r.supplierOutput/6.8)]:[])]));
  if(!Number.isFinite(ratio)||ratio<=0)throw unavailable();const quota=Math.floor(Math.min(5000,reserve/1e6/ratio/4*500000));
  return {reserveUsdMicros:reserve,quota,reserveCnyMicros:Math.ceil(quota*68/5)};
 }
-export function createNativeCustomerKeys({env,catalog,verifyOwner,legacyKeys,fetchImpl=fetch,clock=Date.now}){
+export function createNativeCustomerKeys({env,catalog,verifyOwner,legacyKeys,tierPolicy,fetchImpl=fetch,clock=Date.now}){
  if(env.APIWILD_NATIVE_CUSTOMER_KEYS_ENABLED!=='true')return undefined;
  const accountId=Number(env.SUBROUTER_ACCOUNT_USER_ID),expiry=Date.parse(env.APIWILD_NATIVE_KEYS_AUTHORIZATION_EXPIRES_AT);
  if(!Number.isFinite(expiry)||env.APIWILD_BILLING_MODE!=='live')throw unavailable();
  const routes=JSON.parse(env.APIWILD_GATEWAY_ROUTES_JSON),budgets=[...new Set(routes.map(r=>r.providerBudgetId))];if(budgets.length!==1)throw unavailable();
- const rates=nativeRateSnapshot(catalog,routes),native=createNativeTokenClient({accessToken:env.SUBROUTER_ACCOUNT_ACCESS_TOKEN,accountId,fetchImpl});
+ const rates=nativeRateSnapshot(catalog,routes,{tierPolicy}),native=createNativeTokenClient({accessToken:env.SUBROUTER_ACCOUNT_ACCESS_TOKEN,accountId,fetchImpl});
  const conversion=createSupplierConversionGuard({conversion:JSON.parse(env.APIWILD_SUPPLIER_CONVERSION_JSON),fetchImpl,clock});
  if(conversion.conversion.price!=='6.8')throw unavailable();
  async function rpc(name,args){try{return await boundedNativeJson(await fetchImpl(SUPABASE_ORIGIN+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:env.SUPABASE_SECRET_KEY,'Content-Type':'application/json'},body:JSON.stringify(args),redirect:'error',signal:AbortSignal.timeout(20000)}));}catch{throw unavailable();}}

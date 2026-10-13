@@ -3,6 +3,7 @@ import {createRetailTokenPricing} from '../runtime/retail-token-pricing.mjs';
 import {canonicalSupplierModel} from '../runtime/supplier-model-identity.mjs';
 import {createDeepSeekTierPolicy,DEEPSEEK_SOURCE_REVISION,DEEPSEEK_CALENDAR_VERSION} from '../runtime/deepseek-tier-policy.mjs';
 import {nativeTariffCharge} from '../runtime/native-retail-tier.mjs';
+import {nativeRateSnapshot,nativeAllowance} from '../runtime/native-customer-keys.mjs';
 import {listedCustomerModels} from '../../../app/models/callable-catalogue.mjs';
 const catalog=JSON.parse(fs.readFileSync(new URL('../../../app/models/public-models.json',import.meta.url)));
 const metadata=JSON.parse(fs.readFileSync(new URL('../../../app/models/public-model-metadata.json',import.meta.url)));
@@ -41,4 +42,13 @@ test('hourly native retail uses receipt UTC time, preserves old fixed snapshots 
 test('cards list approved prices without falsely granting callability',()=>{
  const rows=listedCustomerModels({schemaVersion:1,authority:'apiwild-owned-runtime',source:'apiwild-approved-retail',count:1,models:[{id:'gpt-6-astra',callable:true,capabilities:['chat']}]},catalog.models);
  assert.equal(rows.length,22);assert.equal(rows.find(m=>m.model_name==='gpt-6-astra').available,true);assert.equal(rows.find(m=>m.model_name===ds).available,false);
+});
+test('native six-model snapshot admits reviewed DeepSeek policy and reserves its peak tariff',()=>{
+ const privateCatalog=JSON.parse(fs.readFileSync(new URL('../../../data/selected-supplier-models.json',import.meta.url)));
+ const models=['gpt-6-astra','gpt-6-sol','glm-5.3','claude-sonnet-5-5','gemini-3.8-flash',ds];
+ const routes=models.map(model=>({model,supplierSlug:'a6aa'}));
+ const tierPolicy=createDeepSeekTierPolicy({enabled:true,config,clock:()=>Date.parse('2026-10-13T00:00:00Z')});
+ const rates=nativeRateSnapshot(privateCatalog,routes,{tierPolicy});assert.equal(Object.keys(rates).length,6);
+ assert.equal(rates[ds].peak.output,760000);assert.equal(rates[ds].validUntil,Date.parse(config.validUntil)/1000);assert.ok(nativeAllowance(100000,rates).quota>0);
+ assert.throws(()=>nativeRateSnapshot(privateCatalog,routes));
 });

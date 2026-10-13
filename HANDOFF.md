@@ -19,3 +19,14 @@ API WILD owns Supabase accounts, Resend emails, Stripe retail credits and custom
 The Railway runtime now mounts retail-only public model/config discovery and authenticated account, key-model and key-usage reads. The health workflow waits for its exact main commit to appear in runtime metadata before verifying routes and access controls. Manual feature-branch runs do not probe production. The legacy Cloudflare D1/AARO maintenance mutation is removed from this read-only monitor; owned Supabase finance sweeping and paid launch acceptance remain open under GEN-10. Keep the separate active launch checkout and its allowance/docs changes intact.
 
 Validation before publishing: Railway Vite build completed; all 350 top-level tests passed; focused discovery, gateway authentication, assembly and health tests passed. Public model availability reports configured capabilities only, not verified supplier funding. A successful health run is not evidence of payment-to-inference acceptance.
+
+
+## Six-model catalogue and pricing expansion, 2026-10-13
+
+Prepared six owner-selected USD reference tariffs per million input/output tokens: GPT 6 Astra5/25, GPT6Sol1/5, GLM5.3 1/2.25, Sonnet5.5 1/5, Gemini3.8Flash0.5/1.75, DeepSeekV4.1Flash peak0.15/0.76 and offpeak0.09/0.35. Public approved catalogue22; private retained catalogue40 with historical supplier and tariff snapshots. Actual billing follows the newer supplier-cost5x policy from PR35; preserve its prospective activation, immutable old records and zero extra fee.
+
+All six produced real paid supplier responses through isolated test-mode customer keys; original retail-debit arithmetic, replay and immutable native wallet receipts verified before cost5 activation. Native tariff SQL tests use isolated rollback fixtures; no production customer funding changed. Failed Gemini timeout and two DeepSeek validation requests remain held. Test supplier allowance cap was not increased and test keys were revoked. Private journals and USD comparison are under workspace work/apiwild-provider-review-20261012, outside published source.
+
+The reviewed a6aa DeepSeek alias reports an auxiliary cache-derived total inconsistent with the wallet-metered input/output pair. Acceptance requires the exact alias/model/supplier, valid immutable request identity and an explained auxiliary total; other routes remain strict. Public customer totals use the validated input/output pair; original supplier total remains private audit evidence.
+
+Release/configuration verification is recorded in the final checkpoint; source preparation and paid sandbox checks do not prove a new live customer purchase.

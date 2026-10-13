@@ -71,6 +71,8 @@
 !infra/railway/runtime/reservation-expiry-operator.mjs
 !infra/railway/runtime/reservation-expiry-sweep.mjs
 !infra/railway/runtime/supplier-request-identity.mjs
+!infra/railway/runtime/supplier-model-identity.mjs
+!infra/railway/runtime/native-retail-tier.mjs
 !infra/railway/runtime/subrouter-supplier-conversion.mjs
 !infra/railway/runtime/subrouter-receipt-reader.mjs
 !infra/railway/runtime/supplier-debit-operator.mjs
