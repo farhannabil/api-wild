@@ -343,10 +343,12 @@ export function createGatewayRpc(config) {
       if (raw.state === 'failed' && raw.costUsdMicros !== 0) throw new GatewayError('gateway_invalid_input', 400);
       text(raw.settlementReference, 500);
       const result = cloneJsonObject(raw.result, 1048576); const usage = cloneJsonObject(raw.usage, 65536);
+      const costPending=config.retailSettlement&&record.usage_json?.billingPolicy==='supplier-cost-5x-v1';
+      if(costPending)Object.assign(usage,{billingPolicy:'supplier-cost-5x-v1',customerChargePending:true,supplierReconciliationPending:true,extraFeeUsdMicros:0});
       rejectPrivate({ result, usage, reference: raw.settlementReference });
       // Send real observed over-bound costs to the SQL freeze path; never clamp native liability.
       return rpc('finish', context, { p_id: record.id, p_expected_version: record.version, p_state: raw.state,
-        p_cost_usd_micros: raw.costUsdMicros, p_cost_cny_micros: raw.costCnyMicros, p_settlement_reference: raw.settlementReference,
+        p_cost_usd_micros: costPending?0:raw.costUsdMicros, p_cost_cny_micros: raw.costCnyMicros, p_settlement_reference: raw.settlementReference,
         p_result: result, p_usage: usage }, record);
     },
     uncertain(context, record) { reference(context, record); return rpc('uncertain', context, { p_id: record.id, p_expected_version: record.version }, record); },
