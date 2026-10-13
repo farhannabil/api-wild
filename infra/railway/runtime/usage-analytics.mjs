@@ -11,6 +11,9 @@ export function nativeTokenDetails(row,fact){
  return {fact,cacheReadTokens:read,cacheWriteTokens:total??(short!==null&&long!==null?count(short+long):null)};
 }
 export function validateUsageDashboard(v){
+ const integer=n=>Number.isSafeInteger(n)&&n>=0;
+ if(v?.activity!==undefined&&(!Array.isArray(v.activity)||v.activity.length>50||!v.activity.every(r=>typeof r.id==='string'&&/^[0-9a-f-]{36}$/.test(r.id)&&typeof r.createdAt==='string'&&Number.isFinite(Date.parse(r.createdAt))&&typeof r.model==='string'&&r.model.length<=200&&['succeeded','failed','uncertain'].includes(r.state)&&typeof r.pending==='boolean'&&['inputTokens','outputTokens','chargedUsdMicros'].every(k=>integer(r[k]))&&['cacheReadTokens','cacheWriteTokens'].every(k=>r[k]===null||integer(r[k])))))throw Error('usage_activity_unverified');
+ if(v?.models?.some(r=>['inputTokens','outputTokens','cacheReadTokens','cacheWriteTokens','cacheReadKnown','cacheWriteKnown'].some(k=>r[k]!==undefined&&!integer(r[k]))))throw Error('usage_models_unverified');
  const fields=['requests','inputTokens','outputTokens','cacheReadTokens','cacheWriteTokens','cacheReadKnown','cacheWriteKnown','chargedUsdMicros','pendingRequests'];
  const counts=r=>r&&fields.every(k=>Number.isSafeInteger(r[k])&&r[k]>=0)&&r.cacheReadKnown<=r.requests&&r.cacheWriteKnown<=r.requests;
  const stamp=t=>t===null||(typeof t==='string'&&Number.isFinite(Date.parse(t)));

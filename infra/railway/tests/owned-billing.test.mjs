@@ -3,6 +3,25 @@ const env={OWN_BILLING_ENABLED:'true',APIWILD_CHECKOUT_ENABLED:'true',BILLING_MO
 async function run(port,path,method='GET',body,headers={}){const req=Readable.from(body?[Buffer.from(JSON.stringify(body))]:[]);Object.assign(req,{url:path,method,headers:{authorization:'Bearer '+ 'x'.repeat(30),origin:'https://apiwild.com','content-type':'application/json',...headers}});let result;const res={writeHead(status){this.status=status},end(text){result={status:this.status,data:JSON.parse(text)}}};await port.handle(req,res);return result}
 function setup({confirmed=true,authStatus=200,suspended=false,checkoutFlag='true',withStripeKey=true}={}){const calls=[];const stripeCalls=[];const fetchImpl=async(url,o)=>{calls.push(url);if(url.endsWith('/auth/v1/user')&&authStatus!==200)return Response.json({error:'expired'},{status:authStatus});return Response.json(url.endsWith('/auth/v1/user')?{id:'12345678-1234-4123-8123-123456789abc',email_confirmed_at:confirmed?'now':null}:url.endsWith('apiwild_gateway_account_initialize')?{initialized:true,customer_id:'12345678-1234-4123-8123-123456789abc',billing_mode:'test'}:url.endsWith('apiwild_billing_read')?{balanceCents:0,orders:[],suspended}:url.endsWith('apiwild_stripe_customer')?{customerId:'cus_demo'}:{registered:true,...{order_id:JSON.parse(o.body).p_order_id,session_id:JSON.parse(o.body).p_session_id}})};const stripeClient={accounts:{retrieve:async()=>({id:'acct_1UCiHk0SGcPsf6AA'})},prices:{retrieve:async()=>({id:'price_demo',active:true,livemode:false,currency:'usd',type:'one_time',unit_amount:100})},checkout:{sessions:{create:async p=>(stripeCalls.push(p),{id:'cs_test_example',mode:'payment',livemode:false,customer:p.customer,client_reference_id:p.client_reference_id,metadata:p.metadata,currency:'usd',amount_subtotal:3000,amount_total:3000,status:'open',payment_status:'unpaid',total_details:{amount_discount:0,amount_tax:0},url:'https://checkout.stripe.com/c/pay/example'})}}};return {calls,stripeCalls,port:createOwnedBillingFromEnv({...env,APIWILD_CHECKOUT_ENABLED:checkoutFlag,STRIPE_SECRET_KEY:withStripeKey?env.STRIPE_SECRET_KEY:undefined},{fetchImpl,stripeClient})}}
 test('missing credentials stays disabled',async()=>{const p=await createOwnedBillingFromEnv({});assert.equal((await run(p,'/api/billing')).status,503)});
+test('promo redemption and key labels use authenticated owner without Stripe and reject injected owner',async()=>{
+ const calls=[],id='12345678-1234-4123-8123-123456789abc';
+ const port=await createOwnedBillingFromEnv({OWN_BILLING_ENABLED:'true',BILLING_MODE:'live',SUPABASE_SECRET_KEY:env.SUPABASE_SECRET_KEY},{fetchImpl:async(url,o)=>{
+  const p=o.body?JSON.parse(o.body):{};calls.push({url,p});
+  if(url.endsWith('/auth/v1/user'))return Response.json({id,email_confirmed_at:'now'});
+  if(url.endsWith('apiwild_gateway_account_initialize'))return Response.json({initialized:true,customer_id:id,billing_mode:'live'});
+  if(url.endsWith('apiwild_redeem_credit_code'))return Response.json({redeemed:true,replayed:false,amountCents:40000});
+  if(url.endsWith('apiwild_customer_key_names'))return Response.json([{id,name:p.p_name??'Production'}]);
+  throw Error('Unexpected external request');
+ }});
+ assert.equal((await run(port,'/api/billing/promo','POST',{code:'FIXTURE'})).data.amountCents,40000);
+ assert.equal(calls.at(-1).p.p_owner,'live:supabase:'+id);
+ assert.equal((await run(port,'/api/billing/promo','POST',{code:'FIXTURE',owner:'foreign'})).status,400);
+ assert.equal((await run(port,'/api/billing/key-names','POST',{id,name:'Production'})).data.names[0].name,'Production');
+ assert.equal((await run(port,'/api/billing/promo','POST',{code:'FIXTURE'},{origin:'https://evil.example'})).status,403);
+ for(let i=0;i<4;i++)assert.equal((await run(port,'/api/billing/promo','POST',{code:'FIXTURE'})).status,200);
+ assert.equal((await run(port,'/api/billing/promo','POST',{code:'FIXTURE'})).status,429);
+ assert.ok(calls.every(c=>!c.url.includes('stripe.com')));
+});
 test('confirmed Supabase identity reads owned ledger',async()=>{const f=setup();const r=await run(await f.port,'/api/billing');assert.equal(r.status,200);assert.equal(r.data.balanceCents,0);assert.equal(r.data.minimumTopupCents,3000)});
 test('unconfirmed user cannot read finances',async()=>{const f=setup({confirmed:false});assert.equal((await run(await f.port,'/api/billing')).status,401);assert.equal(f.calls.length,1)});
 test('cross-origin checkout blocked before remote auth',async()=>{const f=setup();assert.equal((await run(await f.port,'/api/billing/checkout','POST',{}, {origin:'https://evil.example'})).status,403);assert.equal(f.calls.length,0)});

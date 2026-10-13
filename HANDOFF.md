@@ -30,3 +30,11 @@ All six produced real paid supplier responses through isolated test-mode custome
 The reviewed a6aa DeepSeek alias reports an auxiliary cache-derived total inconsistent with the wallet-metered input/output pair. Acceptance requires the exact alias/model/supplier, valid immutable request identity and an explained auxiliary total; other routes remain strict. Public customer totals use the validated input/output pair; original supplier total remains private audit evidence.
 
 Release/configuration verification is recorded in the final checkpoint; source preparation and paid sandbox checks do not prove a new live customer purchase.
+
+## Customer credits console — October 12 local / October 13 UTC
+
+Direct promo redemption uses a private campaign table, locked global cap and unique customer redemption. Wallet funding, immutable redemption and credit-email queue are one transaction. No Stripe call for promo. New card-credit ledger trigger queues confirmation only on actual positive checkout funding. Email worker uses fixed Resend idempotency keys, durable leases, bounded retry window and no secret logs. API-key labels are separate owner-scoped metadata and do not change upstream key identity.
+
+Usage explorer adds model input/output/cache totals and latest50 safe owner-scoped activity rows, preserving unknown cache and historical charges. Manual refresh also refreshes charts. Source/UI tests452, focused runtime22, PostgreSQL9groups, TypeScript and Railway build passed. Two independent reviews completed; active final email lease and ambiguous billing response corrected.
+
+Supabase20261013040000/20261013040100 applied after production rollback acceptance. No campaigns or credits created by migration. Owner-approved private campaign is400USD, one redemption globally,48hours from activation after UI release. Production before release e3f26095149f12945c69671e9e774645a3c9208a. Deployment and actual email delivery remain pending at this source checkpoint. No paid test or real promo redemption.

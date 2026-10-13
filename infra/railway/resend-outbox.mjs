@@ -29,7 +29,7 @@ function cancelReceipt(reader) { try { Promise.resolve(reader?.cancel()).catch((
 
 // One absolute deadline covers transport and the receipt body. Provider success
 // is never inferred from an oversized, malformed, or incomplete receipt.
-async function resendReceipt(fetchImpl, options) {
+export async function resendReceipt(fetchImpl, options) {
   const controller = new AbortController(); let reader, response, timer;
   const deadline = new Promise((_, reject) => { timer = setTimeout(() => {
     controller.abort(); cancelReceipt(reader ?? response?.body); reject(new Error('email_provider_receipt_ambiguous'));

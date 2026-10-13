@@ -25,6 +25,7 @@ function fixture(temporaryOffer) {
   assert.equal(source.diagnostics.filter(item=>item.category===ts.DiagnosticCategory.Error).length,0);
   const require=name=>{
     if(name==='react')return react;
+    if(name==='./promo-credit')return {default:'promo-credit'};
     if(name==='@/lib/owned-credit-offers.mjs')return {...offers,verifiedTemporaryCreditOffer:value=>offers.verifiedTemporaryCreditOffer(value,now),checkoutRequest:(storage,identity)=>offers.checkoutRequest(storage,identity,()=> 'checkout-dollar-ui-once-0001')};
     if(name==='@/lib/owned-client-config.mjs')return {verifiedCheckoutUrl};
     if(name==='@/app/public-credit-pack-cards')return {CreditPackCards:'public-pack-cards'};
