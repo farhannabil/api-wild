@@ -106,3 +106,6 @@
 **/node_modules
 **/.git
 !infra/railway/runtime/usage-analytics.mjs
+!infra/railway/runtime/credit-email-worker.mjs
+!infra/railway/resend-outbox.mjs
+!infra/railway/runtime/welcome-rpc.mjs

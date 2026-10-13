@@ -5,8 +5,9 @@ import {SUPABASE_ORIGIN} from './supabase-gateway-rpc.mjs';
 import {STRIPE_ACCOUNTS} from './stripe-financial-projection.mjs';
 import {createCreditOfferPolicy} from './credit-offers.mjs';
 import {createTemporaryCreditOfferFromEnv} from './temporary-credit-offer.mjs';
+import {createCreditEmailWorker} from './credit-email-worker.mjs';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-const routes=['/api/billing','/api/billing/offers','/api/billing/checkout','/api/billing/reconcile','/api/billing/webhook'];
+const routes=['/api/billing','/api/billing/offers','/api/billing/checkout','/api/billing/reconcile','/api/billing/webhook','/api/billing/promo','/api/billing/promos','/api/billing/key-names'];
 const error=(status=503)=>Object.assign(new Error('Billing unavailable.'),{status});
 async function json(response,max=65536){if(!response.ok||response.redirected||!/^application\/json/.test(response.headers.get('content-type')||''))throw error();const reader=response.body.getReader();let n=0;const chunks=[];try{while(true){const x=await reader.read();if(x.done)break;n+=x.value.length;if(n>max)throw error();chunks.push(x.value)}return JSON.parse(Buffer.concat(chunks,n).toString('utf8'))}finally{await reader.cancel().catch(()=>{});reader.releaseLock()}}
 function send(res,status,data){res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(data))}
@@ -22,6 +23,8 @@ export async function createOwnedBillingFromEnv(env,{fetchImpl=fetch,stripeClien
  const checkoutReady=ready&&env.APIWILD_CHECKOUT_ENABLED==='true';
  const call=async(path,body)=>json(await fetchImpl(SUPABASE_ORIGIN+path,{method:body?'POST':'GET',headers:{apikey:secret,...(secret?.startsWith('sb_secret_')?{}:{authorization:'Bearer '+secret}),'content-type':'application/json'},body:body?JSON.stringify(body):undefined,redirect:'error',signal:AbortSignal.timeout(12000)}));
  const rpc=(name,p)=>call('/rest/v1/rpc/'+name,p);
+ const emailWorker=createCreditEmailWorker({rpc,apiKey:env.RESEND_API_KEY,fetchImpl,enabled:Boolean(readReady),write:result=>console.log(JSON.stringify(result))});
+ const promoWindows=new Map();
  if(ready){
   if(!new RegExp('^(sk|rk)_'+mode+'_[A-Za-z0-9]+$').test(apiKey))throw error();
   stripe=stripeClient??new (await import('stripe')).default(apiKey,{maxNetworkRetries:0,timeout:15000});
@@ -32,7 +35,7 @@ export async function createOwnedBillingFromEnv(env,{fetchImpl=fetch,stripeClien
   }});
   webhook=createStripeWebhookIngress({enabled:true,billingMode:mode,accountId:account,stripeSecretKey:apiKey,webhookSecret:env.STRIPE_WEBHOOK_SECRET,supabaseOrigin:SUPABASE_ORIGIN,supabaseSecretKey:secret,fetchImpl});
  }
- return Object.freeze({matches:path=>routes.includes(path.split('?')[0]),async handle(req,res){
+ return Object.freeze({start:()=>emailWorker.start(),stop:()=>emailWorker.stop(),matches:path=>routes.includes(path.split('?')[0]),async handle(req,res){
   const url=new URL(req.url,'https://apiwild.com'),path=url.pathname;
   if(path==='/api/billing/webhook'){if(!webhook)return send(res,503,{error:'Payments are not activated.'});return webhook.handle(req,res)}
   try{
@@ -51,6 +54,24 @@ export async function createOwnedBillingFromEnv(env,{fetchImpl=fetch,stripeClien
    const user=await json(authResponse);
    if(!uuid.test(user.id)||!user.email_confirmed_at||user.is_anonymous===true)throw error(401);const owner=mode+':supabase:'+user.id;
    const initialized=await rpc('apiwild_gateway_account_initialize',{p_owner:owner});if(initialized.initialized!==true||initialized.customer_id!==user.id||initialized.billing_mode!==mode)throw error();
+   if(path==='/api/billing/promos'&&req.method==='GET')return send(res,200,{redemptions:await rpc('apiwild_credit_history',{p_owner:owner})});
+   if(path==='/api/billing/key-names'&&req.method==='GET')return send(res,200,{names:await rpc('apiwild_customer_key_names',{p_owner:owner})});
+   if(['/api/billing/promo','/api/billing/key-names'].includes(path)&&req.method==='POST'){
+    if(url.search||!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))throw error(400);
+    const chunks=[];let size=0;const timeout=setTimeout(()=>req.destroy(),5000);let input;
+    try{for await(const c of req){size+=c.length;if(size>1024)throw error(413);chunks.push(c)}input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}finally{clearTimeout(timeout)}
+    if(!input||typeof input!=='object'||Array.isArray(input))throw error(400);
+    if(path.endsWith('/key-names')){
+     if(Object.keys(input).some(k=>!['id','name'].includes(k))||!uuid.test(input.id??'')||typeof input.name!=='string'||!input.name.trim()||input.name.length>64||/[\x00-\x1f\x7f]/.test(input.name))throw error(400);
+     return send(res,200,{names:await rpc('apiwild_customer_key_names',{p_owner:owner,p_id:input.id,p_name:input.name.trim()})});
+    }
+    if(Object.keys(input).length!==1||typeof input.code!=='string'||!/^[A-Za-z0-9_-]{4,48}$/.test(input.code.trim()))throw error(400);
+    const now=clock();for(const [id,w]of promoWindows)if(now>w.until)promoWindows.delete(id);
+    const w=promoWindows.get(owner)??{until:now+60000,count:0};if(w.count>=5||promoWindows.size>=2048&&!promoWindows.has(owner))return send(res,429,{error:'Please wait a minute before trying another code.'});w.count++;promoWindows.set(owner,w);
+    const result=await rpc('apiwild_redeem_credit_code',{p_owner:owner,p_code:input.code.trim()});
+    if(result.redeemed!==true)return send(res,422,{error:'This promo code is unavailable, expired, or fully redeemed.'});
+    return send(res,200,result);
+   }
    if(path==='/api/billing'&&req.method==='GET'){
     const info=await rpc('apiwild_billing_read',{p_owner:owner});let privateOffer;
     if(checkoutReady&&info.suspended===false&&temporaryOffer?.read(owner)){
@@ -69,6 +90,6 @@ export async function createOwnedBillingFromEnv(env,{fetchImpl=fetch,stripeClien
    const chunks=[];let size=0;const timeout=setTimeout(()=>req.destroy(),5000);let input;
    try{for await(const c of req){size+=c.length;if(size>4096)throw error(413);chunks.push(c)}input=JSON.parse(Buffer.concat(chunks).toString('utf8'))}finally{clearTimeout(timeout)}
    return send(res,200,await checkout.checkout(owner,input));
-  }catch(e){send(res,[400,401,403,405,413,415].includes(e.status)?e.status:503,{error:'Billing unavailable. No credits were granted.',...(uuid.test(e.orderId??'')?{orderId:e.orderId,creditsGranted:false}:{})})}
+  }catch(e){send(res,[400,401,403,405,413,415].includes(e.status)?e.status:503,{error:'This action could not be confirmed. Refresh your balance and history before retrying.',...(uuid.test(e.orderId??'')?{orderId:e.orderId,creditsGranted:false}:{})})}
  }});
 }

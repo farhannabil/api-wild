@@ -64,6 +64,7 @@ jobs:
           infra/railway/tests/six-model-prices.test.mjs
           infra/railway/tests/retail-token-pricing.test.mjs
           infra/railway/tests/native-customer-hourly.test.mjs
+          infra/railway/tests/credit-email-worker.test.mjs
           infra/railway/tests/usage-analytics.test.mjs
           infra/railway/tests/model-accounting.test.mjs
           infra/railway/tests/welcome-brand.test.mjs
@@ -86,6 +87,7 @@ jobs:
           node tests/integration/native-hourly-pglite.mjs "$RUNNER_TEMP/apiwild-promotion-pglite/node_modules/@electric-sql/pglite/dist/index.js"
           node tests/integration/supplier-cost-five-pglite.mjs "$RUNNER_TEMP/apiwild-promotion-pglite/node_modules/@electric-sql/pglite/dist/index.js"
           node tests/integration/usage-analytics-pglite.mjs "$RUNNER_TEMP/apiwild-promotion-pglite/node_modules/@electric-sql/pglite/dist/index.js"
+          node tests/integration/customer-credit-console-pglite.mjs "$RUNNER_TEMP/apiwild-promotion-pglite/node_modules/@electric-sql/pglite/dist/index.js"
   production-health:
     needs: build-and-test
     if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push')

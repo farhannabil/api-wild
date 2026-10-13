@@ -275,7 +275,7 @@ export function createGatewayRpc(config) {
   };
   const accountRead=async(context,name,maxBytes=65536)=>{const meta=owner(context);const headers={apikey:secret.value,'content-type':'application/json',accept:'application/json'};if(secret.legacy)headers.authorization='Bearer '+secret.value;const value=await request(SUPABASE_ORIGIN+'/rest/v1/rpc/'+name,headers,JSON.stringify({p_owner:meta.owner}),rpcTimeoutMs,maxBytes);rejectPrivate(value);return value;};
   const client = {
-    async usageDashboard(context){return validateUsageDashboard(await accountRead(context,'apiwild_usage_dashboard'));},
+    async usageDashboard(context){return validateUsageDashboard(await accountRead(context,'apiwild_usage_explorer'));},
     async initializeAccount(context){const v=await accountRead(context,'apiwild_gateway_account_initialize');if(v?.initialized!==true||v.customer_id!==context.customerId||v.billing_mode!==billingMode)throw new GatewayError('gateway_account_unverified');return {initialized:true};},
     async usage(context){const v=await accountRead(context,'apiwild_gateway_usage');strictObject(v,['currency','fundedUsdMicros','spentUsdMicros','reservedUsdMicros','paymentHoldUsdMicros','availableUsdMicros','completedRequests']);if(v.currency!=='USD')throw new GatewayError('gateway_usage_unverified');for(const k of ['fundedUsdMicros','spentUsdMicros','reservedUsdMicros','paymentHoldUsdMicros','availableUsdMicros','completedRequests'])exactInteger(v[k],k==='fundedUsdMicros'?-USD_MAX:0,USD_MAX);return Object.freeze(v);},
     async verifyKeyOwner(raw) {

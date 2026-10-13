@@ -18,6 +18,7 @@ COPY --from=build /app/infra/railway/preparation-server.mjs ./infra/railway/prep
 COPY --from=build /app/infra/railway/allowance-worker.mjs ./infra/railway/allowance-worker.mjs
 COPY --from=build /app/infra/railway/reservation-expiry.mjs ./infra/railway/reservation-expiry.mjs
 COPY --from=build /app/infra/railway/supplier-debit.mjs ./infra/railway/supplier-debit.mjs
+COPY --from=build /app/infra/railway/resend-outbox.mjs ./infra/railway/resend-outbox.mjs
 COPY --from=build /app/infra/railway/release ./infra/railway/release
 COPY --from=build /app/infra/railway/runtime/aaro-usage-ingress.mjs ./infra/railway/runtime/aaro-usage-ingress.mjs
 COPY --from=build /app/infra/railway/runtime/aaro-usage-bridge.mjs ./infra/railway/runtime/aaro-usage-bridge.mjs
