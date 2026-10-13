@@ -3413,7 +3413,7 @@
       "creator": "DeepSeek",
       "creator_id": "deepseek",
       "creator_source": "https://api-docs.deepseek.com/quick_start/pricing/",
-      "logo": "/providers/openrouter/deepseek.svg",
+      "logo": "/providers/openrouter/deepseek.png",
       "status": "response_and_native_debit_verified",
       "openrouter_reference": null,
       "official_reference": {

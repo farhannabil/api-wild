@@ -1026,7 +1026,7 @@
     {
       "model_name": "deepseek-v4.1-flash",
       "creator": "DeepSeek",
-      "logo": "/providers/openrouter/deepseek.svg",
+      "logo": "/providers/openrouter/deepseek.png",
       "creator_source": "https://api-docs.deepseek.com/quick_start/pricing/",
       "apiwild_selling_price": {
         "currency": "USD",
