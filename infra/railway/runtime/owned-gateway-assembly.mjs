@@ -13,6 +13,7 @@ import {createSupplierConversionGuard} from './subrouter-supplier-conversion.mjs
 import {createResearchTools} from './research-tools.mjs';
 import {createNativeCustomerKeys} from './native-customer-keys.mjs';
 import {createNativeUsageSync} from './native-usage-sync.mjs';
+import {supplierCostReserve} from './supplier-cost-billing.mjs';
 export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Date.now}){
  if(env.APIWILD_OWNED_GATEWAY_ENABLED!=='true')return undefined;
  const secretKey=env.SUPABASE_SECRET_KEY,publishableKey=env.SUPABASE_PUBLISHABLE_KEY,billingMode=env.APIWILD_BILLING_MODE;
@@ -76,7 +77,7 @@ export function createOwnedGatewayFromEnv({env,catalog,fetchImpl=fetch,clock=Dat
   const economics=selection?accounting.quoteConditional({...quote,selection}):accounting.quote(quote);
   if(economics.estimatedSupplierCnyMicros>route.supplierReserveCnyMicros)throw new GatewayError('supplier_reserve_below_quote');
   const requestRateVersion=selection?.rateVersion??rateVersion;
-  return {providerBudgetId:route.providerBudgetId,model,rateVersion:requestRateVersion,reservedUsdMicros:Math.max(1,pricing.charge({model,promptTokens:route.maxInputTokens,completionTokens:maxTokens,requestRateVersion}).costUsdMicros),reservedCnyMicros:route.supplierReserveCnyMicros};
+  return {providerBudgetId:route.providerBudgetId,model,rateVersion:requestRateVersion,reservedUsdMicros:Math.max(1,supplierCostReserve(route.supplierReserveCnyMicros),pricing.charge({model,promptTokens:route.maxInputTokens,completionTokens:maxTokens,requestRateVersion}).costUsdMicros),reservedCnyMicros:route.supplierReserveCnyMicros};
  }});
  return createGatewayHttp({ingress,discovery,nativeUsageSync});
 }

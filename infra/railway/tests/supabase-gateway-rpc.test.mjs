@@ -29,7 +29,7 @@ function fixture(options = {}) {
     calls.push({ url, init, body: init.body ? JSON.parse(init.body) : undefined });
     if (url === SUPABASE_ORIGIN + '/auth/v1/user') return handlers.user?.(url, init) ?? json({ id: USER, email: 'synthetic@example.invalid', email_confirmed_at: STAMP, is_anonymous: false });
     if (url.startsWith(SUPABASE_ORIGIN + '/rest/v1/customer_profiles?')) return handlers.profile?.(url, init) ?? json([{ user_id: USER, onboarding_completed_at: STAMP }]);
-    const operation = Object.keys(RPC_NAMES).find(name => url === SUPABASE_ORIGIN + '/rest/v1/rpc/' + RPC_NAMES[name]);
+    const operation = url===SUPABASE_ORIGIN+'/rest/v1/rpc/apiwild_gateway_finish_retail'&&options.config?.retailSettlement?'finish':Object.keys(RPC_NAMES).find(name => url === SUPABASE_ORIGIN + '/rest/v1/rpc/' + RPC_NAMES[name]);
     assert.ok(operation, 'only fixed RPC URLs can be requested');
     if (handlers[operation]) return handlers[operation](url, init, calls.at(-1).body);
     if (operation === 'reserve') return json({ fresh: true, record: row() });
@@ -49,6 +49,16 @@ function fixture(options = {}) {
   } };
 }
 const rejectsCode = async (promise, code) => assert.rejects(promise, e => e instanceof GatewayError && e.code === code && !e.stack.includes(SECRET));
+
+test('cost-five retail finish sends pending zero debit and accepts the exact database response',async()=>{
+ const policy={billingPolicy:'supplier-cost-5x-v1'};
+ const f=fixture({config:{retailSettlement:true},handlers:{reserve:()=>json({fresh:true,record:row({usage_json:policy})}),claim:()=>json({claimed:true,record:row({state:'executing',version:1,usage_json:policy})})}});
+ const {owner,record}=await f.reserved();const executing=(await f.rpc.claim(owner,record)).record;
+ const done=await f.rpc.finish(owner,executing,receipt({costCnyMicros:0}));
+ assert.equal(done.settled,true);assert.equal(done.record.cost_usd_micros,0);
+ assert.deepEqual(done.record.usage_json,{tokens:3,billingPolicy:'supplier-cost-5x-v1',customerChargePending:true,supplierReconciliationPending:true,extraFeeUsdMicros:0});
+ assert.equal(f.calls.at(-1).body.p_cost_usd_micros,0);
+});
 
 test('canonical origin, explicit credentials, fixed mode and bounded configuration', () => {
   for (const origin of ['https://bheheypylmibuicqtywx.supabase.co', SUPABASE_ORIGIN + '/', SUPABASE_ORIGIN + ':443', SUPABASE_ORIGIN.replace('https://', 'http://'), 'https://user:pass@yautmilnpllojugpmfgy.supabase.co']) {

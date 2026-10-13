@@ -199,7 +199,7 @@ export function createGatewayRpc(config) {
       exactInteger(raw.reserved_usd_micros, 1, USD_MAX); exactInteger(raw.reserved_cny_micros, 1, CNY_RESERVE_MAX);
       exactInteger(raw.cost_usd_micros, 0, raw.reserved_usd_micros); exactInteger(raw.cost_cny_micros, 0, raw.reserved_cny_micros);
       exactInteger(raw.observed_cny_micros, 0, USD_MAX);
-      if (typeof raw.pricing_bound_exceeded !== 'boolean' || (raw.state === 'failed' && raw.cost_usd_micros !== 0)) throw new GatewayError('gateway_invalid_response');
+      if (typeof raw.pricing_bound_exceeded !== 'boolean' || (raw.state === 'failed' && raw.cost_usd_micros !== 0 && !(raw.usage_json?.billingPolicy==='supplier-cost-5x-v1'&&raw.usage_json?.customerChargePending===false&&Number.isSafeInteger(raw.usage_json?.supplierUsdMicros)&&raw.usage_json.supplierUsdMicros*5===raw.cost_usd_micros))) throw new GatewayError('gateway_invalid_response');
       if ((raw.pricing_bound_exceeded && raw.state !== 'uncertain')
           || (!['succeeded', 'failed'].includes(raw.state) && (raw.cost_usd_micros !== 0 || raw.cost_cny_micros !== 0))
           || (['succeeded', 'failed'].includes(raw.state) && (raw.pricing_bound_exceeded || raw.observed_cny_micros !== raw.cost_cny_micros
@@ -343,10 +343,12 @@ export function createGatewayRpc(config) {
       if (raw.state === 'failed' && raw.costUsdMicros !== 0) throw new GatewayError('gateway_invalid_input', 400);
       text(raw.settlementReference, 500);
       const result = cloneJsonObject(raw.result, 1048576); const usage = cloneJsonObject(raw.usage, 65536);
+      const costPending=config.retailSettlement&&record.usage_json?.billingPolicy==='supplier-cost-5x-v1';
+      if(costPending)Object.assign(usage,{billingPolicy:'supplier-cost-5x-v1',customerChargePending:true,supplierReconciliationPending:true,extraFeeUsdMicros:0});
       rejectPrivate({ result, usage, reference: raw.settlementReference });
       // Send real observed over-bound costs to the SQL freeze path; never clamp native liability.
       return rpc('finish', context, { p_id: record.id, p_expected_version: record.version, p_state: raw.state,
-        p_cost_usd_micros: raw.costUsdMicros, p_cost_cny_micros: raw.costCnyMicros, p_settlement_reference: raw.settlementReference,
+        p_cost_usd_micros: costPending?0:raw.costUsdMicros, p_cost_cny_micros: raw.costCnyMicros, p_settlement_reference: raw.settlementReference,
         p_result: result, p_usage: usage }, record);
     },
     uncertain(context, record) { reference(context, record); return rpc('uncertain', context, { p_id: record.id, p_expected_version: record.version }, record); },
