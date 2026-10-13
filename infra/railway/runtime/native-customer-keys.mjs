@@ -1,5 +1,6 @@
 import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import {GatewayError,SUPABASE_ORIGIN,exactInteger} from './supabase-gateway-rpc.mjs';
+import {createSupplierConversionGuard} from './subrouter-supplier-conversion.mjs';
 const ORIGIN='https://subrouter.ai';
 const unavailable=()=>new GatewayError('native_key_unavailable',503,true);
 export async function boundedNativeJson(response,max=2000000){
@@ -26,8 +27,9 @@ export function nativeReceipt(row,key){
  return {id:row.id,account:row.user_id,token:row.token_id,created:row.created_at,model:row.model_name,provider:other.provider_slug,prompt:row.prompt_tokens,completion:row.completion_tokens,quota:row.quota};
 }
 export function nativeRetailMicros(fact,rates){const r=rates[fact.model];if(!r)throw unavailable();return Number((BigInt(fact.prompt)*BigInt(r.input)+BigInt(fact.completion)*BigInt(r.output)+999999n)/1000000n);}
-export function nativeAllowance(available,rates){
+export function nativeAllowance(available,rates,costBased=false){
  exactInteger(available,0,1000000000000);const reserve=Math.min(available,1000000);
+ if(costBased){const quota=Math.floor(reserve/10);return {quota,reserveUsdMicros:quota*10,reserveCnyMicros:Math.ceil(quota*68/5)};}
  // Small supplier allowance, with headroom for discounted/cache usage. Actual
  // retail usage still reconciles hourly; this is not a real-time retail cutoff.
  const ratio=Math.max(...Object.values(rates).flatMap(r=>[r.input/1e6/(r.supplierInput/6.8),r.output/1e6/(r.supplierOutput/6.8)]));
@@ -40,11 +42,13 @@ export function createNativeCustomerKeys({env,catalog,verifyOwner,legacyKeys,fet
  if(!Number.isFinite(expiry)||env.APIWILD_BILLING_MODE!=='live')throw unavailable();
  const routes=JSON.parse(env.APIWILD_GATEWAY_ROUTES_JSON),budgets=[...new Set(routes.map(r=>r.providerBudgetId))];if(budgets.length!==1)throw unavailable();
  const rates=nativeRateSnapshot(catalog,routes),native=createNativeTokenClient({accessToken:env.SUBROUTER_ACCOUNT_ACCESS_TOKEN,accountId,fetchImpl});
+ const conversion=createSupplierConversionGuard({conversion:JSON.parse(env.APIWILD_SUPPLIER_CONVERSION_JSON),fetchImpl,clock});
+ if(conversion.conversion.price!=='6.8')throw unavailable();
  async function rpc(name,args){try{return await boundedNativeJson(await fetchImpl(SUPABASE_ORIGIN+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:env.SUPABASE_SECRET_KEY,'Content-Type':'application/json'},body:JSON.stringify(args),redirect:'error',signal:AbortSignal.timeout(20000)}));}catch{throw unavailable();}}
  async function owner(authorization){const c=await verifyOwner({authorization});if(c.billingMode!=='live')throw unavailable();return 'live:supabase:'+c.customerId;}
  const tokenFields=(name,expires)=>({name,status:1,remain_quota:0,unlimited_quota:false,expired_time:Math.floor(expires/1000),model_limits_enabled:true,model_limits:Object.keys(rates).join(','),group:'subrouter',cross_group_retry:false,include_official_channels:false,include_shared_subscriptions:false,include_provider_self:true,include_cache_hit_rate:false,subrouter_providers:[...new Set(Object.values(rates).map(r=>r.provider))].join(','),subrouter_model_providers:JSON.stringify(Object.fromEntries(Object.entries(rates).map(([m,r])=>[m,[r.provider]])))});
  function verifyToken(t,row){if(t.name!==row.token_name||t.unlimited_quota!==false||t.model_limits_enabled!==true||t.group!=='subrouter'||t.include_official_channels!==false||t.include_shared_subscriptions!==false||t.cross_group_retry!==false)throw unavailable();const models=t.model_limits.split(',').sort(),expected=Object.keys(row.rates).sort();if(JSON.stringify(models)!==JSON.stringify(expected))throw unavailable();const map=JSON.parse(t.subrouter_model_providers);for(const m of expected)if(JSON.stringify(map[m])!==JSON.stringify([row.rates[m].provider]))throw unavailable();}
- const manager={rpc,native,rates,expiry,accountId,verifyToken,
+ const manager={rpc,native,rates,expiry,accountId,verifyToken,assertConversion:()=>conversion.assertConversion(),async billingPolicy(){return rpc('apiwild_customer_billing_policy',{});},
  async list({authorization}){const own=await owner(authorization),rows=await rpc('apiwild_native_key_rows',{p_owner:own}),keys=await legacyKeys.list({authorization});return keys.map(k=>{const n=rows.find(r=>r.key_id===k.id);return n?{...k,issuer:'subrouter',baseUrl:ORIGIN+'/v1',lastSyncedAt:n.last_synced_at,provisioningPending:n.token_id===null}:k;});},
  async issue(raw){const own=await owner(raw.authorization);for(const v of [raw.dailyLimitUsdMicros,raw.totalLimitUsdMicros])if(v!==null)exactInteger(v,0,1000000000000);if(raw.dailyLimitUsdMicros!==null&&raw.totalLimitUsdMicros!==null&&raw.dailyLimitUsdMicros>raw.totalLimitUsdMicros)throw new GatewayError('native_invalid_limits',400);
  const end=raw.expiresAt===null?expiry:Math.min(Date.parse(raw.expiresAt),expiry);if(!Number.isFinite(end)||end<=clock())throw new GatewayError('native_invalid_expiry',400);

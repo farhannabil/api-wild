@@ -199,7 +199,7 @@ export function createGatewayRpc(config) {
       exactInteger(raw.reserved_usd_micros, 1, USD_MAX); exactInteger(raw.reserved_cny_micros, 1, CNY_RESERVE_MAX);
       exactInteger(raw.cost_usd_micros, 0, raw.reserved_usd_micros); exactInteger(raw.cost_cny_micros, 0, raw.reserved_cny_micros);
       exactInteger(raw.observed_cny_micros, 0, USD_MAX);
-      if (typeof raw.pricing_bound_exceeded !== 'boolean' || (raw.state === 'failed' && raw.cost_usd_micros !== 0)) throw new GatewayError('gateway_invalid_response');
+      if (typeof raw.pricing_bound_exceeded !== 'boolean' || (raw.state === 'failed' && raw.cost_usd_micros !== 0 && !(raw.usage_json?.billingPolicy==='supplier-cost-5x-v1'&&raw.usage_json?.customerChargePending===false&&Number.isSafeInteger(raw.usage_json?.supplierUsdMicros)&&raw.usage_json.supplierUsdMicros*5===raw.cost_usd_micros))) throw new GatewayError('gateway_invalid_response');
       if ((raw.pricing_bound_exceeded && raw.state !== 'uncertain')
           || (!['succeeded', 'failed'].includes(raw.state) && (raw.cost_usd_micros !== 0 || raw.cost_cny_micros !== 0))
           || (['succeeded', 'failed'].includes(raw.state) && (raw.pricing_bound_exceeded || raw.observed_cny_micros !== raw.cost_cny_micros
