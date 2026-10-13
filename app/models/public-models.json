@@ -866,7 +866,7 @@
         "matched_dated_alias": false,
         "time_tier_applicability": "unspecified"
       },
-      "billing_note": "Input billing uses the upstream model’s reported prompt tokens, including cached and added context."
+      "billing_note": "Reported input usage can include cached tokens and provider-added context. Actual credits use supplier USD cost ×5."
     },
     {
       "model_name": "gpt-6-sol",
@@ -911,7 +911,7 @@
         "matched_dated_alias": false,
         "time_tier_applicability": "unspecified"
       },
-      "billing_note": "Input billing uses the upstream model’s reported prompt tokens, including cached and added context."
+      "billing_note": "Reported input usage can include cached tokens and provider-added context. Actual credits use supplier USD cost ×5."
     },
     {
       "model_name": "grok-4.5",

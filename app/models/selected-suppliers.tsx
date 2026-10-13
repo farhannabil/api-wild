@@ -17,7 +17,7 @@ function modelLabel(id:string){
 }
 function PriceComparison({label,input,output,officialInput,officialOutput,referenceLabel='Official API'}:{label:string;input:number;output:number;officialInput:number;officialOutput:number;referenceLabel?:string}){
  const total=input+output,official=officialInput+officialOutput,savings=(1-total/official)*100;
- return <div className="selected-price-tier"><strong>{label}{money(input)} input · {money(output)} output</strong><p><b>{money(total)}</b> for 1M input + 1M output<br/>{referenceLabel}: {money(officialInput)} input · {money(officialOutput)} output — {money(official)} combined<br/><span>{savings.toFixed(1)}% customer savings ({money(official-total)} difference)</span></p></div>;
+ return <div className="selected-price-tier"><strong>{label}{money(input)} input · {money(output)} output</strong><p><b>{money(total)}</b> for 1M input + 1M output<br/>{referenceLabel}: {money(officialInput)} input · {money(officialOutput)} output — {money(official)} combined<br/><span>{savings.toFixed(1)}% reference-price difference ({money(official-total)} difference)</span></p></div>;
 }
 function RetailPrice({model}:{model:Model}){
  const price=model.apiwild_selling_price;

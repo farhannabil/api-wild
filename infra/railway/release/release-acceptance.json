@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "accepted",
   "version": "apiwild-launch-20261005",
-  "issuedAt": "2026-10-05T21:38:04.198Z",
+  "issuedAt": "2026-10-13T00:38:08.175Z",
   "validUntil": "2026-11-04T10:25:19Z",
   "acceptedModels": [
     "MiniMax-M2.7-highspeed",
@@ -17,16 +17,22 @@
     "claude-opus-5-5",
     "claude-sonnet-4-6",
     "claude-sonnet-5",
+    "claude-sonnet-5-5",
+    "deepseek-v4.1-flash",
     "gemini-3.1-flash-lite",
     "gemini-3.1-pro-preview",
+    "gemini-3.8-flash",
+    "glm-5.3",
+    "gpt-6-astra",
+    "gpt-6-sol",
     "grok-4.5",
     "grok-4.7"
   ],
   "conversionSha256": "1ab01f38aa6f6948ff53ef3fdcfbf5063f30acc09fbfcd982f816dc7843a4f3f",
   "checkpoints": {
-    "customer-session-acceptance": "605383fd00e85e59ec4ccf1a8d8871aa05ca838fc0649600f0e2e8762551de58",
-    "payment-lifecycle-acceptance": "9bd22646c787365e5b688b25e5ded3814cbdd78f68e0116b92379f49395b9f41",
-    "supplier-budget-acceptance": "71f543662bf5bd6428476b7f93dbba84a69bb043aa2f0c9a8b44e72446fa11e4",
-    "supplier-debit-acceptance": "5dcc64e44862b6c77b541e7701607f3e55af7ce5c88dd743d3d5a4dfaf032187"
+    "customer-session-acceptance": "82ff515fdc9aaf94089dd9d114d2ac375b8617a4a847c16c7584077eaca4b559",
+    "payment-lifecycle-acceptance": "8e74c5d581f1c42dbe91e0f2a7760056827da94a12ac8f19f7d420923ea2d081",
+    "supplier-budget-acceptance": "c2a1cd105c10d428522dbeed7abdd0d013538b2aaaa945401201ff7a9485a7ed",
+    "supplier-debit-acceptance": "bd5bc4b1102422622e234850f2cea76c285ec28c6572d1dacbd1911493fa8cd1"
   }
 }

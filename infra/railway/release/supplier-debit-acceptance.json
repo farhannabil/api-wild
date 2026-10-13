@@ -3,7 +3,7 @@
   "gate": "supplier-debit-acceptance",
   "status": "passed",
   "ownerApproved": true,
-  "observedAt": "2026-10-05T21:38:04.198Z",
+  "observedAt": "2026-10-13T00:38:08.175Z",
   "scope": "genuine-customer-sandbox-request",
   "checks": {
     "customerRequestMatched": true,
@@ -21,6 +21,10 @@
     "c110bf8032f5fb2be0f1c8ed20af47f02b8193ee5f02ae92a092b8d306310ffd",
     "57b0300f5de0c176eb352969e32d4980834b6778d68733d4218547f95951b6e6",
     "6846ab41039421047b27bc1fe3707f2ff4e11e7dab2022af84ffeb949bcfdd2a",
-    "a4da56e1efa66b47989c6f77488871fe8c8d0aa7d20f98e21594e441fdac72a4"
+    "a4da56e1efa66b47989c6f77488871fe8c8d0aa7d20f98e21594e441fdac72a4",
+    "8ed71a26e79a9c1ecc49a940279db113603013c5946da68720e4d35d2c721921",
+    "323122b455886100cfba893f0a272ca4055ae19a95914048c5f7397cac35abfd",
+    "e3c1ab1de3b70559151eb33c96d017b74bff242ec11e095a0ef04792576310e0",
+    "efa72c6800b1276e4506949457eb83aa55a069313d26a41a854eb9455dd20209"
   ]
 }
