@@ -14,6 +14,15 @@ function fixture(patch={}){
  const ingress=createGatewayIngress({rpc,keys:keyClient,service,selectQuote:async()=>({providerBudgetId:BUDGET,model:'fixture-model',rateVersion:'v1',reservedUsdMicros:100,reservedCnyMicros:10}),origin:'https://apiwild.com',enabled:true,...patch});return {ingress,calls};
 }
 const request=(path='/v1/chat/completions',body={model:'fixture-model',messages:[{role:'user',content:'fixture'}]},patch={})=>new Request('https://apiwild.com'+path,{method:'POST',headers:{authorization:'Bearer '+TOKEN,'content-type':'application/json','idempotency-key':'fixture_request_01'},body:JSON.stringify(body),...patch});
+
+test('dashboard details bind to verified session owner and reject identity overrides',async()=>{
+ const owner={customerId:USER,billingMode:'test'};let reads=0;
+ const f=fixture({rpc:{verifyOwner:async({authorization})=>{assert.equal(authorization,SESSION);return owner;},verifyKeyOwner:async()=>{throw Error('not allowed');},usageDashboard:async context=>{assert.equal(context,owner);reads++;return {days:[]};}}});
+ const get=(path,authorization=SESSION)=>new Request('https://apiwild.com'+path,{headers:{authorization}});
+ assert.equal((await f.ingress.handle(get('/api/usage/details'))).status,200);assert.equal(reads,1);
+ assert.equal((await f.ingress.handle(get('/api/usage/details?owner=another'))).status,403);
+ assert.equal((await f.ingress.handle(get('/api/usage/details','Bearer '+TOKEN))).status,401);assert.equal(reads,1);
+});
 test('API request uses verified key identity and server quote; exact envelope fingerprint binds reservation',async()=>{const f=fixture();const r=await f.ingress.handle(request());assert.equal(r.status,200);const data=await r.json();assert.equal(data.object,'chat.completion');assert.equal(data.usage.total_tokens,5);assert.equal(r.headers.get('cache-control'),'private, no-store');const [context,quote,payload]=f.calls[0];assert.equal(context.keyId,KEY);assert.equal(quote.keyId,KEY);assert.equal(quote.payloadHash,gatewayPayloadFingerprint(payload));assert.equal(quote.reservedUsdMicros,100);});
 test('native request accepts verified session and never fabricates key association',async()=>{const f=fixture();const r=await f.ingress.handle(request('/api/gateway',undefined,{headers:{authorization:SESSION,'content-type':'application/json','idempotency-key':'fixture_request_01'}}));assert.equal(r.status,200);assert.equal(f.calls[0][1].keyId,null);});
 test('unconfigured enable gate does not authenticate, select or dispatch',async()=>{const f=fixture({enabled:false});assert.equal((await f.ingress.handle(request())).status,503);assert.equal(f.calls.length,0);});

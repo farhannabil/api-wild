@@ -97,7 +97,7 @@ export function createSubrouterDispatch(config) {
       const result = { providerResponseId: value.id, ...(providerRequestId ? {providerRequestId} : {}), model: value.model, ...assistant,
         created: exactInteger(value.created ?? Math.floor(Date.now() / 1000)),
         finishReason: ['stop', 'length', 'content_filter', 'tool_calls'].includes(finish) ? finish : null,
-        usage: { prompt_tokens: input, completion_tokens: output }, settlementVerified: false };
+        usage: { prompt_tokens: input, completion_tokens: output,...gatewayTokenDetails(value.usage) }, settlementVerified: false };
       if (secrets.some(secret => JSON.stringify(result).includes(secret))) fail('subrouter_private_response_rejected', true);
       return Object.freeze(result);
     } catch (error) {
@@ -106,3 +106,4 @@ export function createSubrouterDispatch(config) {
     }
   };
 }
+import {gatewayTokenDetails} from './usage-analytics.mjs';

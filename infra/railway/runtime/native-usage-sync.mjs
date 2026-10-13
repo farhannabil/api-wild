@@ -1,5 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {nativeReceipt,nativeAllowance} from './native-customer-keys.mjs';
+import {nativeTokenDetails} from './usage-analytics.mjs';
 export function createNativeUsageSync({manager,clock=Date.now,write=()=>{},setTimer=setTimeout,clearTimer=clearTimeout}){
  if(!manager)return {start(){},async stop(){},async runPass(){return {disabled:true};}};
  let stopped=false,timer,pending;
@@ -19,8 +20,10 @@ export function createNativeUsageSync({manager,clock=Date.now,write=()=>{},setTi
    for(let page=0;page<100;page++){
     const data=await manager.native.call('/api/log/self?type=2&start_timestamp='+start+'&end_timestamp='+end+'&cursor='+encodeURIComponent(cursor)+'&page_size=100');
     if(!Array.isArray(data.items)||data.items.length>100||typeof data.has_more!=='boolean')throw Error('native_log_invalid');
-    const facts=data.items.filter(r=>r.token_id===key.token_id).map(r=>nativeReceipt(r,key));
-    if(facts.length){const result=await manager.rpc('apiwild_native_import',{p_key:key.key_id,p_run:run,p_rows:facts});imported+=result.imported;}
+    const rows=data.items.filter(r=>r.token_id===key.token_id),facts=rows.map(r=>nativeReceipt(r,key));
+    if(facts.length){const result=await manager.rpc('apiwild_native_import',{p_key:key.key_id,p_run:run,p_rows:facts});imported+=result.imported;
+     try{await manager.rpc('apiwild_native_usage_details',{p_key:key.key_id,p_run:run,p_rows:rows.map((row,i)=>nativeTokenDetails(row,facts[i]))});}catch{write({analyticsUnavailable:true});}
+    }
     if(!data.has_more){complete=true;break;}if(typeof data.next_cursor!=='string'||!data.next_cursor||data.next_cursor===cursor)throw Error('native_log_cursor_invalid');cursor=data.next_cursor;
    }
    if(!complete)throw Error('native_log_scan_incomplete');
