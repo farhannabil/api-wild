@@ -103,3 +103,4 @@
 **/*.db
 **/node_modules
 **/.git
+!infra/railway/runtime/usage-analytics.mjs
