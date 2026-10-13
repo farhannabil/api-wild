@@ -392,7 +392,7 @@
   },
   "claude-sonnet-5-5": {
     "reference_model": "Anthropic: Claude Sonnet 5.5",
-    "description": "Claude Sonnet 5.5 has a published 1,000,000-token context window. Its reference listing supports text, image, file input and text output. Published API options include tool calling, structured output, reasoning controls.",
+    "description": "Anthropic’s balanced model for coding, analysis and everyday agent workflows.",
     "context_tokens": 1000000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -418,7 +418,7 @@
       "verbosity"
     ],
     "source": "https://openrouter.ai/anthropic/claude-sonnet-5.5",
-    "checked_date": "2026-10-05",
+    "checked_date": "2026-10-12",
     "dated_alias": false
   },
   "deepseek-v4-flash": {
@@ -637,7 +637,7 @@
   },
   "gemini-3.8-flash": {
     "reference_model": "Google: Gemini 3.8 Flash",
-    "description": "Gemini 3.8 Flash has a published 1,048,576-token context window. Its reference listing supports text, image, video, file, audio input and text output. Published API options include tool calling, structured output, reasoning controls.",
+    "description": "Google’s Flash model for software engineering, agents and multimodal reasoning. API WILD’s selected route currently supports text.",
     "context_tokens": 1048576,
     "max_output_tokens": 65536,
     "input_modalities": [
@@ -665,7 +665,7 @@
       "top_p"
     ],
     "source": "https://openrouter.ai/google/gemini-3.8-flash",
-    "checked_date": "2026-10-05",
+    "checked_date": "2026-10-12",
     "dated_alias": false
   },
   "glm-5.1": {
@@ -744,7 +744,7 @@
   },
   "glm-5.3": {
     "reference_model": "Z.ai: GLM 5.3",
-    "description": "GLM 5.3 has a published 1,048,576-token context window. Its reference listing supports text input and text output. Published API options include tool calling, structured output, reasoning controls.",
+    "description": "Z.ai’s coding-focused model for complex software engineering and long-horizon agent tasks.",
     "context_tokens": 1048576,
     "max_output_tokens": 131072,
     "input_modalities": [
@@ -777,7 +777,7 @@
       "top_p"
     ],
     "source": "https://openrouter.ai/z-ai/glm-5.3",
-    "checked_date": "2026-10-05",
+    "checked_date": "2026-10-12",
     "dated_alias": false
   },
   "glm-5.3-flash": {
@@ -1001,7 +1001,7 @@
   },
   "gpt-6-astra": {
     "reference_model": "OpenAI: GPT-6 Astra",
-    "description": "GPT-6 Astra has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
+    "description": "OpenAI’s flagship reasoning model for demanding analysis, coding and complex agent workflows.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -1026,7 +1026,7 @@
       "verbosity"
     ],
     "source": "https://openrouter.ai/openai/gpt-6-astra",
-    "checked_date": "2026-10-05",
+    "checked_date": "2026-10-12",
     "dated_alias": false
   },
   "gpt-6-luna": {
@@ -1061,7 +1061,7 @@
   },
   "gpt-6-sol": {
     "reference_model": "OpenAI: GPT-6 Sol",
-    "description": "GPT-6 Sol has a published 1,050,000-token context window. Its reference listing supports file, image, text input and text output. Published API options include tool calling, structured output, reasoning controls.",
+    "description": "OpenAI’s model for software engineering and agent workflows, with text and image input capabilities in the official API.",
     "context_tokens": 1050000,
     "max_output_tokens": 128000,
     "input_modalities": [
@@ -1086,7 +1086,7 @@
       "verbosity"
     ],
     "source": "https://openrouter.ai/openai/gpt-6-sol",
-    "checked_date": "2026-10-05",
+    "checked_date": "2026-10-12",
     "dated_alias": false
   },
   "gpt-6.1-sol": {
@@ -1216,5 +1216,23 @@
     "source": "https://openrouter.ai/x-ai/grok-4.7",
     "checked_date": "2026-10-05",
     "dated_alias": false
+  },
+  "deepseek-v4.1-flash": {
+    "reference_model": "deepseek-v4.1-flash",
+    "context_tokens": 1000000,
+    "max_output_tokens": 384000,
+    "input_modalities": [
+      "text"
+    ],
+    "output_modalities": [
+      "text"
+    ],
+    "parameters": [
+      "max_tokens"
+    ],
+    "source": "https://api-docs.deepseek.com/news/news260910/",
+    "dated_alias": false,
+    "description": "DeepSeek’s efficient reasoning model with peak and off-peak token pricing. API WILD’s selected route supports text responses.",
+    "checked_date": "2026-10-12"
   }
 }

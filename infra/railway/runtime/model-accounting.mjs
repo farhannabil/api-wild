@@ -17,7 +17,7 @@ function tokenCost(input,output,prompt,completion){
 export function createModelAccounting({catalog,rateVersion,tierPolicy,conditionalSupplierRates={}}){
  if(!catalog||!Array.isArray(catalog.models)||typeof rateVersion!=='string'||!rateVersion||rateVersion.length>160)fail();
  if(tierPolicy!==undefined&&(!isDeepSeekTierPolicy(tierPolicy)||tierPolicy.baseRateVersion!==rateVersion))fail();
- strictObject(conditionalSupplierRates,['deepseek-v4-flash','deepseek-v4-pro']);
+ strictObject(conditionalSupplierRates,['deepseek-v4-flash','deepseek-v4-pro','deepseek-v4.1-flash']);
  for(const value of Object.values(conditionalSupplierRates))strictObject(value,['primary','backup']);
  // Pin FX to this quote snapshot. It is an estimate, not a settlement exchange rate.
  const fxScale=10n**18n,fx=decimal(catalog.fx?.CNY_USD,18);if(fx===0n)fail();

@@ -1,8 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {createModelAccounting} from '../runtime/model-accounting.mjs';
 const catalog=JSON.parse(await readFile(new URL('../../../data/selected-supplier-models.json',import.meta.url),'utf8'));
 const make=()=>createModelAccounting({catalog,rateVersion:'fixture-v1'});
-test('all 39 models have independent retail and private supplier calculations',()=>{
- const p=make();assert.equal(p.models.length,39);
+test('all 40 retained models have independent retail and private supplier calculations',()=>{
+ const p=make();assert.equal(p.models.length,40);
  for(const m of catalog.models){for(const tier of [m.apiwild_selling_price.processing,...(m.apiwild_selling_price.peak?['peak']:[])]){
   const q=p.quote({model:m.model_name,promptTokens:1000000,completionTokens:1000000,tier});
   const r=tier==='peak'?m.apiwild_selling_price.peak:m.apiwild_selling_price;

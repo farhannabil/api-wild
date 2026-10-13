@@ -22,15 +22,17 @@ export function createRetailTokenPricing({models,rateVersion,tierPolicy}){
   // Conditional models require explicit trusted policy; browser tier input and
   // a catalogue flag alone cannot activate them. Cache/batch remain unsupported.
   if(p.input_cache!=='uncached')continue;
-  if(p.processing==='standard')rates.set(entry.model_name,{input:rate(p.input),output:rate(p.output)});
+  const version=p.rate_version??rateVersion;if(typeof version!=='string'||!version.length||version.length>160)fail();
+  if(p.processing==='standard')rates.set(entry.model_name,{input:rate(p.input),output:rate(p.output),version});
   else if(p.processing==='off_peak'&&tierPolicy?.models.includes(entry.model_name)&&p.peak){
    rates.set(entry.model_name,{conditional:true,off_peak:{input:rate(p.input),output:rate(p.output)},peak:{input:rate(p.peak.input),output:rate(p.peak.output)}});
   }
  }
- return Object.freeze({rateVersion,models:Object.freeze([...rates.keys()]),charge({model,promptTokens,completionTokens,requestRateVersion=rateVersion}){
+ return Object.freeze({rateVersion,models:Object.freeze([...rates.keys()]),versionFor(model){const p=rates.get(model);if(!p)fail();return p.version??rateVersion;},charge({model,promptTokens,completionTokens,requestRateVersion}){
   const p=rates.get(model);if(!p)fail();
+  requestRateVersion??=p.version??rateVersion;
   const selected=p.conditional?p[tierPolicy.tierFromVersion(model,requestRateVersion)]:p;
-  if(!p.conditional&&requestRateVersion!==rateVersion)fail();
+  if(!p.conditional&&requestRateVersion!==p.version)fail();
   return Object.freeze({rateVersion:requestRateVersion,costUsdMicros:cost(selected.input,selected.output,promptTokens,completionTokens)});
  }});
 }

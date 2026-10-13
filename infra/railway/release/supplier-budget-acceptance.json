@@ -3,7 +3,7 @@
   "gate": "supplier-budget-acceptance",
   "status": "passed",
   "ownerApproved": true,
-  "observedAt": "2026-10-05T21:38:04.198Z",
+  "observedAt": "2026-10-13T00:38:08.175Z",
   "scope": "production-configuration",
   "checks": {
     "restrictedProductKey": true,
@@ -25,6 +25,8 @@
     "a4da56e1efa66b47989c6f77488871fe8c8d0aa7d20f98e21594e441fdac72a4",
     "379afad5d3cbffe32f88f960fee4f052d0eff9b9ae6b4b3a2c191cdcda986176",
     "d4b88131c66030e939a76b9f47a2d0fb723959e3330942504d239669f12eef92",
-    "6de6d011d1b03049048b389098e545a4b91edfaa797637781487e503cbac369a"
+    "6de6d011d1b03049048b389098e545a4b91edfaa797637781487e503cbac369a",
+    "50dd8c4094e4644b32749583130cc2f5b48857a2b7b4ec58618f9359a8ccb8d4",
+    "efa72c6800b1276e4506949457eb83aa55a069313d26a41a854eb9455dd20209"
   ]
 }

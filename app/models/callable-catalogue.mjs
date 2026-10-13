@@ -52,3 +52,14 @@ export function callableCustomerModels(data, approved) {
   }
   return approved.filter(row => active.has(row.model_name));
 }
+
+/** List approved prices while keeping live callability explicit.
+ * @template {{model_name:string}} T
+ * @param {unknown} data
+ * @param {readonly T[]} approved
+ * @returns {(T & {available:boolean})[]}
+ */
+export function listedCustomerModels(data,approved){
+ const active=new Set(callableCustomerModels(data,approved).map(m=>m.model_name));
+ return approved.map(m=>({...m,available:active.has(m.model_name)}));
+}

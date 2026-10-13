@@ -15,7 +15,7 @@ export function createSubrouterReceiptReader({enabled=false,accessToken,accountU
  const trusted=new Map();
  for(const [key,value]of Object.entries(bindings)){
   if(!UUID.test(key))throw fail();strictObject(value,['tokenId','modelProviders']);exactInteger(value.tokenId,1,Number.MAX_SAFE_INTEGER);
-  const models=value.modelProviders;if(!models||typeof models!=='object'||Array.isArray(models)||!Object.keys(models).length||Object.keys(models).length>39)throw fail();
+  const models=value.modelProviders;if(!models||typeof models!=='object'||Array.isArray(models)||!Object.keys(models).length||Object.keys(models).length>40)throw fail();
   for(const [model,provider]of Object.entries(models))if(!/^[A-Za-z0-9][A-Za-z0-9._/-]{0,159}$/.test(model)||typeof provider!=='string'||!/^[a-z0-9][a-z0-9_-]{0,99}$/.test(provider))throw fail();
   trusted.set(key,{tokenId:value.tokenId,modelProviders:Object.freeze({...models})});
  }
