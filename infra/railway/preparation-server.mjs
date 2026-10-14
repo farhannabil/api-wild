@@ -159,8 +159,14 @@ export function createPreparationServer({backendPort, origin = 'https://apiwild.
       void aaroUsageIngress.handle(request, response); return;
     }
     if (aaroBilling && aaroBilling.matches(request.url)) {void aaroBilling.handle(request,response);return;}
+    // Native sk- keys are the white-label customer lane and must reach the relay,
+    // not the aw_live gateway (which would reject them as unverifiable). Route chat
+    // by credential type before the generic gateway path.
+    if (nativeAuthHttp && request.url === '/v1/chat/completions' && /^Bearer sk-[A-Za-z0-9_-]{16,256}$/.test(request.headers.authorization||'')) {
+      void nativeAuthHttp.handle(request, response); return;
+    }
     if(gatewayHttp&&isGatewayPath(request.url)){void gatewayHttp.handle(request,response);return;}
-    if (nativeAuthHttp && (request.url?.startsWith('/api/native/auth/')||request.url?.startsWith('/api/native/customer/')||request.url==='/v1/chat/completions')) {
+    if (nativeAuthHttp && (request.url?.startsWith('/api/native/auth/')||request.url?.startsWith('/api/native/customer/'))) {
       void nativeAuthHttp.handle(request, response); return;
     }
     const result = preparationResponse(request);
