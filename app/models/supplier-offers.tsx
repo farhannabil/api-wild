@@ -3,7 +3,7 @@ import {supplierQuote,type SupplierOffer} from '@/lib/catalog-display';
 export default function SupplierOffers({offers}:{offers:SupplierOffer[]}){
  return <>
   <h3>Advertised supplier quotes</h3>
-  <p className="muted">These are SubRouter supplier quotes, not approved API WILD selling prices. CNY and USD are not converted. No supplier is selected automatically by this directory.</p>
+  <p className="muted">These are supplier quotes, not approved API WILD selling prices. CNY and USD are not converted. No supplier is selected automatically by this directory.</p>
   {!offers.length&&<p>No public supplier offer was found. A pricing-index name alone does not establish cost or customer access.</p>}
   <div className="model-price-lines">{offers.map(offer=><section key={offer.id}>
    <h4>{offer.providerName} · offer {offer.id}</h4>
@@ -26,7 +26,6 @@ export default function SupplierOffers({offers}:{offers:SupplierOffer[]}){
     <p>Cache authority: {offer.cachePricingAuthoritative?'platform-authoritative':'not established'}. Effective cache quotes are platform reports, not reconciled debits.</p>
     <pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{JSON.stringify(offer.platformEvidence,null,2)}</pre>
    </details>
-   <a href={`https://subrouter.ai/models/${offer.id}`} target="_blank" rel="noreferrer">Public supplier offer ↗</a>
   </section>)}</div>
  </>;
 }

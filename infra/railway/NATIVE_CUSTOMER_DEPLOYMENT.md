@@ -11,7 +11,7 @@ NATIVE_AUTH_ENABLED=true
 NATIVE_CUSTOMER_ENABLED=true
 NATIVE_KEY_WRITES_ENABLED=false
 NATIVE_CHECKOUT_ENABLED=false
-NATIVE_RELAY_ENABLED=false
+NATIVE_RELAY_ENABLED=true
 ```
 
 These first two flags allow customer-entered username/password login and registration plus account, key-metadata, usage and billing-history reads. They need no owner API key, provider master key or Supabase service-role credential. Browsers receive only an opaque Secure, HttpOnly, SameSite=Strict cookie; upstream station cookies remain private process memory. Sessions expire in one hour and all sessions are lost on deployment/restart. Multiple replicas require a reviewed shared session store before activation.
@@ -22,7 +22,7 @@ The generated Railway preview hostname intentionally rejects native endpoints be
 
 `NATIVE_KEY_WRITES_ENABLED=true` allows scoped key creation and revocation. Key budget is a spend limit, not funded credit. The adapter checks that requested exact model names are listed by the native station before key creation, and never returns old key secrets from list responses. New secrets are displayed once and are not persisted in browser storage.
 
-Before activation, reconcile the station's listed models and custom retail prices with the approved public catalogue, verify native customer login/logout and a scoped key creation/read/revoke cycle with an authorized customer, and confirm the actual API endpoint accepts that customer's native token. Keep relay disabled until supply, funding and the approved single-call spending limit are verified. Do not substitute an owner token for customer authentication.
+Before activation, reconcile the station's listed models and custom retail prices with the approved public catalogue, verify native customer login/logout and a scoped key creation/read/revoke cycle with an authorized customer, and confirm the actual API endpoint accepts that customer's native token. The relay serves `https://apiwild.com/v1/chat/completions` and forwards to the supplier's white-label upstream, so customers never see the supplier origin. Do not substitute an owner token for customer authentication.
 
 ## Customer payments
 

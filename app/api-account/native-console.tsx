@@ -29,7 +29,7 @@ export default function NativeConsole({section}:{section:string}){
  async function copyKey(){if(!secret)return;try{await navigator.clipboard.writeText(secret.key);setCopied(true)}catch{setError('Clipboard access was unavailable. Select the key text and copy it manually.')}}
  async function checkout(){await run(async()=>{if(data.billing?.checkoutEnabled!==true)throw Error('Credit purchases are not activated.');const amountCents=Math.round(Number(topup)*100);if(Math.abs(Number(topup)*100-amountCents)>1e-6||!Number.isSafeInteger(amountCents)||amountCents<3000||amountCents>25000)throw Error('Choose a top-up between $30 and $250.');const r=await nativeApi('/api/native/customer/billing/checkout',{method:'POST',body:{amountCents,currency:'USD'}});const url=new URL(r.data?.url);if(url.origin!=='https://checkout.stripe.com'||url.username||url.password||!url.pathname.startsWith('/c/'))throw Error('The secure checkout URL could not be verified.');location.assign(url.href);})}
  const sampleModel=secret?.models?.[0]??catalog.models[0].model_name;
- const stationBaseUrl='https://apiwild.subrouter.ai/v1';
+ const stationBaseUrl='https://apiwild.com/v1';
  const starterHeaders='Authorization: Bearer <your API WILD key>\nContent-Type: application/json';
  const starterPayload=JSON.stringify({model:sampleModel,messages:[{role:'user',content:'Hello'}],stream:false,max_tokens:32},null,2);
  const title=sections.find(s=>s[1]===section)?.[0]??'API account';

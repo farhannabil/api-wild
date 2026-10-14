@@ -110,7 +110,7 @@ export function createGatewayIngress(config) {
       if(url.pathname==='/api/usage'){if(request.method!=='GET')bad(405);const context=await rpc.verifyOwner({authorization});await rpc.initializeAccount(context);return reply(200,await rpc.usage(context));}
       if(url.pathname==='/api/usage/details'){if(request.method!=='GET')bad(405);const context=await rpc.verifyOwner({authorization});return reply(200,await rpc.usageDashboard(context));}
       if (['/api/keys','/api/gateway/keys'].includes(url.pathname)) {
-        if (request.method === 'GET') return reply(200, { keys: await customerKeys.list({ authorization }), ...(config.nativeKeys?{issuance:'subrouter',baseUrl:'https://subrouter.ai/v1',billingSync:'hourly'}:{}) });
+        if (request.method === 'GET') return reply(200, { keys: await customerKeys.list({ authorization }), ...(config.nativeKeys?{issuance:'subrouter',baseUrl:'https://apiwild.com/v1',billingSync:'hourly'}:{}) });
         if (request.method !== 'POST') bad(405);
         const raw = await withDeadline(signal => body(request, signal), 5000);
         strictObject(raw, ['scopes', 'dailyLimitUsdMicros', 'totalLimitUsdMicros', 'expiresAt']);

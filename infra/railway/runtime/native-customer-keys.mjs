@@ -4,6 +4,9 @@ import {createSupplierConversionGuard} from './subrouter-supplier-conversion.mjs
 import {nativeTariffCharge} from './native-retail-tier.mjs';
 import {isDeepSeekTierPolicy} from './deepseek-tier-policy.mjs';
 const ORIGIN='https://subrouter.ai';
+// Customer-facing base URL: the white-label relay at apiwild.com hides Subrouter.
+// Customers must never receive subrouter.ai/v1 — that would leak supplier branding.
+const CUSTOMER_BASE_URL='https://apiwild.com/v1';
 const unavailable=()=>new GatewayError('native_key_unavailable',503,true);
 export async function boundedNativeJson(response,max=2000000){
  if(!response.ok||response.redirected||!/^application\/json/.test(response.headers.get('content-type')||''))throw unavailable();
@@ -41,8 +44,14 @@ export function nativeReceipt(row,key){
 }
 export function nativeRetailMicros(fact,rates){return nativeTariffCharge(fact,rates);}
 export function nativeAllowance(available,rates,costBased=false){
- exactInteger(available,0,1000000000000);const reserve=Math.min(available,1000000);
- if(costBased){const quota=Math.floor(reserve/10);return {quota,reserveUsdMicros:quota*10,reserveCnyMicros:Math.ceil(quota*68/5)};}
+ exactInteger(available,0,1000000000000);
+ // 5x supplier-cost billing: fund the token with the customer's entire available
+ // balance divided by 5 (supplier value) as a hard budget. quota*2 micros is the
+ // supplier cost and quota*10 micros the customer cost, so quota = available/10
+ // caps the customer at exactly their paid amount. Subrouter stops the token at
+ // quota==0, so a customer physically cannot overrun their funded balance.
+ if(costBased){const quota=Math.floor(available/10);return {quota,reserveUsdMicros:quota*10,reserveCnyMicros:Math.ceil(quota*68/5)};}
+ const reserve=Math.min(available,1000000);
  // Small supplier allowance, with headroom for discounted/cache usage. Actual
  // retail usage still reconciles hourly; this is not a real-time retail cutoff.
  const ratio=Math.max(...Object.values(rates).flatMap(r=>[r.input/1e6/(r.supplierInput/6.8),r.output/1e6/(r.supplierOutput/6.8),...(r.peak?[r.peak.input/1e6/(r.supplierInput/6.8),r.peak.output/1e6/(r.supplierOutput/6.8)]:[])]));
@@ -62,7 +71,7 @@ export function createNativeCustomerKeys({env,catalog,verifyOwner,legacyKeys,tie
  const tokenFields=(name,expires)=>({name,status:1,remain_quota:0,unlimited_quota:false,expired_time:Math.floor(expires/1000),model_limits_enabled:true,model_limits:Object.keys(rates).join(','),group:'subrouter',cross_group_retry:false,include_official_channels:false,include_shared_subscriptions:false,include_provider_self:true,include_cache_hit_rate:false,subrouter_providers:[...new Set(Object.values(rates).map(r=>r.provider))].join(','),subrouter_model_providers:JSON.stringify(Object.fromEntries(Object.entries(rates).map(([m,r])=>[m,[r.provider]])))});
  function verifyToken(t,row){if(t.name!==row.token_name||t.unlimited_quota!==false||t.model_limits_enabled!==true||t.group!=='subrouter'||t.include_official_channels!==false||t.include_shared_subscriptions!==false||t.cross_group_retry!==false)throw unavailable();const models=t.model_limits.split(',').sort(),expected=Object.keys(row.rates).sort();if(JSON.stringify(models)!==JSON.stringify(expected))throw unavailable();const map=JSON.parse(t.subrouter_model_providers);for(const m of expected)if(JSON.stringify(map[m])!==JSON.stringify([row.rates[m].provider]))throw unavailable();}
  const manager={rpc,native,rates,expiry,accountId,verifyToken,assertConversion:()=>conversion.assertConversion(),async billingPolicy(){return rpc('apiwild_customer_billing_policy',{});},
- async list({authorization}){const own=await owner(authorization),rows=await rpc('apiwild_native_key_rows',{p_owner:own}),keys=await legacyKeys.list({authorization});return keys.map(k=>{const n=rows.find(r=>r.key_id===k.id);return n?{...k,issuer:'subrouter',baseUrl:ORIGIN+'/v1',lastSyncedAt:n.last_synced_at,provisioningPending:n.token_id===null}:k;});},
+ async list({authorization}){const own=await owner(authorization),rows=await rpc('apiwild_native_key_rows',{p_owner:own}),keys=await legacyKeys.list({authorization});return keys.map(k=>{const n=rows.find(r=>r.key_id===k.id);return n?{...k,issuer:'subrouter',baseUrl:CUSTOMER_BASE_URL,lastSyncedAt:n.last_synced_at,provisioningPending:n.token_id===null}:k;});},
  async issue(raw){const own=await owner(raw.authorization);for(const v of [raw.dailyLimitUsdMicros,raw.totalLimitUsdMicros])if(v!==null)exactInteger(v,0,1000000000000);if(raw.dailyLimitUsdMicros!==null&&raw.totalLimitUsdMicros!==null&&raw.dailyLimitUsdMicros>raw.totalLimitUsdMicros)throw new GatewayError('native_invalid_limits',400);
  const end=raw.expiresAt===null?expiry:Math.min(Date.parse(raw.expiresAt),expiry);if(!Number.isFinite(end)||end<=clock())throw new GatewayError('native_invalid_expiry',400);
  const id=randomUUID(),name='aw-'+id.replaceAll('-','').slice(0,24);
@@ -70,8 +79,10 @@ export function createNativeCustomerKeys({env,catalog,verifyOwner,legacyKeys,tie
  await native.call('/api/token/','POST',tokenFields(name,end));const t=await native.find(name);verifyToken(t,{token_name:name,rates});if(t.remain_quota!==0||t.used_quota!==0)throw unavailable();
  const key=typeof t.key==='string'?(t.key.startsWith('sk-')?t.key:'sk-'+t.key):'';if(!/^sk-[A-Za-z0-9_-]{32,128}$/.test(key))throw unavailable();
  await rpc('apiwild_native_key_attach',{p_owner:own,p_id:id,p_token:t.id});
- // New keys start with zero quota. The worker allocates only against funded USD.
- return {key,metadata:{...metadata,issuer:'subrouter',baseUrl:ORIGIN+'/v1'},baseUrl:ORIGIN+'/v1',billingSync:'hourly'};
+ // New keys start with zero quota; the hourly worker funds the full available
+ // balance / 5 (a hard supplier budget) on its next sync, so a customer cannot
+ // overrun their paid amount before the next reconciliation.
+ return {key,metadata:{...metadata,issuer:'subrouter',baseUrl:CUSTOMER_BASE_URL},baseUrl:CUSTOMER_BASE_URL,billingSync:'hourly'};
  },
  async revoke(raw){const own=await owner(raw.authorization),rows=await rpc('apiwild_native_key_rows',{p_owner:own}),n=rows.find(r=>r.key_id===raw.keyId);if(!n)return legacyKeys.revoke(raw);const run=randomUUID();if(!await rpc('apiwild_native_sync_claim',{p_key:n.key_id,p_run:run}))throw unavailable();try{if(n.token_id){const t=await native.read(n.token_id);verifyToken(t,n);const paused=await native.setStatus(t,2);const stopped=await native.update(paused,{remain_quota:0,expired_time:Math.floor(clock()/1000)-1});if(stopped.status!==2||stopped.remain_quota!==0)throw unavailable();}return await legacyKeys.revoke(raw);}finally{await rpc('apiwild_native_sync_release',{p_key:n.key_id,p_run:run}).catch(()=>{});}}
  };return Object.freeze(manager);
