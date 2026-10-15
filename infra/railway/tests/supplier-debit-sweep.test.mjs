@@ -6,8 +6,14 @@ const rows=Array.from({length:5},(_,i)=>({owner,requestId:'bbbbbbbb-bbbb-4bbb-8b
 test('disabled sweep has no network, timer or configuration requirement',async()=>{const worker=createSupplierDebitSweepFromEnv({fetchImpl:()=>assert.fail(),setTimer:()=>assert.fail()});worker.start();assert.equal(worker.enabled,false);assert.deepEqual(await worker.runPass(),{disabled:true});await worker.stop();});
 test('one finite pass advances past failures, max5, and wraps after the last page',async()=>{
  const cursors=[],attempted=[];let page=0;const worker=createSupplierDebitSweep({listPending:async cursor=>{cursors.push(cursor);return page++===0?rows:[];},reconcile:async q=>{attempted.push(q);if(attempted.length===2)throw Error('held');return {reconciled:attempted.length===1};}});
- const result=await worker.runPass();assert.equal(result.attempted,5);assert.equal(result.reconciled,1);assert.equal(result.held,4);assert.equal(attempted.length,5);
+ const result=await worker.runPass();assert.equal(result.attempted,5);assert.equal(result.reconciled,1);assert.equal(result.held,4);assert.deepEqual(result.reasons,{reconciliation_unclassified:4});assert.equal(attempted.length,5);
  await worker.runPass();await worker.runPass();assert.deepEqual(cursors,[null,{createdAt:rows[4].createdAt,requestId:rows[4].requestId},null]);await worker.stop();
+});
+test('held results expose only bounded fixed reason categories in supplier reconciliation output',async()=>{
+ const output=[];let calls=0;const worker=createSupplierDebitSweep({listPending:async()=>rows.slice(0,2),reconcile:async()=>++calls===1?{reconciled:false,held:true,reason:'token_mismatch',privateDetail:'secret'}:Promise.reject(Error('access-token-secret')),write:value=>output.push(value)});
+ const result=await worker.runPass();assert.deepEqual(result.reasons,{token_mismatch:1,reconciliation_unclassified:1});
+ assert.deepEqual(output[0].supplierReconciliation.reasons,{token_mismatch:1,reconciliation_unclassified:1});
+ assert.doesNotMatch(JSON.stringify(output),/secret|access-token/);await worker.stop();
 });
 test('concurrent ticks share one in-flight pass; next timer is scheduled only after completion',async()=>{
  let release,calls=0;const timers=[];const worker=createSupplierDebitSweep({listPending:()=>new Promise(r=>{calls++;release=r;}),reconcile:()=>assert.fail(),setTimer:(fn,ms)=>{timers.push({fn,ms});return timers.length;},clearTimer:()=>{}});

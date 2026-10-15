@@ -15,6 +15,20 @@ const rate = value => {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 10000) throw Error('Invalid retail discovery rate.');
   return value;
 };
+const decimal = (value, places = 6) => {
+  const text = String(value);
+  if (!/^\d+(?:\.\d+)?$/.test(text)) throw Error('Invalid supplier discovery rate.');
+  const [whole, fraction = ''] = text.split('.');
+  if (fraction.length > places) throw Error('Invalid supplier discovery rate.');
+  return BigInt(whole) * 10n ** BigInt(places) + BigInt(fraction.padEnd(places, '0'));
+};
+const chargedRate = (supplierRate, supplierCurrency, fx) => {
+  const supplierMicros = decimal(supplierRate);
+  const numerator = supplierCurrency === 'USD' ? supplierMicros * 5n : supplierMicros * decimal(fx, 18) * 5n;
+  const denominator = supplierCurrency === 'USD' ? 1n : 10n ** 18n;
+  const chargedMicros = (numerator + denominator - 1n) / denominator;
+  return Number(chargedMicros) / 1000000;
+};
 const freeze = value => {
   if (value && typeof value === 'object') { for (const item of Object.values(value)) freeze(item); Object.freeze(value); }
   return value;
@@ -33,9 +47,15 @@ export function createOwnedDiscoverySnapshot({catalog, routes = [], rateVersion 
     const id = text(row.model_name), p = row.apiwild_selling_price;
     if (seen.has(id) || p.currency !== 'USD' || p.unit !== 'per_million_tokens') throw Error('Invalid discovery catalogue.');
     seen.add(id);
+    const supplier = row.primary;
+    const chargedPricing = p.processing === 'standard' && supplier?.billing_mode === 'ratio'
+      && supplier.unit === 'per_million_tokens' && ['USD', 'CNY'].includes(supplier.supplier_currency)
+      ? {currency:'USD',unit:'per_million_tokens',input:chargedRate(supplier.supplier_input,supplier.supplier_currency,catalog.fx?.CNY_USD),
+        output:chargedRate(supplier.supplier_output,supplier.supplier_currency,catalog.fx?.CNY_USD),rateVersion:p.rate_version??rateVersion,
+        billingPolicy:'supplier-cost-5x-v1',rounding:'ceil to integer micro-USD per request'} : null;
     const tier = raw => raw == null ? null : Object.fromEntries(['threshold_input_tokens','input','output','cache_read','cache_write']
       .filter(key => Object.hasOwn(raw, key)).map(key => [key, key === 'threshold_input_tokens' ? exactInteger(raw[key],1,10000000) : rate(raw[key])]));
-    return {id, name: id, creator: text(row.creator), pricing: {
+    return {id, name: id, creator: text(row.creator), chargedPricing, pricing: {
       currency: 'USD', unit: 'per_million_tokens', input: rate(p.input), output: rate(p.output),
       processing: text(p.processing), inputCache: text(p.input_cache),
       // Conditional rates are advertised only as references, never selected by

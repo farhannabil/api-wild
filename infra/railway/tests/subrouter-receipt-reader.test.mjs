@@ -26,16 +26,24 @@ test('actual USD quota uses exact conservative normalization and stable native a
  assert.equal(normalizedQuotaCnyMicros(0,conversion),0);assert.equal(normalizedQuotaCnyMicros(500000,conversion),6800000);
  assert.throws(()=>normalizedQuotaCnyMicros(Number.MAX_SAFE_INTEGER,conversion));assert.throws(()=>validateSupplierConversion({...conversion,settingsSha256:'a'.repeat(64)}));
 });
-test('every receipt identity and wallet-source mismatch fails closed',async()=>{
- for(const patch of [{token_id:999},{user_id:999},{model_name:'other'},{type:1},{quota:-1},{quota:0.5},{request_id:'bad receipt'},
-  {other:JSON.stringify({billing_source:'subscription',billing_multiplier:1,provider_slug:'leapnode'})},
-  {other:JSON.stringify({billing_source:'wallet',billing_multiplier:2,provider_slug:'leapnode'})},
-  {other:JSON.stringify({billing_source:'wallet',billing_multiplier:1,provider_slug:'wrong'})},{created_at:1}])await assert.rejects(fixture({rows:[{...row,...patch}]}).reader.readReceipt(query));
- await assert.rejects(fixture({rows:[]}).reader.readReceipt(query));await assert.rejects(fixture({rows:[row,row]}).reader.readReceipt(query));
+test('receipt identity and source mismatches produce fixed reason categories',async()=>{
+ for(const [patch,code] of [[{token_id:999},'supplier_token_mismatch'],[{user_id:999},'supplier_account_mismatch'],[{model_name:'other'},'supplier_model_mismatch'],[{type:1},'supplier_log_type_mismatch'],[{quota:-1},'supplier_conversion_guard_failed'],[{quota:0.5},'supplier_conversion_guard_failed'],[{request_id:'bad receipt'},'supplier_receipt_invalid'],
+  [{other:JSON.stringify({billing_source:'subscription',billing_multiplier:1,provider_slug:'leapnode'})},'supplier_receipt_source_mismatch'],
+  [{other:JSON.stringify({billing_source:'wallet',billing_multiplier:2,provider_slug:'leapnode'})},'supplier_receipt_source_mismatch'],
+  [{other:JSON.stringify({billing_source:'wallet',billing_multiplier:1,provider_slug:'wrong'})},'supplier_receipt_source_mismatch'],[{created_at:1},'supplier_conversion_guard_failed']])
+  await assert.rejects(fixture({rows:[{...row,...patch}]}).reader.readReceipt(query),error=>error.code===code);
+ await assert.rejects(fixture({rows:[]}).reader.readReceipt(query),error=>error.code==='supplier_receipt_not_found');
+ await assert.rejects(fixture({rows:[row,row]}).reader.readReceipt(query),error=>error.code==='supplier_receipt_duplicate');
+ await assert.rejects(fixture().reader.readReceipt({...query,keyReference:'dddddddd-dddd-4ddd-8ddd-dddddddddddd'}),error=>error.code==='supplier_binding_not_found');
+ await assert.rejects(fixture().reader.readReceipt({...query,model:'other'}),error=>error.code==='supplier_model_mismatch');
 });
 test('published conversion drift before or after logs prevents reconciliation',async()=>{
- const early=fixture({statusPatch:{usd_exchange_rate:6.9}});await assert.rejects(early.reader.readReceipt(query));assert.equal(early.calls.length,1);
- const late=fixture({afterPatch:{price:6.9,usd_exchange_rate:6.9}});await assert.rejects(late.reader.readReceipt(query));assert.equal(late.calls.length,3);
+ const early=fixture({statusPatch:{usd_exchange_rate:6.9}});await assert.rejects(early.reader.readReceipt(query),error=>error.code==='supplier_conversion_guard_failed');assert.equal(early.calls.length,1);
+ const late=fixture({afterPatch:{price:6.9,usd_exchange_rate:6.9}});await assert.rejects(late.reader.readReceipt(query),error=>error.code==='supplier_conversion_guard_failed');assert.equal(late.calls.length,3);
+});
+test('account access-token rejection is a fixed diagnostic category',async()=>{
+ const f=fixture({fetchPatch:async(url)=>url.endsWith('/api/status')?Response.json({success:true,data:status}):new Response('',{status:401})});
+ await assert.rejects(f.reader.readReceipt(query),error=>error.code==='supplier_access_token_rejected');
 });
 test('pagination, response-size, schema and redirect bounds cannot be bypassed',async()=>{
  for(const options of [{page:{items:[row],has_more:true,next_cursor:'first',page_size:20}},

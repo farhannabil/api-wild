@@ -120,6 +120,8 @@ test('quota-only, estimated, foreign, unfinished and fractional receipts cannot 
 test('supplier overrun or an ambiguous SQL reply remains held',async()=>{
   for(const rpc of [async()=>({reconciled:false,reason:'supplier_bound_exceeded'}),async()=>{throw Error('ambiguous');}]){
     const reconciler=createSupplierDebitReconciler({enabled:true,readRequest:async()=>request,readReceipt:async()=>actual,rpc});
-    assert.deepEqual(await reconciler.reconcile({owner,requestId:orderId}),{reconciled:false,held:true,automaticRetry:false});
+    const result=await reconciler.reconcile({owner,requestId:orderId});
+    assert.deepEqual({...result,reason:undefined},{reconciled:false,held:true,automaticRetry:false,reason:undefined});
+    assert.match(result.reason,/^[a-z][a-z_]{1,63}$/);
   }
 });

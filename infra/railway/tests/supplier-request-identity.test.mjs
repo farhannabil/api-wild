@@ -41,7 +41,7 @@ test('short receipt identities reject wrong providers, duplicates, unknown IDs a
   {other:JSON.stringify({provider_slug:'bangai',billing_source:'wallet',billing_multiplier:2})},
  ].map(patch=>({rows:[{...base,...patch}]}))])await assert.rejects(reader(c,options).adapter.readReceipt(query(c)));
  const wrong=reader(c,{provider:'other'});await assert.rejects(wrong.adapter.readReceipt(query(c)));assert.equal(wrong.calls,0);
- const held=createSupplierDebitReconciler({enabled:true,readRequest:async()=>({owner,requestId,...query(c),supplierPending:true}),readReceipt:reader(c,{rows:[base,base]}).adapter.readReceipt,rpc:()=>assert.fail('Unverified debit must not write')});assert.deepEqual(await held.reconcile({owner,requestId}),{reconciled:false,held:true,automaticRetry:false});
+ const held=createSupplierDebitReconciler({enabled:true,readRequest:async()=>({owner,requestId,...query(c),supplierPending:true}),readReceipt:reader(c,{rows:[base,base]}).adapter.readReceipt,rpc:()=>assert.fail('Unverified debit must not write')});const heldResult=await held.reconcile({owner,requestId});assert.deepEqual({...heldResult,reason:undefined},{reconciled:false,held:true,automaticRetry:false,reason:undefined});assert.equal(heldResult.reason,'duplicate_receipt');
 });
 test('transport rejects short IDs for other suppliers and unapproved bangai models without retry',async()=>{
  for(const [supplierSlug,model]of [['other',captured[0].model],['bangai','other-model'],[undefined,captured[0].model]]){

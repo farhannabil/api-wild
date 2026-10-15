@@ -39,7 +39,7 @@ test('public discovery hides every unconfigured model without transport or suppl
     assert.equal(models.body.authority,'apiwild-owned-runtime');assert.ok(models.body.models.every(model=>model.callable===false&&model.pricing.currency==='USD'&&model.capabilities.length===0));
     assert.equal(config.status,200);assert.equal(config.body.deploymentCommit,env.RAILWAY_GIT_COMMIT_SHA);assert.equal(config.body.inferenceConfigured,false);assert.equal(config.body.enabled,false);
     assert.ok(Object.values(config.body.ready).every(value=>value===false));assert.equal(config.body.streaming,true);assert.equal(config.body.streamingMode,'buffered-after-settlement');assert.equal(config.body.nativeStreaming,false);assert.equal(config.body.functionCalling,true);assert.equal(config.body.externalTools,false);
-    for(const forbidden of ['supplier','primary','backup','offer_id','fx','CNY','apiKey','sb_secret_','sb_publishable_'])assert.ok(!models.raw.includes(forbidden)&&!config.raw.includes(forbidden),forbidden);
+    for(const forbidden of ['supplier_input','supplier_output','primary','backup','offer_id','fx','CNY','apiKey','sb_secret_','sb_publishable_'])assert.ok(!models.raw.includes(forbidden)&&!config.raw.includes(forbidden),forbidden);
     assert.deepEqual(config.body.models,[]);
     assert.equal((await call('/health/ready')).status,503);assert.equal(f.calls.length,0);
   });
@@ -49,7 +49,7 @@ test('public route snapshots allow only configured approved model capabilities a
   const active=createOwnedDiscoverySnapshot({catalog,routes:[{model:'claude-fable-5',capability:'code',maxOutputTokens:1000,apiKey:'must-not-be-public',supplierReserveCnyMicros:99}],rateVersion:'accepted-v1'});
   assert.equal(active.config.deploymentCommit,null);assert.equal(active.config.ready.code,true);assert.equal(active.config.ready.chat,false);
   assert.equal(active.catalog.count,1);assert.deepEqual(active.catalog.models.map(model=>model.id),['claude-fable-5']);assert.deepEqual(active.config.models.map(model=>model.id),['claude-fable-5']);assert.deepEqual(active.v1Models.data.map(model=>model.id),['claude-fable-5']);assert.equal(active.catalog.models[0].pricing.input,catalog.models.find(model=>model.model_name==='claude-fable-5').apiwild_selling_price.input);assert.equal(active.v1Models.data.find(model=>model.id==='claude-fable-5').available,true);
-  assert.ok(!JSON.stringify(active).includes('must-not-be-public'));assert.throws(()=>active.catalog.models.push({}));
+  assert.ok(!JSON.stringify(active).includes('must-not-be-public'));assert.equal(active.catalog.models[0].chargedPricing.billingPolicy,'supplier-cost-5x-v1');assert.equal(active.catalog.models[0].chargedPricing.rateVersion,'accepted-v1');assert.ok(active.catalog.models[0].chargedPricing.input>0);assert.throws(()=>active.catalog.models.push({}));
   for(const deploymentCommit of ['G'.repeat(40),'abc','x\n'+ 'a'.repeat(40),123])assert.equal(createOwnedDiscoverySnapshot({catalog,deploymentCommit}).config.deploymentCommit,null);
   assert.throws(()=>createOwnedDiscoverySnapshot({catalog,routes:[{model:'unapproved',capability:'chat',maxOutputTokens:1000}]}));
   assert.throws(()=>createOwnedDiscoverySnapshot({catalog,routes:[{model:'claude-fable-5',capability:'voice',maxOutputTokens:1000}]}));

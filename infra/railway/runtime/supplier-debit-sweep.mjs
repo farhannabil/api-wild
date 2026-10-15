@@ -11,16 +11,17 @@ export function createSupplierDebitSweep({listPending,reconcile,intervalMs=60000
  function runPass(){
   if(stopped)return Promise.resolve({stopped:true});if(pending)return pending;
   pending=(async()=>{
-   let attempted=0,reconciled=0,held=0;
+   let attempted=0,reconciled=0,held=0;const reasons={};
    try{
     const rows=await listPending(cursor,{signal:controller.signal});if(!Array.isArray(rows)||rows.length>5)throw Error();
     for(const row of rows){if(controller.signal.aborted)break;
-     attempted++;try{const result=await reconcile({owner:row.owner,requestId:row.requestId});if(result?.reconciled===true)reconciled++;else held++;}catch{held++;}
+     attempted++;let result;try{result=await reconcile({owner:row.owner,requestId:row.requestId});}catch{}
+     if(result?.reconciled===true)reconciled++;else{held++;const code=typeof result?.reason==='string'&&/^[a-z][a-z0-9_]{0,63}$/.test(result.reason)?result.reason:'reconciliation_unclassified';reasons[code]=(reasons[code]??0)+1;}
      cursor={createdAt:row.createdAt,requestId:row.requestId}; // Advance past held receipts so the next page can progress.
     }
     if(rows.length<5&&!controller.signal.aborted)cursor=null;
-    const result={attempted,reconciled,held,automaticRetry:false};write(result);return result;
-   }catch{const result={attempted,reconciled,held,scanUnavailable:true,automaticRetry:false};write(result);return result;}
+    const result={attempted,reconciled,held,reasons,automaticRetry:false};write({supplierReconciliation:result});return result;
+   }catch{const result={attempted,reconciled,held,reasons,scanUnavailable:true,automaticRetry:false};write({supplierReconciliation:result});return result;}
   })().finally(()=>{pending=null;});return pending;
  }
  function schedule(delay){timer=setTimer(async()=>{timer=null;await runPass();if(started&&!stopped)schedule(intervalMs);},delay);timer?.unref?.();}

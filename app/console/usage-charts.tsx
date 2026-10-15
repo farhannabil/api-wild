@@ -1,19 +1,21 @@
 'use client';
 import {useEffect,useState} from 'react';
 import {customerApi} from '@/lib/customer-api';
+import {nativeApi} from '@/lib/native-api-client.mjs';
 import {watchWallet} from '@/lib/owned-wallet-poll.mjs';
 import {walletMoney as money} from './use-owned-wallet';
 import UsageActivity from './usage-activity';
 type Counts={requests:number;inputTokens:number;outputTokens:number;cacheReadTokens:number;cacheWriteTokens:number;cacheReadKnown:number;cacheWriteKnown:number;chargedUsdMicros:number;pendingRequests:number};
 type Dashboard={activity?:Parameters<typeof UsageActivity>[0]["activity"];currency:string;windowDays:number;timezone:string;refreshedAt:string|null;totals:Counts;days:(Counts&{day:string})[];models:{model:string;requests:number;chargedUsdMicros:number}[];billingCheck:{checkedAt:string;mismatches:number;overdueRequests:number;staleKeys:number}|null};
+type NativeLog={id:string;created_at:string|number;model_name:string;prompt_tokens:number|null;completion_tokens:number|null;quota:number};
+type NativeData={usage:{quota:number;used_quota:number;request_count:number;package_used_quota:number};logs:{items:NativeLog[];total?:number};logStats:{quota:number;rpm:number;tpm:number;token:number}};
 const number=(n:number)=>n.toLocaleString();
+const nativeMoney=(quota:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:6}).format(quota/500000*5);
+function NativeUsage({data}:{data:NativeData}){return <><p>Native <code>sk-</code> lane · imported hourly. Recent activity can take until the next hourly refresh.</p><div className="metrics-grid">{[['Reported requests',number(data.usage.request_count)],['Reported usage',nativeMoney(data.usage.used_quota)],['Reported quota',nativeMoney(data.usage.quota)],['RPM',number(data.logStats.rpm)],['TPM',number(data.logStats.tpm)]].map(([label,value])=><article className="metric-card" key={label}><small>{label}</small><strong>{value}</strong></article>)}</div><p>Native station quota is the source reported for this lane: 500,000 supplier quota units = $1 supplier = $5 customer. No gateway settlement or estimated charge is substituted.</p><h3>Recent native activity</h3>{data.logs.items.length?<div className="usage-table-wrap"><table className="usage-table"><thead><tr>{['Time','Model','Input','Output','Reported customer charge'].map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{data.logs.items.map(row=><tr key={row.id}><td>{typeof row.created_at==='number'?new Date(row.created_at*1000).toLocaleString():new Date(row.created_at).toLocaleString()}</td><td>{row.model_name}</td><td>{row.prompt_tokens===null?'Not reported':number(row.prompt_tokens)}</td><td>{row.completion_tokens===null?'Not reported':number(row.completion_tokens)}</td><td>{nativeMoney(row.quota)}</td></tr>)}</tbody></table></div>:<p>No native usage records are listed.</p>}</>}
 export default function UsageCharts(){
- const[data,setData]=useState<Dashboard|null>(null),[error,setError]=useState(false);
- useEffect(()=>watchWallet({document,window,read:async signal=>{
-  const value=await customerApi('/api/usage/details',{signal});
-  if(value.currency!=='USD'||value.windowDays!==30||!Array.isArray(value.days)||!Array.isArray(value.models)||!value.totals)throw Error('Invalid usage');
-  return value as Dashboard;
- },onValue:value=>{setData(value);setError(false)},onError:()=>setError(true)}),[]);
+ const[data,setData]=useState<Dashboard|null>(null),[native,setNative]=useState<NativeData|null>(null),[error,setError]=useState(false);
+ useEffect(()=>{let live=true,stop=()=>{};const controller=new AbortController();(async()=>{try{await nativeApi('/api/native/customer/account',{signal:controller.signal});if(!live)return;const[usage,logs,logStats]=await Promise.all([nativeApi('/api/native/customer/usage',{signal:controller.signal}),nativeApi('/api/native/customer/logs',{signal:controller.signal}),nativeApi('/api/native/customer/logStats',{signal:controller.signal})]);if(live)setNative({usage:usage.data,logs:logs.data,logStats:logStats.data})}catch{if(!live)return;stop=watchWallet({document,window,read:async signal=>{const value=await customerApi('/api/usage/details',{signal});if(value.currency!=='USD'||value.windowDays!==30||!Array.isArray(value.days)||!Array.isArray(value.models)||!value.totals)throw Error('Invalid usage');return value as Dashboard},onValue:value=>{if(live){setData(value);setError(false)}},onError:()=>{if(live)setError(true)}})}})();return()=>{live=false;controller.abort();stop()}},[]);
+ if(native)return <section className="console-panel"><h2>Native usage</h2><NativeUsage data={native}/></section>;
  const colours=['#6366f1','#10b981','#f59e0b','#ec4899'];
  const series=[['inputTokens','Reported input'],['outputTokens','Output'],['cacheReadTokens','Cache read'],['cacheWriteTokens','Cache write']] as const;
  const cache=(count:number,known:number)=>known?`${number(count)}${known<data!.totals.requests?' (reported subtotal)':''}`:'Not reported';

@@ -2,7 +2,7 @@
 // receipt or a token estimate. The accepted public settings remain immutable.
 import {createHash} from 'node:crypto';
 import {strictObject,exactInteger,withDeadline} from './supabase-gateway-rpc.mjs';
-const fail=()=>Error('supplier_conversion_unverified');
+const fail=(code='supplier_conversion_unverified')=>Object.assign(new Error(code),{code});
 const decimal=/^(?:[1-9][0-9]{0,2}|0)(?:\.[0-9]{1,6})?$/;
 const iso=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value)&&Number.isFinite(Date.parse(value));
 export function supplierSettingsHash(settings){
@@ -37,6 +37,7 @@ export async function readSubrouterAccountJson(path,{accessToken,accountUserId,f
  try{
   if(signal?.aborted)throw fail();
   response=await fetchImpl(url,{method:'GET',redirect:'error',cache:'no-store',signal,headers:{accept:'application/json',...(path==='/api/status'?{}:{Authorization:'Bearer '+accessToken,'New-Api-User':String(accountUserId)})}});
+  if(path!=='/api/status'&&response instanceof Response&&(response.status===401||response.status===403))throw fail('supplier_access_token_rejected');
   if(signal?.aborted||!(response instanceof Response)||!response.ok||response.redirected||(response.url&&response.url!==url)
    ||!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type')||''))throw fail();
   const length=response.headers.get('content-length');if(length!==null&&(!/^\d+$/.test(length)||Number(length)>262144))throw fail();
