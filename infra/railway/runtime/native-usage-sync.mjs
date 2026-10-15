@@ -29,20 +29,27 @@ export function createNativeUsageSync({manager,clock=Date.now,write=()=>{},setTi
    if(key.revoked_at||Date.parse(key.expires_at)<=clock()||manager.expiry<=clock()){if(after.status!==2)await manager.native.setStatus(after,2);return {imported,enabled:false};}
    const usage=await manager.rpc('apiwild_gateway_usage',{p_owner:key.owner});const policy=await manager.billingPolicy?.();const allocation=nativeAllowance(usage.availableUsdMicros,key.rates,policy?.active===true);
    if(allocation.quota<1){if(after.status!==2)await manager.native.setStatus(after,2);await manager.native.update(after,{remain_quota:0});return {imported,enabled:false};}
-   try{await manager.rpc('apiwild_native_allocate',{p_key:key.key_id,p_run:run,p_usd:allocation.reserveUsdMicros,p_cny:allocation.reserveCnyMicros});}catch{return {imported,enabled:after.status===1,allowanceUnavailable:true};}
+   // Legacy allocator caps ($1.00 / 1.36 cny per lease) bound the reserve until
+   // the headroom-aware clamp migration (20261015050000) lands; the 5-minute
+   // pass re-tops the lease. A failed or malformed allocation leaves the token
+   // without a backing lease, so fail closed until the next pass re-funds it.
+   let lease;
+   try{lease=await manager.rpc('apiwild_native_allocate',{p_key:key.key_id,p_run:run,p_usd:Math.min(allocation.reserveUsdMicros,1000000),p_cny:Math.min(allocation.reserveCnyMicros,1360000)});}catch{lease=null;}
+   const backed=lease&&Number.isSafeInteger(lease.reservedUsdMicros)&&lease.reservedUsdMicros>=1?Math.min(allocation.quota,Math.floor(lease.reservedUsdMicros/10)):0;
+   if(backed<1){if(after.status!==2)await manager.native.setStatus(after,2);await manager.native.update(after,{remain_quota:0});return {imported,enabled:false,allowanceUnavailable:true};}
    const expiry=Math.floor(Math.min(clock()+65*60000,Date.parse(key.expires_at),manager.expiry)/1000);
    await manager.rpc('apiwild_native_sync_assert',{p_key:key.key_id,p_run:run});
    for(let attempt=0;attempt<3;attempt++){
     const current=attempt===0?after:await manager.native.read(key.token_id);manager.verifyToken(current,key);
     if(![1,2].includes(current.status)||current.used_quota<baselineUsed)throw Error('native_allowance_unconfirmed');
-    const target=Math.max(0,allocation.quota-(current.used_quota-baselineUsed));
-    const prepared=await manager.native.update(current,{remain_quota:Math.min(target,allocation.quota),expired_time:expiry});manager.verifyToken(prepared,key);
-    if(![1,2].includes(prepared.status)||prepared.expired_time!==expiry||prepared.remain_quota>allocation.quota)throw Error('native_allowance_unconfirmed');
+    const target=Math.max(0,backed-(current.used_quota-baselineUsed));
+    const prepared=await manager.native.update(current,{remain_quota:Math.min(target,backed),expired_time:expiry});manager.verifyToken(prepared,key);
+    if(![1,2].includes(prepared.status)||prepared.expired_time!==expiry||prepared.remain_quota>backed)throw Error('native_allowance_unconfirmed');
     const active=prepared.status===1?prepared:await manager.native.setStatus(prepared,1);manager.verifyToken(active,key);
     const readback=await manager.native.read(key.token_id);manager.verifyToken(readback,key);
-    if(readback.status!==1||readback.expired_time!==expiry||readback.used_quota<current.used_quota||readback.remain_quota>allocation.quota)throw Error('native_allowance_unconfirmed');
+    if(readback.status!==1||readback.expired_time!==expiry||readback.used_quota<current.used_quota||readback.remain_quota>backed)throw Error('native_allowance_unconfirmed');
     if(readback.used_quota!==current.used_quota){after=readback;continue;}
-    if(readback.remain_quota!==Math.max(0,allocation.quota-(readback.used_quota-baselineUsed)))throw Error('native_allowance_unconfirmed');
+    if(readback.remain_quota!==Math.max(0,backed-(readback.used_quota-baselineUsed)))throw Error('native_allowance_unconfirmed');
     return {imported,enabled:true};
    }
    throw Error('native_allowance_unconfirmed');
@@ -51,7 +58,7 @@ export function createNativeUsageSync({manager,clock=Date.now,write=()=>{},setTi
  function runPass(){if(stopped)return Promise.resolve({stopped:true});if(pending)return pending;pending=(async()=>{
   const stats={attempted:0,imported:0,paused:0};try{const keys=await manager.rpc('apiwild_native_key_rows',{p_owner:null});if(!Array.isArray(keys)||keys.length>1000)throw Error();
    for(const key of keys){if(stopped)break;const due=!key.last_synced_at||clock()-Date.parse(key.last_synced_at)>=300000||!key.lease_id;
-    if(!due)continue;stats.attempted++;try{const result=await syncKey(key);stats.imported+=result.imported||0;if(result.enabled===false)stats.paused++;}catch{stats.paused++;}
+    if(!due)continue;stats.attempted++;try{const result=await syncKey(key);stats.imported+=result.imported||0;if(result.enabled===false)stats.paused++;if(result.allowanceUnavailable)stats.unfunded=(stats.unfunded||0)+1;}catch{stats.paused++;}
    }
   }catch{stats.unavailable=true;}if(stats.attempted||stats.unavailable)write(stats);return stats;
  })().finally(()=>{pending=null;});return pending;}
