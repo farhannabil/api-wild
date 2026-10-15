@@ -10,6 +10,25 @@ export function createNativeRelayApi({enabled=false,allowedModels=[],fetchImpl=f
   if(!enabled)return json(503,{error:'native_relay_disabled',automaticRetry:false});
   if(active>=4)return json(429,{error:'native_relay_busy',automaticRetry:false});
   const url=new URL(request.url),authorization=request.headers.get('authorization')||'',key=request.headers.get('idempotency-key')||'';
+  if(request.method==='GET'&&url.pathname==='/v1/models'){
+   if(url.origin!=='https://apiwild.com'||url.search||request.body||!/^Bearer sk-[A-Za-z0-9_-]{16,256}$/.test(authorization))return json(400,{error:'native_invalid_relay_request',automaticRetry:false});
+   let upstreamReader;const controller=new AbortController();let timer;active++;
+   try{
+    timer=setTimeout(()=>{controller.abort();void upstreamReader?.cancel().catch(()=>{});},30000);
+    const work=(async()=>{
+     const reply=await fetchImpl('https://apiwild.subrouter.ai/v1/models',{method:'GET',headers:{authorization},redirect:'error',cache:'no-store',signal:controller.signal});
+     if(controller.signal.aborted)throw Error();
+     if(!(reply instanceof Response)||reply.redirected||(reply.url&&reply.url!=='https://apiwild.subrouter.ai/v1/models'))throw Error();
+     if(reply.status!==200)return json([401,403,402,429].includes(reply.status)?reply.status:503,{error:'native_upstream_rejected',automaticRetry:false});
+     if(!/^application\/json(?:\s*;|$)/i.test(reply.headers.get('content-type')||''))throw Error();
+     upstreamReader=reply.body?.getReader();if(!upstreamReader)throw Error();let count=0;const parts=[];
+     for(;;){const next=await upstreamReader.read();if(controller.signal.aborted)throw Error();if(next.done)break;count+=next.value.byteLength;if(count>1048576)throw Error();parts.push(next.value);}
+     const value=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(parts)));if(!value||typeof value!=='object'||Array.isArray(value)||!Array.isArray(value.data))throw Error();return json(200,value);
+    })();
+    return await Promise.race([work,new Promise((_,reject)=>controller.signal.addEventListener('abort',()=>reject(Error()),{once:true}))]);
+   }catch{return json(503,{error:'native_upstream_rejected',automaticRetry:false});}
+   finally{clearTimeout(timer);active--;void upstreamReader?.cancel().catch(()=>{});}
+  }
   if(url.origin!=='https://apiwild.com'||url.pathname!=='/v1/chat/completions'||url.search||request.method!=='POST'||!/^Bearer sk-[A-Za-z0-9_-]{16,256}$/.test(authorization)||!/^[A-Za-z0-9_-]{16,100}$/.test(key))return json(400,{error:'native_invalid_relay_request',automaticRetry:false});
   if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')||'')||request.headers.has('content-encoding'))return json(415,{error:'native_invalid_relay_request',automaticRetry:false});
   let attempt,bodyReader,upstreamReader;const controller=new AbortController();let timer;active++;
