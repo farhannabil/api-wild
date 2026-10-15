@@ -1,6 +1,6 @@
 # Hourly billing checks and customer usage
 
-The existing native worker remains the only native credit importer. It imports verified supplier receipts hourly and deducts actual supplier USD times five. New analytics metadata is stored separately, keyed to the same immutable receipt under the existing sync lease. Analytics failures do not block financial reconciliation; later passes retry enrichment.
+The existing native worker remains the only native credit importer. It imports verified supplier receipts about every five minutes and deducts actual supplier USD times five. New analytics metadata is stored separately, keyed to the same immutable receipt under the existing sync lease. Analytics failures do not block financial reconciliation; later passes retry enrichment.
 
 Two Supabase pg_cron jobs run independently of Railway and of any desktop session:
 
