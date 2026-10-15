@@ -29,12 +29,13 @@ export function createNativeUsageSync({manager,clock=Date.now,write=()=>{},setTi
    if(key.revoked_at||Date.parse(key.expires_at)<=clock()||manager.expiry<=clock()){if(after.status!==2)await manager.native.setStatus(after,2);return {imported,enabled:false};}
    const usage=await manager.rpc('apiwild_gateway_usage',{p_owner:key.owner});const policy=await manager.billingPolicy?.();const allocation=nativeAllowance(usage.availableUsdMicros,key.rates,policy?.active===true);
    if(allocation.quota<1){if(after.status!==2)await manager.native.setStatus(after,2);await manager.native.update(after,{remain_quota:0});return {imported,enabled:false};}
-   // Legacy allocator caps ($1.00 / 1.36 cny per lease) bound the reserve until
-   // the headroom-aware clamp migration (20261015050000) lands; the 5-minute
-   // pass re-tops the lease. A failed or malformed allocation leaves the token
-   // without a backing lease, so fail closed until the next pass re-funds it.
+   // The allocator clamps the reserve to the real remaining headroom (wallet,
+   // account/key limits, supplier budget) and returns what it reserved; the
+   // token quota must never exceed the backed amount. A failed or malformed
+   // allocation leaves the token without a backing lease, so fail closed until
+   // the next pass re-funds it.
    let lease;
-   try{lease=await manager.rpc('apiwild_native_allocate',{p_key:key.key_id,p_run:run,p_usd:Math.min(allocation.reserveUsdMicros,1000000),p_cny:Math.min(allocation.reserveCnyMicros,1360000)});}catch{lease=null;}
+   try{lease=await manager.rpc('apiwild_native_allocate',{p_key:key.key_id,p_run:run,p_usd:allocation.reserveUsdMicros,p_cny:allocation.reserveCnyMicros});}catch{lease=null;}
    const backed=lease&&Number.isSafeInteger(lease.reservedUsdMicros)&&lease.reservedUsdMicros>=1?Math.min(allocation.quota,Math.floor(lease.reservedUsdMicros/10)):0;
    if(backed<1){if(after.status!==2)await manager.native.setStatus(after,2);await manager.native.update(after,{remain_quota:0});return {imported,enabled:false,allowanceUnavailable:true};}
    const expiry=Math.floor(Math.min(clock()+65*60000,Date.parse(key.expires_at),manager.expiry)/1000);
