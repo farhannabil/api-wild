@@ -61,6 +61,6 @@ export function callableCustomerModels(data, approved) {
  */
 export function listedCustomerModels(data,approved){
  const callable=callableCustomerModels(data,approved),active=new Set(callable.map(m=>m.model_name));
- const charged=new Map(callable.map(m=>[m.model_name,m.chargedPricing??null]));
+ const charged=new Map(data.models.map(m=>[m.id,m.chargedPricing??null]));
  return approved.map(m=>({...m,chargedPricing:charged.get(m.model_name)??null,available:active.has(m.model_name)}));
 }

@@ -48,7 +48,7 @@ export function createOwnedDiscoverySnapshot({catalog, routes = [], rateVersion 
     if (seen.has(id) || p.currency !== 'USD' || p.unit !== 'per_million_tokens') throw Error('Invalid discovery catalogue.');
     seen.add(id);
     const supplier = row.primary;
-    const chargedPricing = p.processing === 'standard' && supplier?.billing_mode === 'ratio'
+    const chargedPricing = (p.processing === 'standard' || (p.processing === 'off_peak' && tierPolicy?.canAdmit(id))) && supplier?.billing_mode === 'ratio'
       && supplier.unit === 'per_million_tokens' && ['USD', 'CNY'].includes(supplier.supplier_currency)
       ? {currency:'USD',unit:'per_million_tokens',input:chargedRate(supplier.supplier_input,supplier.supplier_currency,catalog.fx?.CNY_USD),
         output:chargedRate(supplier.supplier_output,supplier.supplier_currency,catalog.fx?.CNY_USD),rateVersion:p.rate_version??rateVersion,

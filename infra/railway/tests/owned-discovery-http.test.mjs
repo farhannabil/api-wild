@@ -7,6 +7,7 @@ import {createPreparationServer} from '../preparation-server.mjs';
 import {createOwnedGatewayFromEnv} from '../runtime/owned-gateway-assembly.mjs';
 import {createOwnedDiscoverySnapshot,createOwnedDiscoveryHttp} from '../runtime/owned-discovery-http.mjs';
 import {conversion} from './supplier-receipt-fixture.mjs';
+import {createDeepSeekTierPolicy,DEEPSEEK_SOURCE_REVISION,DEEPSEEK_CALENDAR_VERSION} from '../runtime/deepseek-tier-policy.mjs';
 
 const catalog=JSON.parse(await readFile(new URL('../../../data/selected-supplier-models.json',import.meta.url),'utf8'));
 const USER='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',OTHER='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',KEY='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -102,6 +103,18 @@ test('discovery and protected reads reject forged identity, origins, bodies and 
     }
     assert.equal(f.calls.length,0);
   });
+});
+
+test('admitted conditional discovery publishes exact charged rates and expired policies expose none',async()=>{
+ const model='deepseek-v4.1-flash',rateVersion='fixture-v1';let now=Date.parse('2026-10-13T00:00:00Z');
+ const tierPolicy=createDeepSeekTierPolicy({enabled:true,clock:()=>now,config:{accepted:true,billingBasis:'apiwild_admission_time',baseRateVersion:rateVersion,sourceRevision:DEEPSEEK_SOURCE_REVISION,calendarVersion:DEEPSEEK_CALENDAR_VERSION,validFrom:'2026-10-12T00:00:00.000Z',validUntil:'2026-10-20T00:00:00.000Z',servedVersions:{[model]:'DeepSeek-V4.1-Flash'}}});
+ const options={catalog,routes:[{model,capability:'chat',maxOutputTokens:1000}],rateVersion,tierPolicy};
+ const snapshot=createOwnedDiscoverySnapshot(options),expected={currency:'USD',unit:'per_million_tokens',input:0.132353,output:0.529412,rateVersion:'apiwild-launch-20261005',billingPolicy:'supplier-cost-5x-v1',rounding:'ceil to integer micro-USD per request'};
+ assert.deepEqual(snapshot.catalog.models[0].chargedPricing,expected);
+ await server({discoveryHttp:createOwnedDiscoveryHttp({snapshot})},async call=>{const result=await call('/api/models');assert.equal(result.status,200);assert.deepEqual(result.body.models[0].chargedPricing,expected);});
+ now=Date.parse('2026-10-20T00:00:00Z');assert.deepEqual(snapshot.catalog.models,[]);
+ assert.equal(createOwnedDiscoverySnapshot(options).catalog.models.find(row=>row.id===model)?.chargedPricing??null,null);
+ assert.equal(createOwnedDiscoverySnapshot({...options,routes:[],tierPolicy:undefined}).catalog.models.find(row=>row.id===model)?.chargedPricing??null,null);
 });
 
 test('malformed retail usage RPC cannot become an authenticated success response',async()=>{

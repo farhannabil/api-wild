@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {approvedModelReferences,callableCustomerModels,customerRouteExamples} from '../app/models/callable-catalogue.mjs';
+import {approvedModelReferences,callableCustomerModels,listedCustomerModels,customerRouteExamples} from '../app/models/callable-catalogue.mjs';
 
 const publicCatalog = JSON.parse(readFileSync(new URL('../app/models/public-models.json', import.meta.url)));
 const internalCatalog = JSON.parse(readFileSync(new URL('../data/selected-supplier-models.json', import.meta.url)));
@@ -38,6 +38,15 @@ test('directory excludes false, absent and unknown routes without changing appro
   assert.deepEqual(result, [first, third]);
   assert.equal(result[0], first);
   assert.deepEqual(callableCustomerModels(discovery([]), publicCatalog.models), []);
+});
+
+test('listed models take charged pricing only from validated runtime rows and preserve availability',()=>{
+ const [first,second,third]=publicCatalog.models,chargedPricing={currency:'USD',unit:'per_million_tokens',input:0.132353,output:0.529412,billingPolicy:'supplier-cost-5x-v1'};
+ const approved=[{...first,chargedPricing:{input:999}},second,third];
+ const result=listedCustomerModels(discovery([{...row(first.model_name),chargedPricing},row(second.model_name,false),{...row('unknown'),chargedPricing}]),approved);
+ assert.deepEqual(result.map(model=>[model.model_name,model.chargedPricing,model.available]),[[first.model_name,chargedPricing,true],[second.model_name,null,false],[third.model_name,null,false]]);
+ assert.equal(listedCustomerModels(discovery([row(first.model_name)]),approved)[0].chargedPricing,null);
+ assert.throws(()=>listedCustomerModels({authority:'untrusted'},approved),/could not be verified/);
 });
 
 test('workspace marketing examples reference only priced accepted customer models', () => {
