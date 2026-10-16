@@ -16,7 +16,7 @@ try{
  create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  grant usage on schema auth to service_role;create table auth.users(id uuid primary key,email_confirmed_at timestamptz,is_anonymous boolean default false);
  create table public.customer_profiles(user_id uuid primary key,onboarding_completed_at timestamptz);`);
- for(const file of ['20261003060000_apiwild_gateway_portability.sql','20261005010000_apiwild_stripe_projection.sql','20261005030000_retail_supplier_separation.sql','20261005083727_supplier_allowance_outbox.sql','20261005103212_supplier_receipt_reader.sql','20261005104158_supplier_pending_list.sql','20261005121900_bangai_request_identity.sql'])await db.exec(fs.readFileSync(root+'supabase/migrations/'+file,'utf8'));
+ for(const file of ['20261003060000_apiwild_gateway_portability.sql','20261005010000_apiwild_stripe_projection.sql','20261005030000_retail_supplier_separation.sql','20261005083727_supplier_allowance_outbox.sql','20261005103212_supplier_receipt_reader.sql','20261005104158_supplier_pending_list.sql','20261005121900_bangai_request_identity.sql','20261016003000_supplier_pending_rolling_window.sql'])await db.exec(fs.readFileSync(root+'supabase/migrations/'+file,'utf8'));
  await db.query('insert into auth.users values($1,now(),false)',[customer]);await db.query('select public.apiwild_gateway_account_initialize($1)',[owner]);
  await db.query("insert into apiwild_finance.provider_budgets values($1,'apiwild','test','CNY',$2,true,10000,10000,'v1',array['model'])",[budget,key]);
  await check('guarded request read returns exact identity only, never content; wrong owner and unfinished remain null',async()=>{

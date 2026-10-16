@@ -1,7 +1,7 @@
 # Bounded background supplier reconciliation
 
 - The existing Railway preparation server can run the reviewed receipt reconciler in the background. There is no new service, cron, public endpoint, customer charge or model call.
-- Deployment requires both reviewed migrations in order: `20261005103212_supplier_receipt_reader.sql`, then `20261005104158_supplier_pending_list.sql`. Root applies them; source tests do not apply production SQL.
+- Deployment requires the reviewed migrations in order: `20261005103212_supplier_receipt_reader.sql`, then `20261005104158_supplier_pending_list.sql`, then `20261016003000_supplier_pending_rolling_window.sql`. Root applies them; source tests do not apply production SQL.
 - Configure the receipt runbook's secret environment and trusted bindings/conversion, plus `APIWILD_BILLING_MODE=live` or `test` for that service. Enable only with **both** `APIWILD_SUPPLIER_DEBIT_ENABLED=true` and `APIWILD_SUPPLIER_SWEEP_ENABLED=true`. Neither defaults to enabled. `--local` preview never starts the worker.
 - The service-only list returns at most five finalized, supplier-pending requests belonging to the configured mode and key references, with exact persisted same-response request UUIDs. It returns owner/request/cursor identity only. The database list is read-only and has no new table or ledger mutation.
 - One pass runs at a time. Each candidate gets the already reviewed, bounded receipt check; only an authoritative matching receipt reaches the idempotent apply RPC. A missing or ambiguous receipt stays held, and the cursor advances so later candidates can be processed. A short/empty final page wraps the in-memory cursor.
@@ -10,8 +10,8 @@
 
 ## Limits and recovery
 
-- Candidates are restricted to the current **UTC** day, and the supplier's documented default log window is its current day. The reader does not invent historical filters. A request outside either window remains held for an explicitly reviewed recovery operation.
-- The rotating cursor is memory-only. Restarts begin at the first current-day candidate; repeated receipts remain protected by database identity/idempotency. Healthy long-lived operation rotates past failures; continuous restart is not a reliable backlog-recovery mechanism.
+- Candidates are restricted to a rolling 7-day window so a row held across a UTC midnight stays retryable and observable. The supplier's documented default log window is still its current day, and the reader does not invent historical filters, so a prior-day candidate typically holds with `receipt_not_found`; it remains held for an explicitly reviewed recovery operation.
+- The rotating cursor is memory-only. Restarts begin at the first in-window candidate; repeated receipts remain protected by database identity/idempotency. Healthy long-lived operation rotates past failures; continuous restart is not a reliable backlog-recovery mechanism.
 - The reader's maximum10 pages of20 supplier rows can make a busy account's current-day log unscannable. Such requests remain held; verified server-side receipt filtering or a larger separately reviewed bound is needed before increasing traffic beyond that operating envelope.
 - A conversion change or expiry blocks both future dispatch and receipt reconciliation. The accepted snapshot is immutable for retries. Do not replace it merely to force pending historical debits through; investigate their original accounting basis.
 - Supplier overruns retain the hold and freeze the provider budget. This worker does not clear a freeze or forgive a debit.
