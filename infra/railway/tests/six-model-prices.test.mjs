@@ -20,10 +20,14 @@ test('six owner prices, immutable model versions and complete metadata agree',()
  assert.equal(p.charge({model:'gpt-6-sol',promptTokens:4392,completionTokens:5}).costUsdMicros,4417);
  assert.ok(metadata[ds].description);assert.ok(!JSON.stringify(catalog).includes('supplier_input'));
 });
-test('reviewed DeepSeek alias is accepted only for the exact model and supplier',()=>{
+test('reviewed supplier aliases are accepted only for the exact model and supplier',()=>{
  const identity={model:ds,supplierSlug:'a6aa'};assert.equal(canonicalSupplierModel('cb/'+ds,identity),ds);
  for(const patch of [{supplierSlug:'kriora'},{model:'deepseek-v4-flash'},{model:'gpt-6-sol'},{upstreamModel:'other'}])assert.equal(canonicalSupplierModel('cb/'+ds,{...identity,...patch}),null);
  for(const value of ['other/'+ds,'cb/deepseek-v4-flash',null])assert.equal(canonicalSupplierModel(value,identity),null);
+ for(const [value,alias] of [['grok-4.5-build',{model:'grok-4.5',supplierSlug:'viapi'}],['gemini-3.8-flash-high',{model:'gemini-3.8-flash',supplierSlug:'a6aa'}]]){
+  assert.equal(canonicalSupplierModel(value,alias),alias.model);
+  for(const patch of [{supplierSlug:'other'},{model:'other'}])assert.equal(canonicalSupplierModel(value,{...alias,...patch}),null);
+ }
 });
 test('DeepSeek tier is pinned across boundaries and prices equal the owner decision',()=>{
  let time=Date.parse('2026-10-13T00:59:59.000Z');const policy=createDeepSeekTierPolicy({enabled:true,config,clock:()=>time}),p=createRetailTokenPricing({models:catalog.models,rateVersion:version,tierPolicy:policy});
