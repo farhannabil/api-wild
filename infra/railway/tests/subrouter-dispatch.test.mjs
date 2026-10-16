@@ -28,8 +28,14 @@ test('strict request bounds reject unsupported tools, streaming, wrong model and
     const f = fixture(); const p = payload(); Object.assign(p.body, patch); await assert.rejects(f.run({ payload: p })); assert.equal(f.calls.length, 0);
   }
 });
+test('completion usage may exceed request but remains bounded by the route output cap', async () => {
+  const withinRoute = fixture(() => response({...result(),usage:{prompt_tokens:8,completion_tokens:54},choices:[{message:{role:'assistant',content:'Fixture answer'},finish_reason:'stop'}]}));
+  const p=payload();p.body.max_tokens=8;const accepted=await withinRoute.run({payload:p});assert.equal(accepted.usage.completion_tokens,54);
+  const beyondRoute = fixture(() => response({...result(),usage:{prompt_tokens:8,completion_tokens:65},choices:[{message:{role:'assistant',content:'Fixture answer'},finish_reason:'stop'}]}));
+  await assert.rejects(beyondRoute.run({payload:p}),e=>e.ambiguous&&e.code==='subrouter_dispatch_requires_reconciliation');
+});
 test('missing/mismatched identity, missing usage and invalid result require reconciliation with no retry', async () => {
-  for (const patch of [{ model: undefined }, { model: 'other' }, { id: '' }, { usage: {} }, { usage: { prompt_tokens: 8, completion_tokens: 40 } }, { choices: [] }]) {
+  for (const patch of [{ model: undefined }, { model: 'other' }, { id: '' }, { usage: {} }, { usage: { prompt_tokens: 8, completion_tokens: 65 } }, { choices: [] }]) {
     const f = fixture(() => response({ ...result(), ...patch }));
     await assert.rejects(f.run(), e => e.ambiguous && e.code === 'subrouter_dispatch_requires_reconciliation'); assert.equal(f.calls.length, 1);
   }
@@ -57,7 +63,7 @@ test('diagnostics contain only fixed response metadata, never supplier content o
  const diagnostics=[];const raw={...result(),choices:[{message:{role:'assistant',content:''},finish_reason:'stop'}],usage:{prompt_tokens:8,completion_tokens:32,total_tokens:40},private:TOKEN};
  const d=createSubrouterDispatch({routes:[route()],fetchImpl:async()=>response(raw),observeFailure:r=>diagnostics.push(r)});
  await assert.rejects(d({record:record(),payload:payload(),signal:new AbortController().signal}));
- assert.deepEqual(diagnostics,[{phase:'validation',status:200,modelMatches:true,contentLength:0,finishReason:'stop',completionTokens:32,maxTokens:32,canonicalModelMatches:true,completionIdentityValid:true,usageTotalMatches:true,code:'gateway_request_rejected'}]);
+ assert.deepEqual(diagnostics,[{phase:'validation',status:200,modelMatches:true,returnedModel:'fixture-upstream',contentLength:0,finishReason:'stop',completionTokens:32,maxTokens:32,canonicalModelMatches:true,completionIdentityValid:true,usageTotalMatches:true,code:'gateway_request_rejected'}]);
  assert.ok(!JSON.stringify(diagnostics).includes(TOKEN));
 });
 test('a reasoning model exhausting its output cap is a metered length completion, not an indefinite hold',async()=>{

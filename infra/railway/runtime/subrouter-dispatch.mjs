@@ -82,7 +82,7 @@ export function createSubrouterDispatch(config) {
       diagnostic = {phase:'response',status:response.status};
       if (!response.ok || response.redirected) fail('subrouter_dispatch_not_confirmed', true);
       const value = await boundedJson(response, signal);
-      diagnostic = {...diagnostic,phase:'validation',modelMatches:value?.model===route.upstreamModel,contentLength:typeof value?.choices?.[0]?.message?.content==='string'?value.choices[0].message.content.length:null,finishReason:['stop','length','content_filter','tool_calls'].includes(value?.choices?.[0]?.finish_reason)?value.choices[0].finish_reason:null,completionTokens:Number.isSafeInteger(value?.usage?.completion_tokens)?value.usage.completion_tokens:null,maxTokens};
+      diagnostic = {...diagnostic,phase:'validation',modelMatches:value?.model===route.upstreamModel,returnedModel:typeof value?.model==='string'?value.model:null,contentLength:typeof value?.choices?.[0]?.message?.content==='string'?value.choices[0].message.content.length:null,finishReason:['stop','length','content_filter','tool_calls'].includes(value?.choices?.[0]?.finish_reason)?value.choices[0].finish_reason:null,completionTokens:Number.isSafeInteger(value?.usage?.completion_tokens)?value.usage.completion_tokens:null,maxTokens};
       const canonical=canonicalSupplierModel(value?.model,{supplierSlug:route.supplierSlug,model:route.model,upstreamModel:route.upstreamModel});
       diagnostic={...diagnostic,canonicalModelMatches:canonical!==null,completionIdentityValid:typeof value?.id==='string'&&/^[A-Za-z0-9_-]{1,160}$/.test(value.id),usageTotalMatches:value?.usage?.total_tokens===undefined||value.usage.total_tokens===value.usage.prompt_tokens+value.usage.completion_tokens};
       if (!value || typeof value !== 'object' || typeof value.id !== 'string' || !/^[A-Za-z0-9_-]{1,160}$/.test(value.id) || canonical===null) fail('subrouter_response_identity_unconfirmed', true);
@@ -90,7 +90,7 @@ export function createSubrouterDispatch(config) {
       // Preserve completion identity separately; neither ID is customer output.
       const providerRequestId = response.headers.get('x-request-id');
       if (providerRequestId !== null && !isSupplierRequestIdentity(providerRequestId,{supplierSlug:route.supplierSlug,model:route.model})) fail('subrouter_request_identity_unconfirmed', true);
-      const input = exactInteger(value.usage?.prompt_tokens); const output = exactInteger(value.usage?.completion_tokens, 0, maxTokens);
+      const input = exactInteger(value.usage?.prompt_tokens); const output = exactInteger(value.usage?.completion_tokens, 0, route.maxOutputTokens);
       const total = exactInteger(input + output);
       // This reviewed a6aa alias reports an auxiliary cache-derived total while
       // its immutable wallet receipt uses prompt_tokens/completion_tokens. Keep
